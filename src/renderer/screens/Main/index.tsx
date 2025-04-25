@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 
 import { Container, Heading, Button } from 'renderer/components'
 import { useWindowStore } from 'renderer/store'
+import { ChatInterface } from '../Chat/ChatInterface'
 
 // The "App" comes from the context bridge in preload/index.ts
 const { App } = window
@@ -28,24 +29,7 @@ export function MainScreen() {
 
   return (
     <Container>
-      <Heading>Hi, {App.username || 'there'}! 👋</Heading>
-
-      <h2>It's time to build something awesome! ✨</h2>
-
-      <nav>
-        <Button
-          className={store.isOpen ? 'disabled' : ''}
-          onClick={openAboutWindow}
-        >
-          Open About Window
-        </Button>
-
-        <Button onClick={() => navigate('anotherScreen')}>
-          Go to Another screen
-        </Button>
-
-        <Button onClick={() => navigate('chat')}>Go to Another screen</Button>
-      </nav>
+      <ChatInterface />
     </Container>
   )
 }

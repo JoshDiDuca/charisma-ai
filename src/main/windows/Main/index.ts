@@ -4,6 +4,10 @@ import { join } from 'path'
 import { ENVIRONMENT } from 'shared/constants'
 import { createWindow } from 'main/factories'
 import { displayName } from '~/package.json'
+import { initializeLLMHandlers, MODEL_DOCUMENTS } from 'main/llm/llmHandler'
+import { initOllamaEmbedding } from 'main/ollama/ollamaEmbeddingService'
+
+export let mainWindow: BrowserWindow | null = null
 
 export async function MainWindow() {
   const window = createWindow({
@@ -23,6 +27,9 @@ export async function MainWindow() {
     },
   })
 
+  initializeLLMHandlers()
+  initOllamaEmbedding(MODEL_DOCUMENTS)
+
   window.webContents.on('did-finish-load', () => {
     if (ENVIRONMENT.IS_DEV) {
       window.webContents.openDevTools({ mode: 'detach' })
@@ -34,6 +41,8 @@ export async function MainWindow() {
   window.on('close', () =>
     BrowserWindow.getAllWindows().forEach((window) => window.destroy())
   )
+
+  mainWindow = window
 
   return window
 }

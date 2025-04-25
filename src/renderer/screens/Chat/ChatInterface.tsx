@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FaMicrophone, FaPaperclip, FaStop } from 'react-icons/fa'
 import {
   Button,
@@ -8,6 +8,7 @@ import {
   CardHeader,
   Spacer,
 } from '@heroui/react'
+import { ModelManager } from 'renderer/components'
 
 type Message = {
   id: number
@@ -15,27 +16,96 @@ type Message = {
   sender: 'user' | 'bot'
 }
 
-const ChatInterface = () => {
+const { App } = window
+
+export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedModel, setSelectedModel] = useState('llama3:latest')
 
-  const handleSendMessage = () => {
-    if (inputValue.trim()) {
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return
+
+    const userMessage = {
+      id: Date.now(),
+      text: inputValue,
+      sender: 'user' as const,
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    setInputValue('')
+    setIsLoading(true)
+
+    try {
+      // Send message and receive stream
+      const response = await App.invoke('send-message', {
+        message: inputValue,
+        model: selectedModel,
+      })
+
+      // Add final message
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), text: inputValue, sender: 'user' },
+        {
+          id: Date.now(),
+          text: response.content,
+          sender: 'bot',
+        },
       ])
-      setInputValue('')
+    } catch (error) {
+      console.error('Chat error:', error)
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          text: `Error: ${error}`,
+          sender: 'bot',
+        },
+      ])
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleStopGenerating = () => {
-    // Add logic for stopping the AI response generation
-    console.log('Stop generating...')
-  }
+  // Stream handler
+  useEffect(() => {
+    const streamHandler = (
+      _: any,
+      {
+        partial,
+        complete,
+      }: {
+        partial: string
+        complete: boolean
+      }
+    ) => {
+      setMessages((prev) => {
+        const last = prev[prev.length - 1]
+        if (complete || last?.sender === 'user') {
+          return [
+            ...prev,
+            {
+              id: Date.now(),
+              text: partial,
+              sender: 'bot',
+            },
+          ]
+        }
+        return prev.map((msg, i) =>
+          i === prev.length - 1 ? { ...msg, text: msg.text + partial } : msg
+        )
+      })
+    }
+
+    App.on('stream-update', streamHandler)
+    return () => {
+      App.removeAllListeners('stream-update')
+    }
+  }, [])
 
   return (
-    <Card className="flex flex-col h-screen max-w-md mx-auto bg-default-100 p-4">
+    <Card className="flex flex-col h-screen bg-default-100 p-4">
       <CardHeader className="bg-primary text-primary-foreground rounded-medium mb-2">
         <span className="text-xl font-bold">AI Chat</span>
       </CardHeader>
@@ -71,18 +141,11 @@ const ChatInterface = () => {
           Send
         </Button>
       </div>
-      <div className="flex justify-center">
-        <Button
-          color="danger"
-          variant="solid"
-          onClick={handleStopGenerating}
-          startContent={<FaStop />}
-        >
+      {/*       <div className="flex justify-center">
+        <Button color="danger" variant="solid" startContent={<FaStop />}>
           Stop Generating
         </Button>
-      </div>
+      </div> */}
     </Card>
   )
 }
-
-export default ChatInterface

@@ -43,6 +43,8 @@ export function MainScreen() {
         <Button onClick={() => navigate('anotherScreen')}>
           Go to Another screen
         </Button>
+
+        <Button onClick={() => navigate('chat')}>Go to Another screen</Button>
       </nav>
     </Container>
   )

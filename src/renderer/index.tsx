@@ -3,13 +3,17 @@ import React from 'react'
 
 import { WindowStoreProvider } from './store'
 import { AppRoutes } from './routes'
+import { HeroUIProvider } from '@heroui/react'
 
 import 'resources/styles/globals.sass'
+import './output.css'
 
 ReactDom.createRoot(document.querySelector('app') as HTMLElement).render(
   <React.StrictMode>
     <WindowStoreProvider>
-      <AppRoutes />
+      <HeroUIProvider>
+        <AppRoutes />
+      </HeroUIProvider>
     </WindowStoreProvider>
   </React.StrictMode>
 )

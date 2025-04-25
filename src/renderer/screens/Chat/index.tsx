@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 
 import { Container, Heading, Button } from 'renderer/components'
-import ChatInterface from '../Chat/ChatInterface'
+import ChatInterface from './ChatInterface'
 
-export function AnotherScreen() {
+export function Chat() {
   const navigate = useNavigate()
 
   return (

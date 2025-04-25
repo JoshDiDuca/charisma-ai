@@ -11,7 +11,7 @@ export function AboutWindow() {
     height: 350,
     show: false,
     resizable: false,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     autoHideMenuBar: true,
   })
 

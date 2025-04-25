@@ -9,6 +9,7 @@ import {
   Spacer,
 } from '@heroui/react'
 import { ModelManager } from 'renderer/components'
+import Markdown from 'react-markdown'
 
 type Message = {
   id: number
@@ -105,10 +106,7 @@ export const ChatInterface = () => {
   }, [])
 
   return (
-    <Card className="flex flex-col h-screen bg-default-100 p-4">
-      <CardHeader className="bg-primary text-primary-foreground rounded-medium mb-2">
-        <span className="text-xl font-bold">AI Chat</span>
-      </CardHeader>
+    <Card className="p-4" style={{ width: '100%' }}>
       <CardBody className="flex-1 overflow-y-auto flex flex-col gap-2 bg-default-200 rounded-medium mb-2 p-4">
         {messages.map((message) => (
           <div
@@ -119,11 +117,14 @@ export const ChatInterface = () => {
                 : 'self-start bg-default-300 text-default-foreground'
             }`}
           >
-            {message.text}
+            <Markdown>{message.text}</Markdown>
           </div>
         ))}
       </CardBody>
-      <div className="flex items-center gap-2 mb-2">
+      <div
+        className="flex items-center gap-2 mb-2"
+        style={{ marginBottom: '1.5rem' }}
+      >
         <Button isIconOnly variant="bordered" aria-label="Attach file">
           <FaPaperclip />
         </Button>
@@ -141,11 +142,6 @@ export const ChatInterface = () => {
           Send
         </Button>
       </div>
-      {/*       <div className="flex justify-center">
-        <Button color="danger" variant="solid" startContent={<FaStop />}>
-          Stop Generating
-        </Button>
-      </div> */}
     </Card>
   )
 }

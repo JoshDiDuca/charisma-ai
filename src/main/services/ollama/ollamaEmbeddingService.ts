@@ -1,0 +1,155 @@
+import { ChromaClient, OllamaEmbeddingFunction, IncludeEnum } from 'chromadb'
+import { ChatResponse, Ollama, Tool } from 'ollama'
+import { v4 as uuidv4 } from 'uuid'
+import { ollama, sendMessage } from './ollamaService'
+import { readdirSync, readFileSync, statSync } from 'fs'
+import { extname } from 'path'
+
+import { promises as fs } from 'fs'
+import path from 'path'
+import { embedFolder, recursiveReadDir } from '../fileService'
+
+export const OLLAMA_MODEL_EMBEDDING =
+  process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large'
+const MIN_SCORE = 0.0001 // Adjust this threshold as needed
+
+const clientChromaDB = new ChromaClient({
+  path: process.env.CHROMADB_PATH ?? 'http://localhost:8000',
+})
+const embedder = new OllamaEmbeddingFunction({
+  url: `${process.env.OLLAMA_HOST}/api/embeddings`,
+  model: OLLAMA_MODEL_EMBEDDING,
+})
+
+const COLLECTION_NAME = 'EMBED-COLLECTION'
+
+function generatePrompt(prompt: string, data: (string | null)[]) {
+  return `Context: ${data.join('\n')}\n\nQuestion: ${prompt}`
+}
+
+export const upsetDocuments = () => {}
+
+async function getOrCreateCollection() {
+  try {
+    return await clientChromaDB.getCollection({
+      name: COLLECTION_NAME,
+      embeddingFunction: embedder,
+    })
+  } catch {
+    return clientChromaDB.createCollection({
+      name: COLLECTION_NAME,
+      embeddingFunction: embedder,
+    })
+  }
+}
+
+export async function initOllamaEmbedding(documents: string[]) {
+  try {
+    await deleteCollections()
+
+    const collection = await clientChromaDB.createCollection({
+      name: COLLECTION_NAME,
+      embeddingFunction: embedder,
+    })
+
+    await collection.upsert({
+      ids: documents.map(() => uuidv4()),
+      documents,
+      metadatas: documents.map((name) => ({ name })),
+    })
+
+    return COLLECTION_NAME
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+export async function loadOllamaEmbedding(path: string) {
+  console.warn('Loading files ' + path)
+  const files = await recursiveReadDir(path)
+  const collection = await getOrCreateCollection()
+  const embeddings = files.map((file) => ({
+    content: readFileSync(file, 'utf-8'),
+    metadata: {
+      path: file,
+      type: extname(file),
+      last_modified: statSync(file).mtime.getTime(),
+    },
+  }))
+  console.warn('Loaded files ' + path)
+  await collection.upsert({
+    ids: embeddings.map(() => uuidv4()),
+    documents: embeddings.map((e) => e.content),
+    metadatas: embeddings.map(({ metadata }) => metadata),
+  })
+  console.warn('Loaded files into DB ' + path)
+}
+
+export async function getOllamaEmbeddingRetrieve(prompt: string) {
+  try {
+    const response = await ollama.embeddings({
+      model: OLLAMA_MODEL_EMBEDDING,
+      prompt,
+    })
+
+    const collection = await clientChromaDB.getCollection({
+      name: COLLECTION_NAME,
+      embeddingFunction: embedder,
+    })
+
+    const results = await collection.query({
+      queryEmbeddings: [response.embedding],
+      nResults: 5,
+      include: [IncludeEnum.Distances, IncludeEnum.Documents],
+    })
+
+    const scoredDocs =
+      results.documents?.[0]?.map((doc, index) => ({
+        content: doc,
+        score: results.distances?.[0]?.[index] || 1,
+      })) || []
+    console.error(scoredDocs)
+
+    const filteredDocs = scoredDocs
+      .filter(({ score }) => score >= MIN_SCORE)
+      .sort((a, b) => a.score - b.score)
+      .map((d) => d.content ?? '' + d.score)
+
+    console.log(filteredDocs)
+
+    return filteredDocs
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+export async function sendMessageWithEmbedding(message: string, model: string) {
+  try {
+    if (embedFolder) {
+      await loadOllamaEmbedding(embedFolder)
+    }
+    console.log('Prompt ' + message)
+    const embeddings = await getOllamaEmbeddingRetrieve(message)
+    console.log('Prompt ' + embeddings.length)
+    if (embeddings.length === 0) {
+      return { content: 'No relevant information found' }
+    }
+    const question = generatePrompt(message, embeddings)
+    const response = await sendMessage(question, model, [])
+    return {
+      ...response,
+      content: response.content,
+    }
+  } catch (e) {
+    console.log(e)
+    return { content: 'Error processing request' }
+  }
+}
+
+export const deleteCollections = async () => {
+  const currentCollections = await clientChromaDB.listCollections()
+  for (const collection of currentCollections) {
+    await clientChromaDB.deleteCollection({ name: collection })
+  }
+}

@@ -3,21 +3,14 @@ import {
   getOllamaEmbeddingRetrieve,
   initOllamaEmbedding,
   sendMessageWithEmbedding,
-} from 'main/ollama/ollamaEmbeddingService'
+} from 'main/services/ollama/ollamaEmbeddingService'
 import {
   downloadModel,
   getInstalledModels,
   sendMessage,
-} from 'main/ollama/ollamaService'
+} from 'main/services/ollama/ollamaService'
 
-export const MODEL_DOCUMENTS = [
-  'Josh is a Software Developer',
-  'Joshs full name is Joshua James Di-Duca',
-  'Josh is originally from Stockton on tees in the United Kingdom',
-  'Josh now lives in the United Kingdom',
-  'Jimmy is a builder',
-  'Jimmy lives in Cardif',
-]
+export const MODEL_DOCUMENTS = []
 
 export function initializeLLMHandlers() {
   ipcMain.handle('get-installed-models', async () => getInstalledModels())

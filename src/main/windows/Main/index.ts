@@ -4,8 +4,13 @@ import { join } from 'path'
 import { ENVIRONMENT } from 'shared/constants'
 import { createWindow } from 'main/factories'
 import { displayName } from '~/package.json'
-import { initializeLLMHandlers, MODEL_DOCUMENTS } from 'main/llm/llmHandler'
-import { initOllamaEmbedding } from 'main/ollama/ollamaEmbeddingService'
+import {
+  initializeLLMHandlers,
+  MODEL_DOCUMENTS,
+} from 'main/handlers/llm/llmHandler'
+import { initOllamaEmbedding } from 'main/services/ollama/ollamaEmbeddingService'
+import { initializeFileHandler } from 'main/handlers/fileHandler'
+import { initializeHandlers } from 'main/handlers'
 
 export let mainWindow: BrowserWindow | null = null
 
@@ -18,7 +23,7 @@ export async function MainWindow() {
     show: false,
     center: true,
     movable: true,
-    resizable: false,
+    resizable: true,
     alwaysOnTop: false,
     autoHideMenuBar: true,
 
@@ -27,7 +32,7 @@ export async function MainWindow() {
     },
   })
 
-  initializeLLMHandlers()
+  initializeHandlers()
   initOllamaEmbedding(MODEL_DOCUMENTS)
 
   window.webContents.on('did-finish-load', () => {

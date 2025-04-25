@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { Container, Heading, Button } from 'renderer/components'
 import { useWindowStore } from 'renderer/store'
 import { ChatInterface } from '../Chat/ChatInterface'
+import { Sidebar } from 'renderer/components/Sidebar/Sidebar'
 
 // The "App" comes from the context bridge in preload/index.ts
 const { App } = window
@@ -29,7 +30,10 @@ export function MainScreen() {
 
   return (
     <Container>
-      <ChatInterface />
+      <div className="min-w-full inline-flex">
+        <Sidebar />
+        <ChatInterface />
+      </div>
     </Container>
   )
 }

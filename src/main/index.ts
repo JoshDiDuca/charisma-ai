@@ -5,13 +5,15 @@ console.log = log.log // Replace default console
 
 import { makeAppSetup, makeAppWithSingleInstanceLock } from './factories'
 import { MainWindow, registerAboutWindowCreationByIPC } from './windows'
-import { ChromaDBService } from './services/chroma/chromaDBService'
+import { ChromaInstanceService } from './services/chroma/chromaInstanceService'
+import { OllamaInstanceService } from './services/ollama/ollamaInstanceService'
 
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
 
-  const chromaService = new ChromaDBService()
-  const ollamaService = new OllamaService()
+  const chromaService = new ChromaInstanceService()
+  const ollamaService = new OllamaInstanceService()
+  await ollamaService.start()
 
   // Create your window here
 

@@ -46,10 +46,6 @@ Before you begin, ensure you have the following installed and running:
     ```
 2.  **Install dependencies:**
     ```
-    npm install
-    # or
-    yarn install
-    # or
     pnpm install
     ```
 
@@ -58,13 +54,16 @@ Before you begin, ensure you have the following installed and running:
 1.  **Ensure Ollama is running** locally with a model available.
 2.  **Start the electron app:**
     ```
-    npm start
-    # or
-    npm run dev
-    # or
-    yarn dev
-    # or
-    pnpm dev
+    pnpm start
+    ```
+## Usage Guide
+
+## Publishing
+
+1.  **Ensure Ollama is running** locally with a model available.
+2.  **Start the electron app:**
+    ```
+    pnpm build
     ```
 ## Usage Guide
 

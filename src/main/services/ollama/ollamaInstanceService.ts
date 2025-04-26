@@ -11,9 +11,11 @@ export class OllamaInstanceService {
 
   getBinaryPath() {
     if (app.isPackaged) {
+      console.log('OllamaInstancePath', path.join(process.resourcesPath, 'bin', 'ollama'));
       return path.join(process.resourcesPath, 'bin', 'ollama')
     } else {
-      return path.join(rootPath, 'resources', getPlatform(), 'bin', 'ollama')
+      console.log('OllamaInstancePath', app.getAppPath());
+      return path.join(app.getAppPath(), 'resources', getPlatform(), 'bin', 'ollama')
     }
   }
 

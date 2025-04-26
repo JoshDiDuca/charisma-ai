@@ -40,10 +40,11 @@ export const ChatInterface = () => {
 
     try {
       // Send message and receive stream
-      const response = await App.invoke('send-message', {
-        message: inputValue,
-        model: selectedModel,
-      })
+      const response = await App.invoke(
+        'send-message',
+        inputValue,
+        selectedModel
+      )
 
       // Add final message
       setMessages((prev) => [

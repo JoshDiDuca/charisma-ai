@@ -33,12 +33,16 @@ export const downloadModel = async (modelName: string) => {
 export const sendMessage = async (
   message: string,
   model: string,
-  tools: Tool[]
+  tools: Tool[],
+  systemMessage?: string
 ) => {
   try {
     const responseStream = await ollama.chat({
       model,
-      messages: [{ role: 'user', content: message }],
+      messages: [
+        ...(systemMessage ? [{ role: 'system', content: systemMessage }] : []),
+        { role: 'user', content: message },
+      ],
       stream: true,
       tools,
     })

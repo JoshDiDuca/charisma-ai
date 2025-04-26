@@ -13,6 +13,8 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "isolatedModules": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true,

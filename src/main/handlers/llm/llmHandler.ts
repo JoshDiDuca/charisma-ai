@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron'
+import { IpcHandle } from 'main/factories/ipcs/IpcHandle'
 import {
   getOllamaEmbeddingRetrieve,
   initOllamaEmbedding,
@@ -13,15 +14,37 @@ import {
 
 export const MODEL_DOCUMENTS = []
 
-export function initializeLLMHandlers() {
-  ipcMain.handle('get-installed-models', async () => getInstalledModels())
-  ipcMain.handle('get-llm-status', async () => getOllamaStatus())
+export class LlmHandlers {
+  @IpcHandle('get-installed-models')
+  async getInstalledModels() {
+    return getInstalledModels()
+  }
 
-  ipcMain.handle('download-model', async (_, modelName: string) =>
-    downloadModel(modelName)
-  )
+  @IpcHandle('get-llm-status')
+  async getOllamaStatus() {
+    return getOllamaStatus()
+  }
 
-  ipcMain.handle('send-message', async (_, { message, model }) => {
-    return await sendMessageWithEmbedding(message, model)
-  })
+  @IpcHandle('download-model')
+  async downloadModel(modelName: string) {
+    return downloadModel(modelName)
+  }
+
+  @IpcHandle('send-message')
+  async sendMessageWithEmbedding(message: string, model: string) {
+    console.log(
+      `sendMessageWithEmbedding received - message:`,
+      message,
+      `(type: ${typeof message})`,
+      `model:`,
+      model
+    )
+    return sendMessageWithEmbedding(message, model)
+  }
+}
+
+export class Test {
+  public test() {
+    return ''
+  }
 }

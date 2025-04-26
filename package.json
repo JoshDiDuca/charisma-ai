@@ -2,7 +2,7 @@
   "displayName": "Charisma",
   "name": "charisma-ai",
   "description": "Charisma AI LLM Client",
-  "version": "3.0.1",
+  "version": "4.0.1",
   "main": "./node_modules/.dev/main/index.js",
   "resources": "src/resources",
   "author": {
@@ -20,8 +20,7 @@
     "postinstall": "run-s prebuild install:deps",
     "install:deps": "electron-builder install-app-deps",
     "make:release": "node ./bin/modules/release/index.js",
-    "release": "electron-builder --publish always",
-    "prepare": "husky install"
+    "release": "electron-builder --publish always"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.4.0",

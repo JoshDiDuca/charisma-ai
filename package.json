@@ -12,15 +12,21 @@
   "license": "MIT",
   "scripts": {
     "start": "electron-vite preview",
-    "dev": "cross-env NODE_ENV=development electron-vite dev --watch --inspect=9229 --remote-debugging-port=9222",
+    "predev": "run-s clean:dev",
+    "dev": "cross-env NODE_ENV=development electron-vite dev --watch",
     "compile:app": "electron-vite build",
-    "compile:packageJSON": "node ./bin/modules/postbuild/index.js",
-    "prebuild": "run-s compile:app compile:packageJSON",
-    "build": "./node_modules/.bin/electron-builder",
+    "compile:packageJSON": "tsx ./src/lib/electron-app/release/modules/prebuild.ts",
+    "prebuild": "run-s clean:dev compile:app compile:packageJSON",
+    "build": "pnpm electron-builder",
     "postinstall": "run-s prebuild install:deps",
     "install:deps": "electron-builder install-app-deps",
-    "make:release": "node ./bin/modules/release/index.js",
-    "release": "electron-builder --publish always"
+    "make:release": "tsx ./src/lib/electron-app/release/modules/release.ts",
+    "release": "electron-builder --publish always",
+    "clean:dev": "rimraf ./node_modules/.dev",
+  },
+  "packageManager": "pnpm@10.0.0",
+  "pnpm": {
+    "onlyBuiltDependenciesFile": "./trusted-dependencies-scripts.json"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.4.0",

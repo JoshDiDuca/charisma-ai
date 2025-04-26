@@ -5,6 +5,8 @@ import { createWindow } from 'lib/electron-app/factories/windows/create'
 import { ENVIRONMENT } from 'shared/constants'
 import { displayName } from '~/package.json'
 
+export let mainWindow: Electron.BrowserWindow | null = null
+
 export async function MainWindow() {
   const window = createWindow({
     id: 'main',
@@ -36,6 +38,6 @@ export async function MainWindow() {
       window.destroy()
     }
   })
-
+mainWindow = window;
   return window
 }

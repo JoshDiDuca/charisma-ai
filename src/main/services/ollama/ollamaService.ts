@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { mainWindow } from 'main/windows'
+import { mainWindow } from 'main/windows/main'
 import { Ollama, Tool } from 'ollama'
 export const ollamaURL = process.env.OLLAMA_API_BASE || 'http://localhost:11434'
 export const ollama = new Ollama({ host: ollamaURL })

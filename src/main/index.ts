@@ -8,17 +8,19 @@ import { makeAppSetup } from 'lib/electron-app/factories/app/setup'
 import { ChromaInstanceService } from './services/chroma/chromaInstanceService'
 import { OllamaInstanceService } from './services/ollama/ollamaInstanceService'
 import { MainWindow } from './windows/main'
+import { initializeHandlers } from './handlers'
 
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
+
 
   const chromaService = new ChromaInstanceService()
   const ollamaService = new OllamaInstanceService()
   await ollamaService.start()
 
-  // Create your window here
-
   // Setup IPC handlers
+  initializeHandlers();
+
   ipcMain.handle('start-chromadb', async () => {
     await chromaService.start()
     return true

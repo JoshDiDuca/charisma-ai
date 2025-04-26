@@ -1,5 +1,4 @@
 import { ipcMain } from 'electron'
-import { IpcHandle } from 'main/factories/ipcs/IpcHandle'
 import {
   getOllamaEmbeddingRetrieve,
   initOllamaEmbedding,
@@ -11,6 +10,7 @@ import {
   getOllamaStatus,
   sendMessage,
 } from 'main/services/ollama/ollamaService'
+import { IpcHandle } from '../IpcHandle'
 
 export const MODEL_DOCUMENTS = []
 

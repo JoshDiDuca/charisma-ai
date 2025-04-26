@@ -9,6 +9,7 @@ import { ChromaInstanceService } from './services/chroma/chromaInstanceService'
 import { OllamaInstanceService } from './services/ollama/ollamaInstanceService'
 import { MainWindow } from './windows/main'
 import { initializeHandlers } from './handlers'
+import { initOllamaEmbedding } from './services/ollama/ollamaEmbeddingService'
 
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
@@ -17,6 +18,8 @@ makeAppWithSingleInstanceLock(async () => {
   const chromaService = new ChromaInstanceService()
   const ollamaService = new OllamaInstanceService()
   await ollamaService.start()
+
+  initOllamaEmbedding([])
 
   // Setup IPC handlers
   initializeHandlers();

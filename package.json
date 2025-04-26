@@ -2,7 +2,7 @@
   "displayName": "Charisma",
   "name": "charisma-ai",
   "description": "Charisma AI LLM Client",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "main": "./node_modules/.dev/main/index.js",
   "resources": "src/resources",
   "author": {
@@ -32,6 +32,7 @@
     "chromadb": "^2.3.0",
     "chromadb-default-embed": "^2.14.0",
     "electron-log": "^5.3.4",
+    "electron-root-path": "^1.1.0",
     "electron-router-dom": "^1.0.5",
     "framer-motion": "^12.9.2",
     "react": "^18.2.0",

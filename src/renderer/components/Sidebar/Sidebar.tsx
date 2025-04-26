@@ -1,15 +1,20 @@
 import { Badge, Button, Card, Select, SelectItem } from '@heroui/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { buildTreeStructure, Tree, TreeNode } from './FileTree'
 
 const { App } = window
 
 export const Sidebar = () => {
-  const [status] = useState<'running' | 'stopped'>('running')
+  const [status, setStatus] = useState<'Running' | 'Stopped' | 'Loading...'>(
+    'Loading...'
+  )
   const [model, setModel] = useState<string>('openchat')
   const [embeddingModel, setEmbeddingModel] =
     useState<string>('nomic-embed-text')
   const [filePath, setFilePath] = useState<string>('')
   const [files, setFiles] = useState<string[]>([])
+
+  const [treeData, setTreeData] = useState<TreeNode[]>([])
 
   const handleSelectFolder = async () => {
     const folder = await App.invoke('select-folder')
@@ -17,19 +22,43 @@ export const Sidebar = () => {
 
     setFilePath(folder)
     const fileList = await App.invoke('get-folder-files', folder)
-    setFiles(fileList)
+    const tree = buildTreeStructure(fileList, folder)
+    setTreeData(tree)
   }
+
+  const loadStatus = async () => {
+    // Send message and receive stream
+    const response: boolean = await App.invoke('get-llm-status')
+    if (response) {
+      setStatus('Running')
+    } else {
+      setStatus('Stopped')
+    }
+  }
+
+  useEffect(() => {
+    loadStatus()
+  }, [])
 
   return (
     <Card className="p-4 w-120" style={{ width: '20rem' }}>
       <div className="flex flex-col gap-4 h-screen">
         <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">AI Application</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Status:</span>
-            <Badge color={status === 'running' ? 'success' : 'danger'}>
-              {status}
-            </Badge>
+          <div className="inline-flex">
+            <img
+              src="/logo.png"
+              width={25}
+              height={25}
+              style={{ marginRight: '0.25rem' }}
+            ></img>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">
+                Status:{' '}
+                <b style={{ color: status === 'Running' ? 'green' : 'red' }}>
+                  {status.toWellFormed()}
+                </b>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -57,20 +86,14 @@ export const Sidebar = () => {
             <label className="text-sm font-medium">Files:</label>
             <Button onClick={handleSelectFolder}>Select Folder</Button>
           </div>
-          <Card className="p-2 h-40 overflow-hidden">
+          <Card className="p-2 h-auto overflow-hidden">
             <div className="text-sm">
-              <ul className="mt-2 space-y-1">
-                {files.map((file, idx) => (
-                  <li key={idx} className="truncate">
-                    {file}
-                  </li>
-                ))}
-              </ul>
+              {treeData.map((node) => (
+                <Tree key={node.path} node={node} onDelete={(_) => {}} />
+              ))}
             </div>
           </Card>
         </div>
-
-        <Button className="w-full mt-auto">Embed files</Button>
       </div>
     </Card>
   )

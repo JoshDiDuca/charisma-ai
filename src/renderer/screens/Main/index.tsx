@@ -30,7 +30,7 @@ export function MainScreen() {
 
   return (
     <Container>
-      <div className="min-w-full inline-flex">
+      <div className="inline-flex" style={{ width: '100%' }}>
         <Sidebar />
         <ChatInterface />
       </div>

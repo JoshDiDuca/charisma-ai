@@ -106,8 +106,14 @@ export const ChatInterface = () => {
   }, [])
 
   return (
-    <Card className="p-4" style={{ width: '100%' }}>
-      <CardBody className="flex-1 overflow-y-auto flex flex-col gap-2 bg-default-200 rounded-medium mb-2 p-4">
+    <Card
+      className="p-4"
+      style={{ height: '100vh', width: '100%', overflowY: 'auto' }}
+    >
+      <CardBody
+        className="flex-1 flex flex-col gap-2 bg-default-200 rounded-medium mb-2 p-4"
+        style={{ overflowY: 'auto' }}
+      >
         {messages.map((message) => (
           <div
             key={message.id}
@@ -123,7 +129,7 @@ export const ChatInterface = () => {
       </CardBody>
       <div
         className="flex items-center gap-2 mb-2"
-        style={{ marginBottom: '1.5rem' }}
+        style={{ marginBottom: '1.5rem', position: 'sticky' }}
       >
         <Button isIconOnly variant="bordered" aria-label="Attach file">
           <FaPaperclip />
@@ -133,6 +139,11 @@ export const ChatInterface = () => {
           placeholder="Type your message..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSendMessage()
+            }
+          }}
           variant="bordered"
         />
         <Button isIconOnly variant="bordered" aria-label="Mic">

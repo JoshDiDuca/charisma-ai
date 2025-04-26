@@ -1,7 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { loadOllamaEmbedding } from './ollama/ollamaEmbeddingService'
 
 export let embedFolder: string | null = null
 

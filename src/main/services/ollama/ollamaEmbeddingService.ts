@@ -1,25 +1,20 @@
-import { ChromaClient, OllamaEmbeddingFunction, IncludeEnum } from 'chromadb'
-import { ChatResponse, Ollama, Tool } from 'ollama'
+import { ChromaClient, IncludeEnum } from 'chromadb'
 import { v4 as uuidv4 } from 'uuid'
 import { ollama, sendMessage } from './ollamaService'
-import { readdirSync, readFileSync, statSync } from 'fs'
+import { readFileSync, statSync } from 'fs'
 import { extname } from 'path'
-
-import { promises as fs } from 'fs'
-import path from 'path'
 import { embedFolder, recursiveReadDir } from '../fileService'
+import {
+  createChromaCollection,
+  deleteAllChromaCollections,
+  getChromaCollection,
+  getOrCreateChromaCollection,
+} from '../chroma/chromaService'
 
-export const OLLAMA_MODEL_EMBEDDING =
-  process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large'
 const MIN_SCORE = 0.0001 // Adjust this threshold as needed
 
-const clientChromaDB = new ChromaClient({
-  path: process.env.CHROMADB_PATH ?? 'http://localhost:8000',
-})
-const embedder = new OllamaEmbeddingFunction({
-  url: `${process.env.OLLAMA_HOST}/api/embeddings`,
-  model: OLLAMA_MODEL_EMBEDDING,
-})
+const OLLAMA_MODEL_EMBEDDING =
+  process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large'
 
 const COLLECTION_NAME = 'EMBED-COLLECTION'
 
@@ -27,30 +22,11 @@ function generatePrompt(prompt: string, data: (string | null)[]) {
   return `Context: ${data.join('\n')}\n\nQuestion: ${prompt}`
 }
 
-export const upsetDocuments = () => {}
-
-async function getOrCreateCollection() {
-  try {
-    return await clientChromaDB.getCollection({
-      name: COLLECTION_NAME,
-      embeddingFunction: embedder,
-    })
-  } catch {
-    return clientChromaDB.createCollection({
-      name: COLLECTION_NAME,
-      embeddingFunction: embedder,
-    })
-  }
-}
-
 export async function initOllamaEmbedding(documents: string[]) {
   try {
-    await deleteCollections()
+    await deleteAllChromaCollections()
 
-    const collection = await clientChromaDB.createCollection({
-      name: COLLECTION_NAME,
-      embeddingFunction: embedder,
-    })
+    const collection = await createChromaCollection(COLLECTION_NAME)
 
     await collection.upsert({
       ids: documents.map(() => uuidv4()),
@@ -67,7 +43,7 @@ export async function initOllamaEmbedding(documents: string[]) {
 export async function loadOllamaEmbedding(path: string) {
   console.warn('Loading files ' + path)
   const files = await recursiveReadDir(path)
-  const collection = await getOrCreateCollection()
+  const collection = await getOrCreateChromaCollection(COLLECTION_NAME)
   const embeddings = files.map((file) => ({
     content: readFileSync(file, 'utf-8'),
     metadata: {
@@ -92,10 +68,7 @@ export async function getOllamaEmbeddingRetrieve(prompt: string) {
       prompt,
     })
 
-    const collection = await clientChromaDB.getCollection({
-      name: COLLECTION_NAME,
-      embeddingFunction: embedder,
-    })
+    const collection = await getChromaCollection(COLLECTION_NAME)
 
     const results = await collection.query({
       queryEmbeddings: [response.embedding],
@@ -144,12 +117,5 @@ export async function sendMessageWithEmbedding(message: string, model: string) {
   } catch (e) {
     console.log(e)
     return { content: 'Error processing request' }
-  }
-}
-
-export const deleteCollections = async () => {
-  const currentCollections = await clientChromaDB.listCollections()
-  for (const collection of currentCollections) {
-    await clientChromaDB.deleteCollection({ name: collection })
   }
 }

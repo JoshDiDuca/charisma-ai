@@ -1,6 +1,17 @@
+import axios from 'axios'
 import { mainWindow } from 'main/windows'
 import { Ollama, Tool } from 'ollama'
-export const ollama = new Ollama({ host: 'http://localhost:11434' })
+export const ollamaURL = process.env.OLLAMA_API_BASE || 'http://localhost:11434'
+export const ollama = new Ollama({ host: ollamaURL })
+
+export const getOllamaStatus = async (): Promise<boolean> => {
+  const appStatus = await axios.get(ollamaURL)
+
+  if (appStatus.data === 'Ollama is running') {
+    return true
+  }
+  return false
+}
 
 export const getInstalledModels = async () => {
   const response = await ollama.list()

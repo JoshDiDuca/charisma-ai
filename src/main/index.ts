@@ -3,10 +3,11 @@ import log from 'electron-log'
 log.initialize()
 console.log = log.log // Replace default console
 
-import { makeAppSetup, makeAppWithSingleInstanceLock } from './factories'
-import { MainWindow, registerAboutWindowCreationByIPC } from './windows'
+import { makeAppWithSingleInstanceLock } from 'lib/electron-app/factories/app/instance'
+import { makeAppSetup } from 'lib/electron-app/factories/app/setup'
 import { ChromaInstanceService } from './services/chroma/chromaInstanceService'
 import { OllamaInstanceService } from './services/ollama/ollamaInstanceService'
+import { MainWindow } from './windows/main'
 
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
@@ -36,6 +37,4 @@ makeAppWithSingleInstanceLock(async () => {
   })
 
   await makeAppSetup(MainWindow)
-
-  registerAboutWindowCreationByIPC()
 })

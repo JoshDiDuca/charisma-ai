@@ -1,10 +1,13 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import { resolve, normalize, dirname } from 'path'
+import { codeInspectorPlugin } from 'code-inspector-plugin'
+import { resolve, normalize, dirname } from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
 
 import injectProcessEnvPlugin from 'rollup-plugin-inject-process-env'
 import tsconfigPathsPlugin from 'vite-tsconfig-paths'
 import reactPlugin from '@vitejs/plugin-react'
 
+import { settings } from './src/lib/electron-router-dom'
 import { main, resources } from './package.json'
 
 const [nodeModules, devFolder] = normalize(dirname(main)).split(/\/|\\/g)
@@ -46,10 +49,21 @@ export default defineConfig({
     },
 
     server: {
-      port: 4927,
+      port: settings.port,
     },
 
-    plugins: [tsconfigPaths, reactPlugin()],
+    plugins: [
+      tsconfigPaths,
+      tailwindcss(),
+      reactPlugin(),
+
+      codeInspectorPlugin({
+        bundler: 'vite',
+        hotKeys: ['altKey'],
+        hideConsole: true,
+      }),
+    ],
+
     publicDir: resolve(resources, 'public'),
 
     build: {

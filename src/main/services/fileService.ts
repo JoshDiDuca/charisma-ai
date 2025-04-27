@@ -1,7 +1,7 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { dialog } from 'electron'
 import { promises as fs } from 'fs'
-import { uniq } from 'lodash'
 import path from 'path'
+import { logError } from './log/logService'
 
 export let embedFolder: string | null = null
 
@@ -26,11 +26,11 @@ export async function recursiveReadDir(dirPath: string): Promise<string[]> {
 }
 
 export type TreeNode = {
-  id: string; // Use full path as unique ID
-  name: string; // The file or folder name itself
+  id: string;
+  name: string;
   isFolder: boolean;
-  path: string; // Full path
-  children?: TreeNode[]; // Children array, only for folders
+  path: string;
+  children?: TreeNode[];
 };
 
 export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> {
@@ -65,28 +65,24 @@ export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> 
 
   return nodes;
 }
+
 export async function getFileTree(startPath: string) {
   try {
-    // You might want a single root node representing the startPath itself
-    const absoluteStartPath = path.resolve(startPath); // Get absolute path
+    const absoluteStartPath = path.resolve(startPath);
     const rootName = path.basename(absoluteStartPath);
     const children = await readDirectoryNested(absoluteStartPath);
 
     const rootNode: TreeNode = {
       id: absoluteStartPath,
-      name: rootName || 'Root', // Handle edge case for root directory "/"
+      name: rootName || 'Root',
       isFolder: true,
       path: absoluteStartPath,
       children: children
     };
-
-    // Send this rootNode object to your frontend
-    console.log(JSON.stringify(rootNode, null, 2));
     return rootNode;
 
   } catch (error) {
-    console.error("Error reading directory structure:", error);
-    // Handle error appropriately, maybe return an error status/object
-    throw error; // Or re-throw
+    logError("Error reading directory structure:", { error, throwError: true });
+    throw error;
   }
 }

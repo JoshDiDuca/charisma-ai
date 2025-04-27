@@ -11,6 +11,7 @@ import {
   getOrCreateChromaCollection,
 } from '../chroma/chromaService'
 import { OllamaModels } from './ollamaCatalog'
+import { logError, logWarning } from '../log/logService'
 
 const MIN_SCORE = 0.0001 // Adjust this threshold as needed
 
@@ -32,7 +33,8 @@ export const getInstalledEmbeddingModels = async () => {
 
 export const getAllEmbeddingModels = async () => {
   const response = await ollama.list();
-  return OllamaModels.filter(m => m.type === 'Embedding').map(m => ({ ...m, installed: response.models.some(model => model.name === m.name) }));
+  return OllamaModels.filter(m => m.type === 'Embedding')
+    .map(m => ({ ...m, installed: response.models.some(model => model.name === m.name) }));
 }
 
 export async function initOllamaEmbedding(documents: string[]) {
@@ -49,12 +51,11 @@ export async function initOllamaEmbedding(documents: string[]) {
 
     return COLLECTION_NAME
   } catch (e) {
-    console.log(e)
+    logError(`Error intialising ollama`, { category: "Ollama", error: e });
   }
 }
 
 export async function loadOllamaEmbedding(path: string) {
-  console.warn('Loading files ' + path)
   const files = await recursiveReadDir(path)
   const collection = await getOrCreateChromaCollection(COLLECTION_NAME)
   const embeddings = files.map((file) => ({
@@ -65,13 +66,11 @@ export async function loadOllamaEmbedding(path: string) {
       last_modified: statSync(file).mtime.getTime()
     } as Metadata,
   }))
-  console.warn('Loaded files ' + path)
   await collection.upsert({
     ids: embeddings.map(() => uuidv4()),
     documents: embeddings.map((e) => e.content),
     metadatas: embeddings.map(({ metadata }) => metadata),
   })
-  console.warn('Loaded files into DB ' + path)
 }
 
 export async function getOllamaEmbeddingRetrieve(prompt: string) {
@@ -94,18 +93,16 @@ export async function getOllamaEmbeddingRetrieve(prompt: string) {
         content: doc,
         score: results.distances?.[0]?.[index] || 1,
       })) || []
-    console.error(scoredDocs)
 
     const filteredDocs = scoredDocs
       .filter(({ score }) => score >= MIN_SCORE)
       .sort((a, b) => a.score - b.score)
       .map((d) => d.content ?? '' + d.score)
 
-    console.log(filteredDocs)
 
     return filteredDocs
   } catch (error) {
-    console.error(error)
+    logError(`Error in getting ollama embedding`, { error, category: "Ollama" })
     throw error
   }
 }
@@ -115,9 +112,7 @@ export async function sendMessageWithEmbedding(message: string, model: string) {
     if (embedFolder) {
       await loadOllamaEmbedding(embedFolder)
     }
-    console.log('Prompt ' + message)
     const embeddings = await getOllamaEmbeddingRetrieve(message)
-    console.log('Prompt ' + embeddings.length);
     const question = generatePrompt(message, embeddings)
     const response = await sendMessage((embeddings.length === 0) ? message : question, model, [])
     return {
@@ -125,7 +120,7 @@ export async function sendMessageWithEmbedding(message: string, model: string) {
       content: response.content,
     }
   } catch (e) {
-    console.log(e)
+    logError(`Error in getting ollama embedding`, { error: e, category: "Ollama" })
     return { content: 'Error processing request' }
   }
 }

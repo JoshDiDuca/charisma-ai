@@ -3,6 +3,7 @@ import { spawn } from 'child_process'
 import { app } from 'electron'
 import path from 'path'
 import { rootPath } from 'electron-root-path'
+import { logInfo } from '../log/logService'
 
 export default function getPlatform() {
   switch (process.platform) {
@@ -54,21 +55,21 @@ export class ChromaInstanceService {
 
     return new Promise((resolve, reject) => {
       this.process.stdout.on('data', (data: any) => {
-        console.log(`ChromaDB: ${data}`)
         if (data.toString().includes('Server started')) {
+          logInfo('ChromaDB server started', { category: "ChromaDB" })
           this.isRunning = true
           resolve(true)
         }
       })
 
       this.process.stderr.on('data', (data: any) => {
-        console.error(`ChromaDB error: ${data}`)
+        logInfo('ChromaDB server error', { category: "ChromaDB" })
         reject(new Error(data.toString()))
       })
 
       this.process.on('close', (code: any) => {
         this.isRunning = false
-        console.log(`ChromaDB process exited with code ${code}`)
+        logInfo(`ChromaDB process exited with code ${code}`, { category: "ChromaDB" })
       })
     })
   }

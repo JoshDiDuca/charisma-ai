@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { ipcMain, shell } from 'electron';
 import { getEligibleGpu } from 'main/services/gpuService';
+import { logError, logInfo } from 'main/services/log/logService';
 
 // FFmpeg conversion utility
 async function convertWebmToWav(inputPath: string, outputPath: string): Promise<void> {
@@ -22,7 +23,7 @@ async function convertWebmToWav(inputPath: string, outputPath: string): Promise<
       else reject(new Error(`FFmpeg conversion failed with code ${code}`));
     });
 
-    ffmpeg.stderr.on('data', (data) => console.error(data.toString()));
+    ffmpeg.stderr.on('data', (data) => logInfo(data.toString()));
   });
 }
 
@@ -41,8 +42,8 @@ export async function transcribeAudio(audioData: string) {
 
     // Whisper transcription
     const transcript = await nodewhisper(wavPath, {
-      modelName: 'base', //Downloaded models name
-      autoDownloadModelName: 'base', // (optional) autodownload a model if model is not present
+      modelName: 'base',
+      autoDownloadModelName: 'base',
       withCuda: !!(await getEligibleGpu())
     });
 
@@ -58,7 +59,6 @@ export async function transcribeAudio(audioData: string) {
       processed: processed.response
     };
   } finally {
-    // Cleanup
     await fs.rm(tempDir, { recursive: true, force: true });
   }
 }
@@ -70,7 +70,7 @@ export const registerVoiceHandlers = () => {
       const result = await transcribeAudio(audioData);
       return { success: true, ...result };
     } catch (error) {
-      console.error('Transcription failed:', error);
+      logError('Transcription failed', { error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

@@ -5,6 +5,7 @@ import path from 'path'
 import { rootPath } from 'electron-root-path'
 import getPlatform from '../chroma/chromaInstanceService'
 import { getEligibleGpu } from '../gpuService'
+import { logError, logInfo } from '../log/logService'
 
 export class OllamaInstanceService {
   private process: any
@@ -12,10 +13,8 @@ export class OllamaInstanceService {
 
   getBinaryPath() {
     if (app.isPackaged) {
-      console.log('OllamaInstancePath', path.join(process.resourcesPath, 'bin', 'ollama'));
       return path.join(process.resourcesPath, 'bin', 'ollama')
     } else {
-      console.log('OllamaInstancePath', app.getAppPath());
       return path.join(app.getAppPath(), 'resources', getPlatform(), 'bin', 'ollama')
     }
   }
@@ -38,15 +37,11 @@ export class OllamaInstanceService {
       })
     })
     this.process.stdout.on('data', (data: any) => {
-      console.log(`Ollama stdout: ${data}`)
-    })
-
-    this.process.stderr.on('data', (data: any) => {
-      console.log(`Ollama stderr: ${data}`)
+      logInfo(`stdout: ${data}`, { category: "Ollama" })
     })
 
     this.process.on('error', (err: any) => {
-      console.error('Failed to start Ollama process:', err)
+      logError('Failed to start Ollama process',{ error: err, category : "Ollama"})
       this.isRunning = false
       throw err
     })

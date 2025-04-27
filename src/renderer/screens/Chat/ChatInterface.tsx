@@ -12,6 +12,7 @@ import {
 import { ModelManager } from 'renderer/components';
 import Markdown from 'react-markdown';
 import { inc } from 'semver';
+import { IPC } from 'shared/constants';
 
 type Message = {
   id: number;
@@ -212,9 +213,9 @@ export const ChatInterface = ({
       });
     };
 
-    App.on('stream-update', streamHandler);
+    App.on(IPC.LLM.STREAM_UPDATE, streamHandler);
     return () => {
-      App.removeAllListeners('stream-update');
+      App.removeAllListeners(IPC.LLM.STREAM_UPDATE);
     };
   }, []);
 

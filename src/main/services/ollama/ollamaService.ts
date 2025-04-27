@@ -4,6 +4,8 @@ import { Ollama, Tool } from 'ollama';
 import { OllamaModels } from './ollamaCatalog';
 import { OllamaModel } from 'shared/types/OllamaModel';
 import { ipcMain } from 'electron';
+import { IPC } from 'shared/constants';
+import { logError, logInfo, logWarning } from '../log/logService';
 
 const modelPollIntervals: Map<string, NodeJS.Timeout> = new Map();
 const currentlyInstallingModels: Set<string> = new Set();
@@ -12,15 +14,15 @@ export const ollamaURL = process.env.OLLAMA_API_BASE || 'http://localhost:11434'
 export const ollama = new Ollama({ host: ollamaURL });
 
 const sendDownloadProgress = async (modelName: string, status: string, error?: any) => {
-  console.log(`[Download Progress] Model: ${modelName}, Status: ${status}`, error || '');
-  mainWindow?.webContents.send('update-all-models', await getAllModels());
+  logInfo(`[Download Progress] Model: ${modelName}, Status: ${status}`, { error, category: "Ollama" });
+  mainWindow?.webContents.send(IPC.LLM.UPDATE_ALL_MODELS, await getAllModels());
 };
 
 const stopPolling = (modelName: string) => {
   if (modelPollIntervals.has(modelName)) {
     clearInterval(modelPollIntervals.get(modelName)!);
     modelPollIntervals.delete(modelName);
-    console.log(`[Polling] Stopped polling for ${modelName}`);
+    logInfo(`[Polling] Stopped polling for ${modelName}`, { category: "Ollama" });
   }
   currentlyInstallingModels.delete(modelName);
 };
@@ -30,7 +32,7 @@ export const getOllamaStatus = async (): Promise<boolean> => {
     const appStatus = await axios.get(ollamaURL);
     return appStatus.data === 'Ollama is running';
   } catch (err) {
-    console.warn('Ollama status check failed:', err);
+    logWarning(`Ollama status check failed`, { error: err, category: "Ollama" });
     return false;
   }
 };
@@ -44,7 +46,7 @@ export const getInstalledModels = async (): Promise<string[]> => {
                 OllamaModels.some(catalogModel => modelName.startsWith(catalogModel.name))
             );
     } catch (error) {
-        console.error("Failed to get installed models:", error);
+        logError(`Failed to get installed models`, { error, category: "Ollama" });
         return [];
     }
 };
@@ -65,7 +67,7 @@ export const getAllModels = async () => {
       return ({ ...m, installed, installing: finalInstalling });
     });
   } catch (error) {
-    console.error("Failed to get all models state:", error);
+    logError(`Failed to get all models state`, { error, category: "Ollama" });
     return OllamaModels.filter(m => m.type === 'LLM').map(m => ({ ...m, installed: false, installing: false }));
   }
 };
@@ -74,19 +76,16 @@ export const downloadModel = async (modelName: string) => {
   const installedList = await getInstalledModels();
 
   if (installedList.some(installedName => installedName.startsWith(modelName))) {
-    console.log(`Model ${modelName} is already installed.`);
     currentlyInstallingModels.delete(modelName);
     stopPolling(modelName);
     return { status: 'already_installed' };
   }
 
   if (currentlyInstallingModels.has(modelName) || modelPollIntervals.has(modelName)) {
-    console.log(`Model ${modelName} download is already in progress.`);
     await sendDownloadProgress(modelName, 'downloading');
     return { status: 'download_in_progress' };
   }
 
-  console.log(`Starting download process for ${modelName}...`);
   currentlyInstallingModels.add(modelName);
   await sendDownloadProgress(modelName, 'started');
 
@@ -96,25 +95,21 @@ export const downloadModel = async (modelName: string) => {
   });
 
   const intervalId = setInterval(async () => {
-    console.log(`[Polling] Checking status for ${modelName}...`);
     try {
       const currentInstalled = await getInstalledModels();
       if (currentInstalled.some(installedName => installedName.startsWith(modelName))) {
-        console.log(`[Polling] Model ${modelName} confirmed installed.`);
         stopPolling(modelName);
         await sendDownloadProgress(modelName, 'complete');
       } else {
         await sendDownloadProgress(modelName, 'downloading');
       }
     } catch (error) {
-      console.error(`[Polling] Error checking status for ${modelName}:`, error);
+      logError(`Error checking model status`, { error, category: "Ollama" })
       await sendDownloadProgress(modelName, 'checking_error', error);
     }
   }, 5000);
 
   modelPollIntervals.set(modelName, intervalId);
-  console.log(`[Polling] Started polling for ${modelName} with interval ID ${intervalId}`);
-
   return { status: 'download_started' };
 };
 
@@ -139,7 +134,7 @@ export const sendMessage = async (
     let fullResponse = ''
     for await (const chunk of responseStream) {
       fullResponse += chunk.message.content
-      mainWindow?.webContents.send('stream-update', chunk.message.content)
+      mainWindow?.webContents.send(IPC.LLM.STREAM_UPDATE, chunk.message.content)
     }
 
     return {
@@ -147,7 +142,7 @@ export const sendMessage = async (
       content: fullResponse,
     }
   } catch (error) {
-    console.error('Chat error:', error)
+    logError(`Chat error:`, { error, category: "Ollama" })
     return {
       status: 'error',
       error: error,

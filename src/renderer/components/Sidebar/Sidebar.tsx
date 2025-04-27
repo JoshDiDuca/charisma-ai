@@ -2,6 +2,7 @@ import { Badge, Button, Card, Select, SelectItem } from '@heroui/react'
 import { useEffect, useState } from 'react'
 import { Tree, TreeNode } from './FileTree'
 import { OllamaModel } from 'shared/types/OllamaModel';
+import { IPC } from 'shared/constants';
 
 const { App } = window
 
@@ -59,11 +60,11 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:S
     }
   }
 
-  App.on("update-all-models", (response: OllamaModel[]) => {
+  App.on(IPC.LLM.UPDATE_ALL_MODELS, (response: OllamaModel[]) => {
     setModels(response)
   })
 
-  App.on("update-all-embedding-models", (response: OllamaModel[]) => {
+  App.on(IPC.LLM.UPDATE_ALL_EMBEDDING_MODELS, (response: OllamaModel[]) => {
     setEmbeddingModels(response)
   })
 

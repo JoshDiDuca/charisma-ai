@@ -139,10 +139,7 @@ export const sendMessage = async (
     let fullResponse = ''
     for await (const chunk of responseStream) {
       fullResponse += chunk.message.content
-      mainWindow?.webContents.send('stream-update', {
-        partial: chunk.message.content,
-        complete: false,
-      })
+      mainWindow?.webContents.send('stream-update', chunk.message.content)
     }
 
     return {

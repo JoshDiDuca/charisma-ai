@@ -10,11 +10,13 @@ import {
 } from '@heroui/react';
 import { ModelManager } from 'renderer/components';
 import Markdown from 'react-markdown';
+import { inc } from 'semver';
 
 type Message = {
   id: number;
   text: string;
   sender: 'user' | 'bot';
+  incomplete: boolean;
 };
 
 const { App } = window;
@@ -49,6 +51,7 @@ export const ChatInterface = ({
       id: Date.now(),
       text: inputValue,
       sender: 'user' as const,
+      incomplete: false
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -65,11 +68,12 @@ export const ChatInterface = ({
 
       // Add final message
       setMessages((prev) => [
-        ...prev,
+        ...prev.filter(e => !e.incomplete),
         {
           id: Date.now(),
           text: response.content,
           sender: 'bot',
+          incomplete: false
         },
       ]);
     } catch (error) {
@@ -80,6 +84,7 @@ export const ChatInterface = ({
           id: Date.now(),
           text: `Error: ${error}`,
           sender: 'bot',
+          incomplete: false
         },
       ]);
     } finally {
@@ -180,29 +185,25 @@ export const ChatInterface = ({
   // Stream handler effect
   useEffect(() => {
     const streamHandler = (
-      _: any,
-      {
-        partial,
-        complete,
-      }: {
-        partial: string;
-        complete: boolean;
-      }
-    ) => {
+      partial: string
+      ) => {
+
       setMessages((prev) => {
         const last = prev[prev.length - 1];
-        if (complete || last?.sender === 'user') {
+        if (!last?.incomplete) {
+          console.log(partial ?? "")
           return [
             ...prev,
             {
               id: Date.now(),
-              text: partial,
+              text: partial ?? "",
               sender: 'bot',
+              incomplete: true
             },
           ];
         }
         return prev.map((msg, i) =>
-          i === prev.length - 1 ? { ...msg, text: msg.text + partial } : msg
+          i === prev.length - 1 ? { ...msg, text: (msg.text ?? "") + (partial ?? "") } : msg
         );
       });
     };

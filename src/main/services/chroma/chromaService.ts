@@ -50,6 +50,18 @@ export async function createChromaCollection(collectionName: string) {
     throw error
   }
 }
+export async function getChromaOnlineStatus(): Promise<boolean> {
+  try {
+    // The heartbeat method returns a nanosecond timestamp if successful[4].
+    // We just need to know if the call succeeds without throwing an error.
+    await clientChromaDB.heartbeat()
+    return true // If the call succeeds, the server is running and reachable.
+  } catch (error) {
+    // If the call fails (e.g., connection refused, timeout), the server is likely not running or unreachable.
+    console.error('ChromaDB heartbeat failed:', error)
+    return false
+  }
+}
 
 export async function resetChromaCollection(collectionName: string) {
   try {

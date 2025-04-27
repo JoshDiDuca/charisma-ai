@@ -70,7 +70,7 @@ export const registerVoiceHandlers = () => {
       const result = await transcribeAudio(audioData);
       return { success: true, ...result };
     } catch (error) {
-      logError('Transcription failed', { error });
+      logError('Transcription failed.', { error, showUI: true });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

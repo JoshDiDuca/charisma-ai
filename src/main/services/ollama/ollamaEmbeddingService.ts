@@ -8,6 +8,7 @@ import {
   createChromaCollection,
   deleteAllChromaCollections,
   getChromaCollection,
+  getChromaOnlineStatus,
   getOrCreateChromaCollection,
 } from '../chroma/chromaService'
 import { OllamaModels } from './ollamaCatalog'
@@ -51,7 +52,7 @@ export async function initOllamaEmbedding(documents: string[]) {
 
     return COLLECTION_NAME
   } catch (e) {
-    logError(`Error intialising ollama`, { category: "Ollama", error: e });
+    logError(`Error intialising ollama embedding with chromaDB`, { category: "Ollama", error: e, showUI: true });
   }
 }
 
@@ -80,29 +81,32 @@ export async function getOllamaEmbeddingRetrieve(prompt: string) {
       prompt,
     })
 
-    const collection = await getChromaCollection(COLLECTION_NAME)
+    if(await getChromaOnlineStatus()) {
+      const collection = await getChromaCollection(COLLECTION_NAME)
 
-    const results = await collection.query({
-      queryEmbeddings: [response.embedding],
-      nResults: 5,
-      include: [IncludeEnum.Distances, IncludeEnum.Documents],
-    })
+      const results = await collection.query({
+        queryEmbeddings: [response.embedding],
+        nResults: 5,
+        include: [IncludeEnum.Distances, IncludeEnum.Documents],
+      })
 
-    const scoredDocs =
-      results.documents?.[0]?.map((doc, index) => ({
-        content: doc,
-        score: results.distances?.[0]?.[index] || 1,
-      })) || []
+      const scoredDocs =
+        results.documents?.[0]?.map((doc, index) => ({
+          content: doc,
+          score: results.distances?.[0]?.[index] || 1,
+        })) || []
 
-    const filteredDocs = scoredDocs
-      .filter(({ score }) => score >= MIN_SCORE)
-      .sort((a, b) => a.score - b.score)
-      .map((d) => d.content ?? '' + d.score)
+      const filteredDocs = scoredDocs
+        .filter(({ score }) => score >= MIN_SCORE)
+        .sort((a, b) => a.score - b.score)
+        .map((d) => d.content ?? '' + d.score)
 
-
-    return filteredDocs
+      return filteredDocs;
+    } else {
+      return [];
+    }
   } catch (error) {
-    logError(`Error in getting ollama embedding`, { error, category: "Ollama" })
+    logError(`Error in getting ollama embedding`, { error, category: "Ollama", showUI: true })
     throw error
   }
 }
@@ -120,7 +124,7 @@ export async function sendMessageWithEmbedding(message: string, model: string) {
       content: response.content,
     }
   } catch (e) {
-    logError(`Error in getting ollama embedding`, { error: e, category: "Ollama" })
+    logError(`Sending message with embedding`, { error: e, category: "Ollama", showUI: true })
     return { content: 'Error processing request' }
   }
 }

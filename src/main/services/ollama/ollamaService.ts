@@ -46,7 +46,7 @@ export const getInstalledModels = async (): Promise<string[]> => {
                 OllamaModels.some(catalogModel => modelName.startsWith(catalogModel.name))
             );
     } catch (error) {
-        logError(`Failed to get installed models`, { error, category: "Ollama" });
+        logError(`Failed to get installed models`, { error, category: "Ollama", showUI: true });
         return [];
     }
 };
@@ -67,7 +67,7 @@ export const getAllModels = async () => {
       return ({ ...m, installed, installing: finalInstalling });
     });
   } catch (error) {
-    logError(`Failed to get all models state`, { error, category: "Ollama" });
+    logError(`Failed to get all models state`, { error, category: "Ollama", showUI: true });
     return OllamaModels.filter(m => m.type === 'LLM').map(m => ({ ...m, installed: false, installing: false }));
   }
 };
@@ -104,7 +104,7 @@ export const downloadModel = async (modelName: string) => {
         await sendDownloadProgress(modelName, 'downloading');
       }
     } catch (error) {
-      logError(`Error checking model status`, { error, category: "Ollama" })
+      logError(`Error checking model status`, { error, category: "Ollama", showUI: true })
       await sendDownloadProgress(modelName, 'checking_error', error);
     }
   }, 5000);
@@ -142,7 +142,7 @@ export const sendMessage = async (
       content: fullResponse,
     }
   } catch (error) {
-    logError(`Chat error:`, { error, category: "Ollama" })
+    logError(`Chat error`, { error, category: "Ollama", showUI: true })
     return {
       status: 'error',
       error: error,

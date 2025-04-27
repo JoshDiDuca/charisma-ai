@@ -14,6 +14,7 @@ import {
   sendMessage,
 } from 'main/services/ollama/ollamaService'
 import { IpcHandle } from '../IpcHandle'
+import { getCurrentStatus } from 'main/services/statusService'
 
 export const MODEL_DOCUMENTS = []
 
@@ -38,6 +39,11 @@ export class LlmHandlers {
   @IpcHandle('get-llm-status')
   async getOllamaStatus() {
     return getOllamaStatus()
+  }
+
+  @IpcHandle('get-app-status')
+  async getStatus() {
+    return getCurrentStatus()
   }
 
   @IpcHandle('download-model')

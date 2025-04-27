@@ -1,11 +1,12 @@
 import { mainWindow } from "main/windows/main";
 import { IPC } from "shared/constants";
+import { Module } from "shared/constants/modules";
 
 export type LogArgs = {
   error?: Error | any;
   showUI?: boolean;
   throwError?: boolean;
-  category?: "ChromaDB" | "Ollama" | "GPU" | "General";
+  category?: keyof typeof Module;
 };
 
 type LogLevel = 'error' | 'info' | 'warn';
@@ -13,7 +14,7 @@ type LogLevel = 'error' | 'info' | 'warn';
 const logMessage = (
   level: LogLevel,
   message: string,
-  { error, showUI, category = 'General', throwError }: LogArgs = {}
+  { error, showUI, category, throwError }: LogArgs = {}
 ) => {
   const logPrefix = category ? `[${category}] ${message}` : message;
   const consoleMethod = console[level] || console.log;

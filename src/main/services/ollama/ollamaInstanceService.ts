@@ -41,7 +41,7 @@ export class OllamaInstanceService {
     })
 
     this.process.on('error', (err: any) => {
-      logError('Failed to start Ollama process',{ error: err, category : "Ollama"})
+      logError('Error in ollama service',{ error: err, category : "Ollama"})
       this.isRunning = false
       throw err
     })

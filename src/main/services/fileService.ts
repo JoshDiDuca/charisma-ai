@@ -82,7 +82,7 @@ export async function getFileTree(startPath: string) {
     return rootNode;
 
   } catch (error) {
-    logError("Error reading directory structure:", { error, throwError: true });
+    logError("Error reading directory.", { error, throwError: true, showUI: true });
     throw error;
   }
 }

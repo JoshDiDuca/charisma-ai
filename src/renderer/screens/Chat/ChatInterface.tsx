@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { FaMicrophone, FaPaperclip, FaStop } from 'react-icons/fa'
+import { useEffect, useState, useRef } from 'react';
+import { FaMicrophone, FaPaperclip, FaStop } from 'react-icons/fa';
 import {
   Button,
   Input,
@@ -7,17 +7,17 @@ import {
   CardBody,
   CardHeader,
   Spacer,
-} from '@heroui/react'
-import { ModelManager } from 'renderer/components'
-import Markdown from 'react-markdown'
+} from '@heroui/react';
+import { ModelManager } from 'renderer/components';
+import Markdown from 'react-markdown';
 
 type Message = {
-  id: number
-  text: string
-  sender: 'user' | 'bot'
-}
+  id: number;
+  text: string;
+  sender: 'user' | 'bot';
+};
 
-const { App } = window
+const { App } = window;
 
 export interface ChatInterfaceProps {
   model: string;
@@ -25,23 +25,35 @@ export interface ChatInterfaceProps {
   setModel: React.Dispatch<React.SetStateAction<string>>;
   setEmbeddingModel: React.Dispatch<React.SetStateAction<string>>;
 }
-export const ChatInterface = ({ model, embeddingModel, setModel, setEmbeddingModel}: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputValue, setInputValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+
+export const ChatInterface = ({
+  model,
+  embeddingModel,
+  setModel,
+  setEmbeddingModel,
+}: ChatInterfaceProps) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+
+  // Audio recording references
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return
+    if (!inputValue.trim() || isLoading) return;
 
     const userMessage = {
       id: Date.now(),
       text: inputValue,
       sender: 'user' as const,
-    }
+    };
 
-    setMessages((prev) => [...prev, userMessage])
-    setInputValue('')
-    setIsLoading(true)
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue('');
+    setIsLoading(true);
 
     try {
       // Send message and receive stream
@@ -49,7 +61,7 @@ export const ChatInterface = ({ model, embeddingModel, setModel, setEmbeddingMod
         'send-message',
         inputValue,
         model
-      )
+      );
 
       // Add final message
       setMessages((prev) => [
@@ -59,9 +71,9 @@ export const ChatInterface = ({ model, embeddingModel, setModel, setEmbeddingMod
           text: response.content,
           sender: 'bot',
         },
-      ])
+      ]);
     } catch (error) {
-      console.error('Chat error:', error)
+      console.error('Chat error:', error);
       setMessages((prev) => [
         ...prev,
         {
@@ -69,13 +81,103 @@ export const ChatInterface = ({ model, embeddingModel, setModel, setEmbeddingMod
           text: `Error: ${error}`,
           sender: 'bot',
         },
-      ])
+      ]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  // Stream handler
+  // Handle microphone button click
+  const handleMicClick = async () => {
+    if (isRecording) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+
+      // We'll handle the rest in the onstop event handler
+    } else {
+      try {
+        // Notify main process that we're starting recording
+        await App.startRecording();
+
+        // Request microphone access
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+
+        streamRef.current = stream;
+
+        // Create MediaRecorder instance
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        // Handle data available event
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        // Handle recording stop event
+        mediaRecorder.onstop = async () => {
+          try {
+            // Create audio blob from chunks
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+
+            // Convert blob to base64
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+
+            reader.onloadend = async () => {
+              const base64Audio = reader.result?.toString().split(',')[1];
+
+              if (base64Audio) {
+                // Notify main process that recording stopped
+                await App.stopRecording();
+
+                setIsLoading(true);
+
+                // Send audio for transcription
+                const { text } = await App.transcribeAudio(base64Audio);
+
+                // Set the transcribed text as input
+                setInputValue(text);
+
+                // Optionally auto-send the message
+                // await handleSendMessage();
+              }
+            };
+
+            // Clean up media stream
+            if (streamRef.current) {
+              streamRef.current.getTracks().forEach(track => track.stop());
+              streamRef.current = null;
+            }
+          } catch (error) {
+            console.error('Error processing recording:', error);
+          } finally {
+            setIsRecording(false);
+            setIsLoading(false);
+          }
+        };
+
+        // Start recording
+        mediaRecorder.start();
+        setIsRecording(true);
+      } catch (error) {
+        console.error('Error starting recording:', error);
+        setIsRecording(false);
+      }
+    }
+  };
+
+  // Stream handler effect
   useEffect(() => {
     const streamHandler = (
       _: any,
@@ -83,12 +185,12 @@ export const ChatInterface = ({ model, embeddingModel, setModel, setEmbeddingMod
         partial,
         complete,
       }: {
-        partial: string
-        complete: boolean
+        partial: string;
+        complete: boolean;
       }
     ) => {
       setMessages((prev) => {
-        const last = prev[prev.length - 1]
+        const last = prev[prev.length - 1];
         if (complete || last?.sender === 'user') {
           return [
             ...prev,
@@ -97,19 +199,32 @@ export const ChatInterface = ({ model, embeddingModel, setModel, setEmbeddingMod
               text: partial,
               sender: 'bot',
             },
-          ]
+          ];
         }
         return prev.map((msg, i) =>
           i === prev.length - 1 ? { ...msg, text: msg.text + partial } : msg
-        )
-      })
-    }
+        );
+      });
+    };
 
-    App.on('stream-update', streamHandler)
+    App.on('stream-update', streamHandler);
     return () => {
-      App.removeAllListeners('stream-update')
-    }
-  }, [])
+      App.removeAllListeners('stream-update');
+    };
+  }, []);
+
+  // Clean up recording on component unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   return (
     <Card
@@ -147,18 +262,30 @@ export const ChatInterface = ({ model, embeddingModel, setModel, setEmbeddingMod
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
-              handleSendMessage()
+              handleSendMessage();
             }
           }}
           variant="bordered"
+          disabled={isRecording}
         />
-        <Button isIconOnly variant="bordered" aria-label="Mic">
-          <FaMicrophone />
+        <Button
+          isIconOnly
+          variant="bordered"
+          aria-label={isRecording ? "Stop recording" : "Record audio"}
+          color={isRecording ? "danger" : "default"}
+          onClick={handleMicClick}
+          disabled={isLoading}
+        >
+          {isRecording ? <FaStop /> : <FaMicrophone />}
         </Button>
-        <Button color="primary" onClick={handleSendMessage}>
+        <Button
+          color="primary"
+          onClick={handleSendMessage}
+          disabled={isRecording || (!inputValue?.trim() && !isLoading)}
+        >
           Send
         </Button>
       </div>
     </Card>
-  )
-}
+  );
+};

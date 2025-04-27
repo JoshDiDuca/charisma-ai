@@ -20,6 +20,11 @@ const API = {
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel)
   },
+
+  // Audio recording methods
+  startRecording: () => ipcRenderer.invoke('start-recording'),
+  stopRecording: () => ipcRenderer.invoke('stop-recording'),
+  transcribeAudio: (audioData: string) => ipcRenderer.invoke('transcribe-audio', audioData),
 }
 
 contextBridge.exposeInMainWorld('App', API)

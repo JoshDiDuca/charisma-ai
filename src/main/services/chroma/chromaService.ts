@@ -64,12 +64,9 @@ export const getChromaDocuments = async (collectionName: string, embedding: numb
     const filteredDocs = scoredDocs
       .filter(({ score }) => score >= MIN_SCORE)
       .sort((a, b) => a.score - b.score)
-      .map((d) => `
-        FILE INFO: ${JSON.stringify(d.metadata)}
-        FILE:
-        ${d.content}
-      `)
+      .map((d) => d.content)
 
+      console.log(filteredDocs);
     logInfo(`ChromaDB found ${filteredDocs.length} documents to embed`, { category: "ChromaDB" })
     return filteredDocs;
   } else {

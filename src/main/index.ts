@@ -10,6 +10,7 @@ import { OllamaInstanceService } from './services/ollama/ollamaInstanceService'
 import { MainWindow } from './windows/main'
 import { initializeHandlers } from './handlers'
 import { initOllamaEmbedding } from './services/ollama/ollamaEmbeddingService'
+import { logError } from './services/log/logService'
 
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
@@ -31,6 +32,15 @@ makeAppWithSingleInstanceLock(async () => {
     await ollamaService.stop()
     app.exit()
   })
+
+  // Catch process-level errors
+  process.on('uncaughtException', error => {
+    logError('Uncaught Exception:', { error });
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    logError('Unhandled Rejection at:', { error: { promise, reason } });
+  });
 
   await makeAppSetup(MainWindow)
 })

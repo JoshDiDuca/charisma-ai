@@ -1,9 +1,11 @@
 import { BrowserWindow, session } from 'electron'
-import { join } from 'node:path'
+import path, { join } from 'node:path'
+import log from 'electron-log';
 
 import { createWindow } from 'lib/electron-app/factories/windows/create'
 import { ENVIRONMENT } from 'shared/constants'
 import { displayName } from '~/package.json'
+import { logError } from 'main/services/log/logService';
 
 export let mainWindow: Electron.BrowserWindow | null = null
 

@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { mainWindow } from "main/windows/main";
 import { IPC } from "shared/constants";
 import { Module } from "shared/constants/modules";
@@ -20,6 +21,12 @@ const logMessage = (
   const consoleMethod = console[level] || console.log;
 
   consoleMethod(logPrefix);
+
+  if (error) {
+    log[level](logPrefix, error);
+  } else {
+    log[level](logPrefix);
+  }
 
   if (error) {
     consoleMethod(JSON.stringify(error, Object.getOwnPropertyNames(error)));

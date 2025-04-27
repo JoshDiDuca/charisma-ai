@@ -3,6 +3,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { app } from 'electron';
 import path from 'path';
 import fs from 'fs';
+import { logError, logInfo } from '../log/logService';
 
 export class ChromaInstanceService {
     private process: ChildProcess | null = null;
@@ -57,9 +58,10 @@ export class ChromaInstanceService {
                  // Consider resolving promise here
              }
         });
-        this.process.stderr?.on('data', (data) => console.error(`ChromaDB ERR: ${data}`));
-        this.process.on('error', (err) => { console.error('ChromaDB spawn error:', err); this.isRunning = false; });
-        this.process.on('close', (code) => { console.log(`ChromaDB exited: ${code}`); this.isRunning = false; });
+
+        this.process.stderr?.on('data', (data) => logError(`ChromaDB ERROR`,{ error:data }));
+        this.process.on('error', (error) => { logError('ChromaDB spawn error:',{  error }); this.isRunning = false; });
+        this.process.on('close', (code) => { logInfo(`ChromaDB exited: ${code}`); this.isRunning = false; });
 
         // Simplified readiness - replace with a proper check
         // Wait for the stdout message or use a timeout/ping

@@ -7,6 +7,7 @@ import {
   CardBody,
   CardHeader,
   Spacer,
+  Spinner,
 } from '@heroui/react';
 import { ModelManager } from 'renderer/components';
 import Markdown from 'react-markdown';
@@ -37,6 +38,7 @@ export const ChatInterface = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFirstResponse, setHasFirstResponse] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
 
   // Audio recording references
@@ -57,6 +59,7 @@ export const ChatInterface = ({
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
+    setHasFirstResponse(false);
 
     try {
       // Send message and receive stream
@@ -89,6 +92,7 @@ export const ChatInterface = ({
       ]);
     } finally {
       setIsLoading(false);
+      setHasFirstResponse(true);
     }
   };
 
@@ -169,6 +173,7 @@ export const ChatInterface = ({
           } finally {
             setIsRecording(false);
             setIsLoading(false);
+            setHasFirstResponse(true);
           }
         };
 
@@ -182,16 +187,15 @@ export const ChatInterface = ({
     }
   };
 
-  // Stream handler effect
   useEffect(() => {
     const streamHandler = (
       partial: string
       ) => {
+      setHasFirstResponse(true);
 
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         if (!last?.incomplete) {
-          console.log(partial ?? "")
           return [
             ...prev,
             {
@@ -248,6 +252,7 @@ export const ChatInterface = ({
             <Markdown>{message.text}</Markdown>
           </div>
         ))}
+        {!hasFirstResponse && (<Spinner />)}
       </CardBody>
       <div
         className="flex items-center gap-2 mb-2"

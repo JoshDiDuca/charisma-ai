@@ -8,13 +8,12 @@ import {
   createChromaCollection,
   deleteAllChromaCollections,
   getChromaCollection,
+  getChromaDocuments,
   getChromaOnlineStatus,
   getOrCreateChromaCollection,
 } from '../chroma/chromaService'
 import { OllamaModels } from './ollamaCatalog'
-import { logError, logWarning } from '../log/logService'
-
-const MIN_SCORE = 0.0001 // Adjust this threshold as needed
+import { logError, logInfo, logWarning } from '../log/logService'
 
 const OLLAMA_MODEL_EMBEDDING =
   process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large'
@@ -81,30 +80,7 @@ export async function getOllamaEmbeddingRetrieve(prompt: string) {
       prompt,
     })
 
-    if(await getChromaOnlineStatus()) {
-      const collection = await getChromaCollection(COLLECTION_NAME)
-
-      const results = await collection.query({
-        queryEmbeddings: [response.embedding],
-        nResults: 5,
-        include: [IncludeEnum.Distances, IncludeEnum.Documents],
-      })
-
-      const scoredDocs =
-        results.documents?.[0]?.map((doc, index) => ({
-          content: doc,
-          score: results.distances?.[0]?.[index] || 1,
-        })) || []
-
-      const filteredDocs = scoredDocs
-        .filter(({ score }) => score >= MIN_SCORE)
-        .sort((a, b) => a.score - b.score)
-        .map((d) => d.content ?? '' + d.score)
-
-      return filteredDocs;
-    } else {
-      return [];
-    }
+    return getChromaDocuments(COLLECTION_NAME, response.embedding);
   } catch (error) {
     logError(`Error in getting ollama embedding`, { error, category: "Ollama", showUI: true })
     throw error

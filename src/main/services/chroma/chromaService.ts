@@ -1,4 +1,7 @@
-import { ChromaClient, OllamaEmbeddingFunction } from 'chromadb'
+import { ChromaClient, IncludeEnum, OllamaEmbeddingFunction } from 'chromadb'
+import { logInfo, logWarning } from '../log/logService'
+
+const MIN_SCORE = 0.0001 // Adjust this threshold as needed
 
 const clientChromaDB = new ChromaClient({
   path: process.env.CHROMADB_PATH ?? 'http://localhost:8000',
@@ -37,6 +40,41 @@ export async function getChromaCollection(collectionName: string) {
     })
   } catch (error) {
     throw error
+  }
+}
+
+export const getChromaDocuments = async (collectionName: string, embedding: number[]) => {
+
+  if(await getChromaOnlineStatus()) {
+    const collection = await getChromaCollection(collectionName)
+
+    const results = await collection.query({
+      queryEmbeddings: [embedding],
+      nResults: 5,
+      include: [IncludeEnum.Distances, IncludeEnum.Documents, IncludeEnum.Metadatas],
+    })
+
+    const scoredDocs =
+      results.documents?.[0]?.map((doc, index) => ({
+        content: doc,
+        score: results.distances?.[0]?.[index] || 1,
+        metadata: results.metadatas?.[0]?.[index] || 1,
+      })) || []
+
+    const filteredDocs = scoredDocs
+      .filter(({ score }) => score >= MIN_SCORE)
+      .sort((a, b) => a.score - b.score)
+      .map((d) => `
+        FILE INFO: ${JSON.stringify(d.metadata)}
+        FILE:
+        ${d.content}
+      `)
+
+    logInfo(`ChromaDB found ${filteredDocs.length} documents to embed`, { category: "ChromaDB" })
+    return filteredDocs;
+  } else {
+    logWarning(`ChromaDB is not running - not embedding files`, { category: "ChromaDB" })
+    return [];
   }
 }
 

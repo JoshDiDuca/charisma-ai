@@ -1,88 +1,101 @@
-// services/chromadb.ts
-import { spawn } from 'child_process'
-import { app } from 'electron'
-import path from 'path'
-import { rootPath } from 'electron-root-path'
-import { logInfo } from '../log/logService'
-
-export default function getPlatform() {
-  switch (process.platform) {
-    case 'aix':
-    case 'freebsd':
-    case 'linux':
-    case 'openbsd':
-    case 'android':
-      return 'linux'
-    case 'darwin':
-    case 'sunos':
-      return 'mac'
-    case 'win32':
-      return 'win'
-    default:
-      return 'unknown'
-  }
-}
+// electron/services/chromadb.ts (Example)
+import { spawn, ChildProcess } from 'child_process';
+import { app } from 'electron';
+import path from 'path';
+import fs from 'fs';
 
 export class ChromaInstanceService {
-  private process: any
-  private isRunning: boolean = false
-  private port: number = 8000
+    private process: ChildProcess | null = null;
+    private isRunning: boolean = false;
+    private port: number = 8000; // Match default in chroma_server.py
 
-  getBinaryPath() {
-    // For packaged app
-    if (app.isPackaged) {
-      return path.join(process.resourcesPath, 'bin', 'chromadb')
-    }
-    // For development
-    else {
-      return path.join(rootPath, 'resources', getPlatform(), 'bin', 'chromadb')
-    }
-  }
+    getBinaryPath(): string | null {
+        const exeName = process.platform === 'win32' ? 'chroma_server.exe' : 'chroma_server';
 
-  async start() {
-    if (this.isRunning) return
+        const binaryPath = app.isPackaged
+            ? path.join(process.resourcesPath, 'bin', 'chroma', exeName) // Adjusted 'to' path
+            : path.join(app.getAppPath(), 'python-server', 'dist', exeName);
 
-    const binaryPath = this.getBinaryPath()
-    const execName = process.platform === 'win32' ? 'chroma.exe' : 'chroma'
-    const fullPath = path.join(binaryPath, execName)
-
-    // Run chroma as a server
-    this.process = spawn(fullPath, [
-      'run',
-      '--path',
-      path.join(binaryPath, 'db'),
-    ])
-
-    return new Promise((resolve, reject) => {
-      this.process.stdout.on('data', (data: any) => {
-        if (data.toString().includes('Server started')) {
-          logInfo('ChromaDB server started', { category: "ChromaDB" })
-          this.isRunning = true
-          resolve(true)
+        if (fs.existsSync(binaryPath)) {
+            return binaryPath;
         }
-      })
-
-      this.process.stderr.on('data', (data: any) => {
-        logInfo('ChromaDB server error', { category: "ChromaDB" })
-        reject(new Error(data.toString()))
-      })
-
-      this.process.on('close', (code: any) => {
-        this.isRunning = false
-        logInfo(`ChromaDB process exited with code ${code}`, { category: "ChromaDB" })
-      })
-    })
-  }
-
-  async stop() {
-    if (!this.isRunning) return
-    this.process.kill()
-    this.isRunning = false
-  }
-
-  getClientConfig() {
-    return {
-      path: `http://localhost:${this.port}`,
+        console.error(`ChromaDB binary not found at: ${binaryPath}`);
+        return null;
     }
-  }
+
+    // Get a writable path for ChromaDB data
+    getDataPath(): string {
+      return path.join(app.getPath('userData'), 'chroma_data');
+    }
+
+
+    async start(): Promise<boolean> {
+        if (this.isRunning) return true;
+        const binaryPath = this.getBinaryPath();
+        if (!binaryPath) return false;
+
+        const dataPath = this.getDataPath(); // Get user data path
+
+        console.log(`Starting ChromaDB from: ${binaryPath}`);
+        console.log(`ChromaDB data directory: ${dataPath}`);
+
+        // Pass the absolute data path as an argument
+        const args = [
+            '--host', '127.0.0.1',
+            '--port', this.port.toString(),
+            '--path', dataPath // Pass the required path argument
+        ];
+
+        this.process = spawn(binaryPath, args, { stdio: 'pipe' });
+
+        // ... (add robust readiness check, error handling, stdout/stderr logging) ...
+        this.process.stdout?.on('data', (data) => {
+             console.log(`ChromaDB: ${data}`);
+             // Check for server started message
+             if(data.toString().includes(`Starting ChromaDB server on`)){
+                 this.isRunning = true;
+                 // Consider resolving promise here
+             }
+        });
+        this.process.stderr?.on('data', (data) => console.error(`ChromaDB ERR: ${data}`));
+        this.process.on('error', (err) => { console.error('ChromaDB spawn error:', err); this.isRunning = false; });
+        this.process.on('close', (code) => { console.log(`ChromaDB exited: ${code}`); this.isRunning = false; });
+
+        // Simplified readiness - replace with a proper check
+        // Wait for the stdout message or use a timeout/ping
+         return new Promise(resolve => {
+            const timeout = setTimeout(() => {
+                console.warn("ChromaDB readiness check timed out, assuming running.");
+                this.isRunning = true; // Assume running after timeout
+                resolve(true);
+            }, 10000); // 10 second timeout
+
+            this.process?.stdout?.on('data', (data) => {
+                if (data.toString().includes(`Starting ChromaDB server on`)) {
+                    clearTimeout(timeout);
+                    this.isRunning = true;
+                    resolve(true);
+                }
+            });
+             this.process?.on('error', () => { // Resolve false on spawn error
+                 clearTimeout(timeout);
+                 resolve(false);
+             });
+        });
+    }
+
+    async stop(): Promise<void> {
+         if (this.process && !this.process.killed) {
+             console.log('Stopping ChromaDB...');
+             this.process.kill();
+         }
+        this.isRunning = false;
+    }
+
+     getClientConfig() {
+        return {
+          host: '127.0.0.1',
+          port: this.port
+        };
+      }
 }

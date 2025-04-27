@@ -3,9 +3,9 @@ import { spawn } from 'child_process'
 import { app } from 'electron'
 import path from 'path'
 import { rootPath } from 'electron-root-path'
-import getPlatform from '../chroma/chromaInstanceService'
 import { getEligibleGpu } from '../gpuService'
 import { logError, logInfo } from '../log/logService'
+import getPlatform from '../platformService'
 
 export class OllamaInstanceService {
   private process: any

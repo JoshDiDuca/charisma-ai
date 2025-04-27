@@ -18,22 +18,13 @@ makeAppWithSingleInstanceLock(async () => {
   const chromaService = new ChromaInstanceService()
   const ollamaService = new OllamaInstanceService()
   await ollamaService.start()
+  await chromaService.start()
 
   initOllamaEmbedding([])
 
   // Setup IPC handlers
   initializeHandlers();
 
-  ipcMain.handle('start-chromadb', async () => {
-    await chromaService.start()
-    return true
-  })
-
-  ipcMain.handle('get-chromadb-config', () => {
-    return chromaService.getClientConfig()
-  })
-
-  // Clean up on quit
   app.on('will-quit', async (e) => {
     e.preventDefault()
     await chromaService.stop()

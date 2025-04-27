@@ -35,6 +35,14 @@ export default {
       "to": "./bin/",
       "filter": ["**/*"]
     },
+    {
+      from: 'python-server/dist',
+      to: 'bin/chroma',
+      filter: [
+        'chroma_server',
+        'chroma_server.exe'
+      ]
+    }
   ],
   mac: {
     artifactName,

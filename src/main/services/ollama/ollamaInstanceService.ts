@@ -4,6 +4,7 @@ import { app } from 'electron'
 import path from 'path'
 import { rootPath } from 'electron-root-path'
 import getPlatform from '../chroma/chromaInstanceService'
+import { getEligibleGpu } from '../gpuService'
 
 export class OllamaInstanceService {
   private process: any
@@ -26,8 +27,15 @@ export class OllamaInstanceService {
     const execName = process.platform === 'win32' ? 'ollama.exe' : 'ollama'
     const fullPath = path.join(binaryPath, execName)
 
+    const eligibleGpu = await getEligibleGpu();
+
     this.process = spawn(fullPath, ['serve'], {
       stdio: ['ignore', 'pipe', 'pipe'], // stdin, stdout, stderr
+      env: (eligibleGpu ? {
+        "CUDA_VISIBLE_DEVICES": eligibleGpu.uuid
+      } : {
+
+      })
     })
     this.process.stdout.on('data', (data: any) => {
       console.log(`Ollama stdout: ${data}`)

@@ -10,6 +10,7 @@ import {
   getChromaCollection,
   getOrCreateChromaCollection,
 } from '../chroma/chromaService'
+import { OllamaModels } from './ollamaCatalog'
 
 const MIN_SCORE = 0.0001 // Adjust this threshold as needed
 
@@ -20,6 +21,18 @@ const COLLECTION_NAME = 'EMBED-COLLECTION'
 
 function generatePrompt(prompt: string, data: (string | null)[]) {
   return `Context: ${data.join('\n')}\n\nQuestion: ${prompt}`
+}
+
+export const getInstalledEmbeddingModels = async () => {
+  const response = await ollama.list()
+  return response.models.map((m) => m.name).filter(model =>
+    OllamaModels.some(baseName => model.startsWith(baseName.name))
+  );
+}
+
+export const getAllEmbeddingModels = async () => {
+  const response = await ollama.list();
+  return OllamaModels.filter(m => m.type === 'Embedding').map(m => ({ ...m, installed: response.models.some(model => model.name === m.name) }));
 }
 
 export async function initOllamaEmbedding(documents: string[]) {

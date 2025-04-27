@@ -1,11 +1,14 @@
 import { ipcMain } from 'electron'
 import {
+  getAllEmbeddingModels,
+  getInstalledEmbeddingModels,
   getOllamaEmbeddingRetrieve,
   initOllamaEmbedding,
   sendMessageWithEmbedding,
 } from 'main/services/ollama/ollamaEmbeddingService'
 import {
   downloadModel,
+  getAllModels,
   getInstalledModels,
   getOllamaStatus,
   sendMessage,
@@ -18,6 +21,18 @@ export class LlmHandlers {
   @IpcHandle('get-installed-models')
   async getInstalledModels() {
     return getInstalledModels()
+  }
+  @IpcHandle('get-installed-embedding-models')
+  async getInstalledEmbeddingModels() {
+    return getInstalledEmbeddingModels()
+  }
+  @IpcHandle('get-all-embedding-models')
+  async getAllEmbeddingModels() {
+    return getAllEmbeddingModels()
+  }
+  @IpcHandle('get-all-models')
+  async getAllModels() {
+    return getAllModels()
   }
 
   @IpcHandle('get-llm-status')

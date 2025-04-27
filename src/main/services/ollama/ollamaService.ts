@@ -1,6 +1,9 @@
 import axios from 'axios'
 import { mainWindow } from 'main/windows/main'
 import { Ollama, Tool } from 'ollama'
+import { OllamaModels } from './ollamaCatalog'
+
+
 export const ollamaURL = process.env.OLLAMA_API_BASE || 'http://localhost:11434'
 export const ollama = new Ollama({ host: ollamaURL })
 
@@ -15,7 +18,14 @@ export const getOllamaStatus = async (): Promise<boolean> => {
 
 export const getInstalledModels = async () => {
   const response = await ollama.list()
-  return response.models.map((m) => m.name)
+  return response.models.map((m) => m.name).filter(model =>
+    OllamaModels.some(baseName => model.startsWith(baseName.name))
+  );
+}
+
+export const getAllModels = async () => {
+  const response = await ollama.list()
+  return OllamaModels.filter(m => m.type === 'LLM').map(m => ({ ...m, installed: response.models.some(model => model.name === m.name) }));
 }
 
 export const downloadModel = async (modelName: string) => {

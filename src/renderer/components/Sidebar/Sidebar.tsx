@@ -1,20 +1,27 @@
 import { Badge, Button, Card, Select, SelectItem } from '@heroui/react'
 import { useEffect, useState } from 'react'
-import { buildTreeStructure, Tree, TreeNode } from './FileTree'
+import { Tree, TreeNode } from './FileTree'
 
 const { App } = window
 
-export const Sidebar = () => {
+
+export interface SidebarProps {
+  model: string;
+  embeddingModel: string;
+  setModel: React.Dispatch<React.SetStateAction<string>>;
+  setEmbeddingModel: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:SidebarProps) => {
   const [status, setStatus] = useState<'Running' | 'Stopped' | 'Loading...'>(
     'Loading...'
   )
-  const [model, setModel] = useState<string>('openchat')
-  const [embeddingModel, setEmbeddingModel] =
-    useState<string>('nomic-embed-text')
   const [filePath, setFilePath] = useState<string>('')
   const [files, setFiles] = useState<string[]>([])
+  const [embeddingModels, setEmbeddingModels] = useState<{ name:string }[]>([])
+  const [models, setModels] = useState<{ name:string }[]>([])
 
-  const [treeData, setTreeData] = useState<TreeNode[]>([])
+  const [treeData, setTreeData] = useState<TreeNode>()
 
   const handleSelectFolder = async () => {
     const folder = await App.invoke('select-folder')
@@ -22,8 +29,7 @@ export const Sidebar = () => {
 
     setFilePath(folder)
     const fileList = await App.invoke('get-folder-files', folder)
-    const tree = buildTreeStructure(fileList, folder)
-    setTreeData(tree)
+    setTreeData(fileList)
   }
 
   const loadStatus = async () => {
@@ -36,12 +42,39 @@ export const Sidebar = () => {
     }
   }
 
+  const loadEmbeddingModels = async () => {
+    // Send message and receive stream
+    const response: { name:string }[] = await App.invoke('get-all-embedding-models')
+    if (response) {
+      setEmbeddingModels(response);
+    }
+  }
+
+  const loadModels = async () => {
+    // Send message and receive stream
+    const response: { name:string }[] = await App.invoke('get-all-models')
+    if (response) {
+      setModels(response);
+    }
+  }
+
+  const downloadModel = async (model: string, type: 'LLM' | 'Embedding') => {
+    await App.invoke('download-model', model)
+    if(type === 'LLM') {
+      setModel(model)
+    } else {
+      setEmbeddingModel(model)
+    }
+  }
+
   useEffect(() => {
     loadStatus()
+    loadEmbeddingModels()
+    loadModels()
   }, [])
 
   return (
-    <Card className="p-4 w-120" style={{ width: '20rem' }}>
+    <Card className="p-4 w-120" style={{ width: '30rem' }}>
       <div className="flex flex-col gap-4 h-screen">
         <div className="flex flex-col gap-2">
           <div className="inline-flex">
@@ -64,20 +97,19 @@ export const Sidebar = () => {
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Model</label>
-          <Select value={model}>
-            <SelectItem key="openchat">openchat</SelectItem>
-            <SelectItem key="llama3">llama3</SelectItem>
-            <SelectItem key="gpt-4o">gpt-4o</SelectItem>
+          <Select value={model} onChange={(e) => downloadModel(e.target.value, 'LLM')}>
+            {models.map((model) => (
+              <SelectItem key={model.name}>{model.name}</SelectItem>
+            ))}
           </Select>
         </div>
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Embedding Model</label>
-          <Select value={embeddingModel}>
-            <SelectItem key="nomic-embed-text">nomic-embed-text</SelectItem>
-            <SelectItem key="text-embedding-ada-002">
-              text-embedding-ada-002
-            </SelectItem>
+          <Select value={embeddingModel} onChange={(e) => downloadModel(e.target.value, 'Embedding')}>
+            {embeddingModels.map((model) => (
+              <SelectItem key={model.name}>{model.name}</SelectItem>
+            ))}
           </Select>
         </div>
 
@@ -86,11 +118,11 @@ export const Sidebar = () => {
             <label className="text-sm font-medium">Files:</label>
             <Button onClick={handleSelectFolder}>Select Folder</Button>
           </div>
-          <Card className="p-2 h-auto overflow-hidden">
+          <Card className="p-2 h-500" style={{ height: "500px", overflowY: 'auto' }}>
             <div className="text-sm">
-              {treeData.map((node) => (
-                <Tree key={node.path} node={node} onDelete={(_) => {}} />
-              ))}
+              {treeData &&
+                <Tree node={treeData} onDelete={(_) => {}} />
+              }
             </div>
           </Card>
         </div>

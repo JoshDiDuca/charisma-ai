@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Container, Heading, Button } from 'renderer/components'
 import { useWindowStore } from 'renderer/store'
@@ -11,7 +11,10 @@ const { App } = window
 
 export function MainScreen() {
   const navigate = useNavigate()
-  const store = useWindowStore().about
+  const store = useWindowStore().about;
+
+  const [model, setModel] = useState<string>('llama3:latest');
+  const [embeddingModel, setEmbeddingModel] = useState<string>('mxbai-embed-large:latest');
 
   useEffect(() => {
     App.sayHelloFromBridge()
@@ -31,8 +34,8 @@ export function MainScreen() {
   return (
     <Container>
       <div className="inline-flex" style={{ width: '100%' }}>
-        <Sidebar />
-        <ChatInterface />
+        <Sidebar model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
+        <ChatInterface model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
       </div>
     </Container>
   )

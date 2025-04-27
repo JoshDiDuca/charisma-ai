@@ -19,11 +19,16 @@ type Message = {
 
 const { App } = window
 
-export const ChatInterface = () => {
+export interface ChatInterfaceProps {
+  model: string;
+  embeddingModel: string;
+  setModel: React.Dispatch<React.SetStateAction<string>>;
+  setEmbeddingModel: React.Dispatch<React.SetStateAction<string>>;
+}
+export const ChatInterface = ({ model, embeddingModel, setModel, setEmbeddingModel}: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedModel, setSelectedModel] = useState('llama3:latest')
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return
@@ -43,7 +48,7 @@ export const ChatInterface = () => {
       const response = await App.invoke(
         'send-message',
         inputValue,
-        selectedModel
+        model
       )
 
       // Add final message

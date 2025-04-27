@@ -9,6 +9,8 @@
 # production
 /build
 /dist
+/chroma
+/release
 
 # misc
 .DS_Store

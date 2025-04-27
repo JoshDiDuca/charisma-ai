@@ -1,6 +1,6 @@
-export type OllamaModelType = "LLM" | "Embedding" | "Reasoning";
+import { OllamaModel } from "shared/types/OllamaModel";
 
-export const OllamaModels: { name: string, type: OllamaModelType }[] = [
+export const OllamaModels: OllamaModel[] = [
   {
     name: 'mxbai-embed-large:latest',
     type: "Embedding"

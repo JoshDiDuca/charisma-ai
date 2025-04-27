@@ -1,6 +1,7 @@
 import { Badge, Button, Card, Select, SelectItem } from '@heroui/react'
 import { useEffect, useState } from 'react'
 import { Tree, TreeNode } from './FileTree'
+import { OllamaModel } from 'shared/types/OllamaModel';
 
 const { App } = window
 
@@ -18,8 +19,8 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:S
   )
   const [filePath, setFilePath] = useState<string>('')
   const [files, setFiles] = useState<string[]>([])
-  const [embeddingModels, setEmbeddingModels] = useState<{ name:string }[]>([])
-  const [models, setModels] = useState<{ name:string }[]>([])
+  const [embeddingModels, setEmbeddingModels] = useState<OllamaModel[]>([])
+  const [models, setModels] = useState<OllamaModel[]>([])
 
   const [treeData, setTreeData] = useState<TreeNode>()
 
@@ -44,7 +45,7 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:S
 
   const loadEmbeddingModels = async () => {
     // Send message and receive stream
-    const response: { name:string }[] = await App.invoke('get-all-embedding-models')
+    const response: OllamaModel[] = await App.invoke('get-all-embedding-models')
     if (response) {
       setEmbeddingModels(response);
     }
@@ -52,11 +53,21 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:S
 
   const loadModels = async () => {
     // Send message and receive stream
-    const response: { name:string }[] = await App.invoke('get-all-models')
+    const response: OllamaModel[] = await App.invoke('get-all-models')
     if (response) {
       setModels(response);
     }
   }
+
+  App.on("update-all-models", (response: OllamaModel[]) => {
+    console.log("update", response)
+    setModels(response)
+  })
+
+  App.on("update-all-embedding-models", (response: OllamaModel[]) => {
+    console.log("update", response)
+    setEmbeddingModels(response)
+  })
 
   const downloadModel = async (model: string, type: 'LLM' | 'Embedding') => {
     await App.invoke('download-model', model)
@@ -99,7 +110,7 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:S
           <label className="text-sm font-medium">Model</label>
           <Select value={model} onChange={(e) => downloadModel(e.target.value, 'LLM')}>
             {models.map((model) => (
-              <SelectItem key={model.name}>{model.name}</SelectItem>
+              <SelectItem key={model.name} textValue={model.name}>{model.name} {model.installed ? "✔️" : model.installing ? "📦" : "❌"} </SelectItem>
             ))}
           </Select>
         </div>
@@ -108,7 +119,7 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:S
           <label className="text-sm font-medium">Embedding Model</label>
           <Select value={embeddingModel} onChange={(e) => downloadModel(e.target.value, 'Embedding')}>
             {embeddingModels.map((model) => (
-              <SelectItem key={model.name}>{model.name}</SelectItem>
+              <SelectItem key={model.name} textValue={model.name}>{model.name}</SelectItem>
             ))}
           </Select>
         </div>

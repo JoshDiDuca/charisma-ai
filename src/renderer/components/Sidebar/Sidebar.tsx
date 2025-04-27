@@ -126,7 +126,7 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:S
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">Files:</label>
-            <Button onClick={handleSelectFolder}>Select Folder</Button>
+            <Button variant="light" size="sm" onClick={handleSelectFolder}>Add Folder</Button>
           </div>
           <Card className="p-2 h-500" style={{ height: "500px", overflowY: 'auto' }}>
             <div className="text-sm">

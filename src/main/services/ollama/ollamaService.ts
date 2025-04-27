@@ -32,7 +32,6 @@ export const getOllamaStatus = async (): Promise<boolean> => {
     const appStatus = await axios.get(ollamaURL);
     return appStatus.data === 'Ollama is running';
   } catch (err) {
-    logWarning(`Ollama status check failed`, { error: err, category: "Ollama" });
     return false;
   }
 };

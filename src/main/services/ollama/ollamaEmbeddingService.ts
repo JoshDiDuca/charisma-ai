@@ -1,19 +1,12 @@
-import { ChromaClient, IncludeEnum, Metadata } from 'chromadb'
+import { Metadata } from 'chromadb'
 import { v4 as uuidv4 } from 'uuid'
 import { ollama, sendMessage } from './ollamaService'
 import { readFileSync, statSync } from 'fs'
 import { extname } from 'path'
 import { embedFolder, recursiveReadDir } from '../fileService'
-import {
-  createChromaCollection,
-  deleteAllChromaCollections,
-  getChromaCollection,
-  getChromaDocuments,
-  getChromaOnlineStatus,
-  getOrCreateChromaCollection,
-} from '../chroma/chromaService'
+import { createChromaCollection, deleteAllChromaCollections, getChromaDocuments, getOrCreateChromaCollection } from '../chroma/chromaService'
 import { OllamaModels } from './ollamaCatalog'
-import { logError, logInfo, logWarning } from '../log/logService'
+import { logError } from '../log/logService'
 
 const OLLAMA_MODEL_EMBEDDING =
   process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large'

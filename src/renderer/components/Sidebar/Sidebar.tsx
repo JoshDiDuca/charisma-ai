@@ -60,12 +60,10 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }:S
   }
 
   App.on("update-all-models", (response: OllamaModel[]) => {
-    console.log("update", response)
     setModels(response)
   })
 
   App.on("update-all-embedding-models", (response: OllamaModel[]) => {
-    console.log("update", response)
     setEmbeddingModels(response)
   })
 

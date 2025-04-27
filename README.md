@@ -80,8 +80,10 @@ Before you begin, ensure you have the following installed and running:
     *   [✔️] Allow specifying *which* Ollama model to use (if multiple are available).
     *   [✔️] Download ollama models with downloading status.
     *   [ ] Background processing/indexing for large folders.
+    *   [ ] Allow different file processing and reading.
     *   [ ] Allow multiple data sources.
     *   [ ] Allow filtering by file type (e.g., only include `.ts`, `.py` files).
+    *   [ ] Image processing with an image model?
 *   **UI/UX Improvements:**
     *   [ ] Implement robust studio like UI.
     *   [✔️] Loading indicators while processing folders and waiting for LLM responses.

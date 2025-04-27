@@ -1,4 +1,4 @@
-import { ChromaClient, IncludeEnum } from 'chromadb'
+import { ChromaClient, IncludeEnum, Metadata } from 'chromadb'
 import { v4 as uuidv4 } from 'uuid'
 import { ollama, sendMessage } from './ollamaService'
 import { readFileSync, statSync } from 'fs'
@@ -62,8 +62,8 @@ export async function loadOllamaEmbedding(path: string) {
     metadata: {
       path: file,
       type: extname(file),
-      last_modified: statSync(file).mtime.getTime(),
-    },
+      last_modified: statSync(file).mtime.getTime()
+    } as Metadata,
   }))
   console.warn('Loaded files ' + path)
   await collection.upsert({
@@ -117,12 +117,9 @@ export async function sendMessageWithEmbedding(message: string, model: string) {
     }
     console.log('Prompt ' + message)
     const embeddings = await getOllamaEmbeddingRetrieve(message)
-    console.log('Prompt ' + embeddings.length)
-    if (embeddings.length === 0) {
-      return { content: 'No relevant information found' }
-    }
+    console.log('Prompt ' + embeddings.length);
     const question = generatePrompt(message, embeddings)
-    const response = await sendMessage(question, model, [])
+    const response = await sendMessage((embeddings.length === 0) ? message : question, model, [])
     return {
       ...response,
       content: response.content,

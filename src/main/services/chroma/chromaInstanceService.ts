@@ -4,6 +4,7 @@ import { app } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { logError, logInfo } from '../log/logService';
+import { getChromaOnlineStatus } from './chromaService';
 
 export class ChromaInstanceService {
     private process: ChildProcess | null = null;
@@ -34,6 +35,13 @@ export class ChromaInstanceService {
         if (this.isRunning) return true;
         const binaryPath = this.getBinaryPath();
         if (!binaryPath) return false;
+
+        const alreadyExists = await getChromaOnlineStatus();
+
+        if(alreadyExists) {
+            this.isRunning = true;
+            return true;
+        }
 
         const dataPath = this.getDataPath(); // Get user data path
 

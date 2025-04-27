@@ -6,6 +6,7 @@ import { rootPath } from 'electron-root-path'
 import { getEligibleGpu } from '../gpuService'
 import { logError, logInfo } from '../log/logService'
 import getPlatform from '../platformService'
+import { getOllamaStatus } from './ollamaService'
 
 export class OllamaInstanceService {
   private process: any
@@ -21,6 +22,14 @@ export class OllamaInstanceService {
 
   async start() {
     if (this.isRunning) return
+
+    const alreadyExists = await getOllamaStatus();
+
+    if(alreadyExists) {
+        this.isRunning = true;
+        return true;
+    }
+
 
     const binaryPath = this.getBinaryPath()
     const execName = process.platform === 'win32' ? 'ollama.exe' : 'ollama'

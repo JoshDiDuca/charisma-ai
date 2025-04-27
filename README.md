@@ -75,25 +75,26 @@ Before you begin, ensure you have the following installed and running:
 
 ## ToDo / Planned Features
 
-*   **LLM Provider Expansion:**
-    *   [ ] Support for remote APIs (OpenAI, Anthropic, Gemini) with API key management.
-    *   [ ] Integration with other local LLM servers (e.g., LM Studio, Jan).
-    *   [ ] UI for selecting the desired LLM provider and model.
-*   **Context Management:**
-    *   [ ] Implement robust context window management (chunking, sliding window).
+*   **Core Functionality:**
     *   [ ] Explore Retrieval-Augmented Generation (RAG) using embeddings (e.g., Ollama embeddings, Sentence Transformers) for more accurate answers on large folders.
+    *   [✔️] Allow specifying *which* Ollama model to use (if multiple are available).
+    *   [✔️] Download ollama models with downloading status.
+    *   [ ] Background processing/indexing for large folders.
+    *   [ ] Allow multiple data sources.
     *   [ ] Allow filtering by file type (e.g., only include `.ts`, `.py` files).
 *   **UI/UX Improvements:**
-    *   [ ] Loading indicators while processing folders and waiting for LLM responses.
-    *   [ ] Better error handling and display (e.g., Ollama connection issues, model not found).
-    *   [ ] Streaming responses from the LLM.
+    *   [ ] Implement robust studio like UI.
+    *   [✔️] Loading indicators while processing folders and waiting for LLM responses.
+    *   [ ] Better error handling and display (e.g., Ollama connection issues, model not found). Displaying a toast when there's a backend error
+    *   [✔️] Streaming responses from the LLM.
     *   [ ] Chat history persistence (session or local storage).
     *   [ ] Copy code snippets from responses.
     *   [ ] Syntax highlighting for code in responses.
     *   [ ] Progress indicator for initial folder processing/indexing.
-*   **Core Functionality:**
-    *   [ ] Allow specifying *which* Ollama model to use (if multiple are available).
-    *   [ ] Background processing/indexing for large folders.
+*   **LLM Provider Expansion:**
+    *   [ ] Integration with other local LLM servers (e.g., LM Studio, Jan).
+    *   [ ] UI for selecting the desired LLM provider and model.
+    *   [ ] Support for remote APIs (OpenAI, Anthropic, Gemini) with API key management.
 *   **Packaging:**
     *   [x] Package as a standalone desktop application using Electron.
 

@@ -1,12 +1,12 @@
-import { Metadata } from 'chromadb'
+import { Embedding, Metadata } from 'chromadb'
 import { v4 as uuidv4 } from 'uuid'
 import { ollama, sendMessage } from './ollamaService'
-import { readFileSync, statSync } from 'fs'
-import { extname } from 'path'
-import { embedFolder, recursiveReadDir } from '../fileService'
+import fs from 'fs'
+import path, { extname } from 'path'
+import { embedFolder, flattenTree, isTextFile, readDirectoryNested, readFileInChunks, shouldSkipFile, } from '../files/fileService'
 import { createChromaCollection, deleteAllChromaCollections, getChromaDocuments, getOrCreateChromaCollection } from '../chroma/chromaService'
 import { OllamaModels } from './ollamaCatalog'
-import { logError } from '../log/logService'
+import { logError, logInfo } from '../log/logService'
 
 const OLLAMA_MODEL_EMBEDDING =
   process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large'
@@ -47,24 +47,79 @@ export async function initOllamaEmbedding(documents: string[]) {
     logError(`Error intialising ollama embedding with chromaDB`, { category: "Ollama", error: e, showUI: true });
   }
 }
+export async function loadOllamaEmbedding(embeddingPath: string) {
+  logInfo(`loadOllamaEmbedding start`);
+  const absoluteStartPath = path.resolve(embeddingPath);
+  const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 
-export async function loadOllamaEmbedding(path: string) {
-  const files = await recursiveReadDir(path)
-  const collection = await getOrCreateChromaCollection(COLLECTION_NAME)
-  const embeddings = files.map((file) => ({
-    content: readFileSync(file, 'utf-8'),
-    metadata: {
-      path: file,
-      type: extname(file),
-      last_modified: statSync(file).mtime.getTime()
-    } as Metadata,
-  }))
-  await collection.upsert({
-    ids: embeddings.map(() => uuidv4()),
-    documents: embeddings.map((e) => e.content),
-    metadatas: embeddings.map(({ metadata }) => metadata),
-  })
+  const BATCH_SIZE = 10;
+  const CONCURRENT_LIMIT = 20;
+  let batch: Array<{content: string, metadata: Metadata}> = [];
+  let activePromises = 0;
+
+  const processBatch = async () => {
+    if (batch.length === 0) return;
+
+    await collection.upsert({
+      ids: batch.map(() => uuidv4()),
+      documents: batch.map(e => e.content),
+      metadatas: batch.map(e => e.metadata),
+    });
+    batch = [];
+  };
+
+  const children = await readDirectoryNested(absoluteStartPath);
+  const files = flattenTree(children)
+    .filter(file => !file.isFolder && isTextFile(file.path))
+    .map(file => file.path);
+
+  // Create promise queue for concurrency control
+  const processFile = async (file: string) => {
+    try {
+      const stats = await fs.promises.stat(file);
+      if (shouldSkipFile(file, stats)) return;
+
+      const content = await readFileInChunks(file);
+
+      // Synchronized batch management
+      batch.push({
+        content,
+        metadata: {
+          path: file,
+          type: extname(file),
+          last_modified: stats.mtime.getTime()
+        }
+      });
+
+      if (batch.length >= BATCH_SIZE) {
+        await processBatch();
+      }
+    } catch (error) {
+      logError('File processing failed: ' + file, { error });
+    }
+  };
+
+  // Concurrent processing with pool management
+  const queue = files.slice();
+  while (queue.length > 0) {
+    if (activePromises < CONCURRENT_LIMIT) {
+      activePromises++;
+      const file = queue.shift()!;
+      processFile(file).finally(() => activePromises--);
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+
+  // Wait for remaining promises
+  while (activePromises > 0) {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+
+  await processBatch();
+  logInfo(`loadOllamaEmbedding Done`);
 }
+
 
 export async function getOllamaEmbeddingRetrieve(prompt: string) {
   try {
@@ -83,10 +138,14 @@ export async function getOllamaEmbeddingRetrieve(prompt: string) {
 export async function sendMessageWithEmbedding(message: string, model: string) {
   try {
     if (embedFolder) {
+      logInfo(`Loding ollama embedding` + embedFolder);
       await loadOllamaEmbedding(embedFolder)
     }
+    logInfo(`getOllamaEmbeddingRetrieve`);
     const embeddings = await getOllamaEmbeddingRetrieve(message)
+    logInfo(`generatePrompt`);
     const question = generatePrompt(message, embeddings)
+    logInfo(`sendMessage`);
     const response = await sendMessage((embeddings.length === 0) ? message : question, model, [])
     return {
       ...response,

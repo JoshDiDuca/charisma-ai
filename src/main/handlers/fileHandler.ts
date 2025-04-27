@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { getFileTree, selectEmbedFolder } from 'main/services/fileService'
+import { getFileTree, selectEmbedFolder } from 'main/services/files/fileService'
 
 export function initializeFileHandler() {
   ipcMain.handle('select-folder', async () => {

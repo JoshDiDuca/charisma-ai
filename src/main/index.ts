@@ -15,32 +15,10 @@ import { logError } from './services/log/logService'
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
 
-
-  const chromaService = new ChromaInstanceService()
-  const ollamaService = new OllamaInstanceService()
-  await ollamaService.start()
-  await chromaService.start()
-
   initOllamaEmbedding([])
 
   // Setup IPC handlers
   initializeHandlers();
-
-  app.on('will-quit', async (e) => {
-    e.preventDefault()
-    await chromaService.stop()
-    await ollamaService.stop()
-    app.exit()
-  })
-
-  // Catch process-level errors
-  process.on('uncaughtException', error => {
-    logError('Uncaught Exception:', { error });
-  });
-
-  process.on('unhandledRejection', (reason, promise) => {
-    logError('Unhandled Rejection at:', { error: { promise, reason } });
-  });
 
   await makeAppSetup(MainWindow)
 })

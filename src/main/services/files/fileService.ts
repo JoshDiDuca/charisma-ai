@@ -1,7 +1,10 @@
 import { dialog } from 'electron'
-import { promises as fs } from 'fs'
-import path from 'path'
-import { logError } from './log/logService'
+import { createReadStream, promises as fs, Stats } from 'fs'
+import path, { extname } from 'path'
+import { logError } from '../log/logService'
+import { fileTypeFromFile } from 'file-type';
+
+export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 export let embedFolder: string | null = null
 
@@ -13,16 +16,23 @@ export const selectEmbedFolder = async (): Promise<string | null> => {
   return folderPath
 }
 
-export async function recursiveReadDir(dirPath: string): Promise<string[]> {
-  const entries = await fs.readdir(dirPath, { withFileTypes: true })
-  const files = await Promise.all(
-    entries.map(async (entry) => {
-      const fullPath = path.join(dirPath, entry.name)
-      return entry.isDirectory() ? recursiveReadDir(fullPath) : fullPath
-    })
-  )
-  const flatFiles = files.flat()
-  return [...flatFiles]
+export function flattenTree(nodes: TreeNode[]): TreeNode[] {
+  const flatList: TreeNode[] = [];
+
+  function traverse(node: TreeNode) {
+    flatList.push(node);
+    if (node.isFolder && node.children) {
+      for (const child of node.children) {
+        traverse(child);
+      }
+    }
+  }
+
+  for (const node of nodes) {
+    traverse(node);
+  }
+
+  return flatList;
 }
 
 export type TreeNode = {
@@ -66,6 +76,28 @@ export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> 
   return nodes;
 }
 
+export async function readFileInChunks(filePath: string) {
+  return new Promise<string>((resolve, reject) => {
+    const stream = createReadStream(filePath, {
+      encoding: 'utf-8',
+      highWaterMark: 1024 * 1024 // 1MB chunks
+    });
+
+    let content = '';
+    stream.on('data', chunk => {
+      content += chunk;
+      // Prevent memory overload
+      if (content.length > 50 * 1024 * 1024) {
+        stream.destroy();
+        reject(new Error('File exceeds 50MB limit'));
+      }
+    });
+
+    stream.on('end', () => resolve(content));
+    stream.on('error', reject);
+  });
+}
+
 export async function getFileTree(startPath: string) {
   try {
     const absoluteStartPath = path.resolve(startPath);
@@ -85,4 +117,26 @@ export async function getFileTree(startPath: string) {
     logError("Error reading directory.", { error, throwError: true, showUI: true });
     throw error;
   }
+}
+
+export const isBinaryFile = (filePath: string) => {
+  const binaryExtensions = new Set([
+    '.dll', '.exe', '.so', '.dylib', '.bin',
+    '.png', '.jpg', '.jpeg', '.gif'
+  ]);
+  return binaryExtensions.has(extname(filePath).toLowerCase());
+};
+
+export const isTextFile = async (file: string) => {
+  const type = await fileTypeFromFile(file);
+  return !type?.mime.startsWith('text/') ? false : true;
+};
+
+
+// Helper functions
+export function shouldSkipFile(file: string, stats: Stats) {
+  return stats.isDirectory() ||
+    isBinaryFile(file) ||
+    !isTextFile(file) ||
+    stats.size > MAX_FILE_SIZE;
 }

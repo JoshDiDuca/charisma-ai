@@ -120,6 +120,7 @@ export const sendMessage = async (
   systemMessage?: string
 ) => {
   try {
+    console.log(message);
     const responseStream = await ollama.chat({
       model,
       messages: [

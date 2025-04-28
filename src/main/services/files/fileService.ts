@@ -74,22 +74,22 @@ export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> 
 }
 
 export async function readFileInChunks(filePath: string): Promise<string> {
-    const stream = createReadStream(filePath, {
-      encoding: 'utf-8',
-      highWaterMark: 1024 * 1024
-    });
+  const stream = createReadStream(filePath, {
+    encoding: 'utf-8',
+    highWaterMark: 1024 * 1024
+  });
 
-    let content = '';
+  let content = '';
 
-    for await (const chunk of stream) {
-        content += chunk;
-        if (content.length > 50 * 1024 * 1024) {
-            stream.destroy();
-            throw new Error('File exceeds 50MB limit');
-        }
+  for await (const chunk of stream) {
+    content += chunk;
+    if (content.length > 50 * 1024 * 1024) {
+      stream.destroy();
+      throw new Error('File exceeds 50MB limit');
     }
+  }
 
-    return content;
+  return content;
 }
 
 export async function getFileTree(startPath: string): Promise<TreeNode> {
@@ -113,7 +113,7 @@ export async function getFileTree(startPath: string): Promise<TreeNode> {
   }
 }
 
-export const isPotentiallyBinaryFileByExtension = (filePath: string): boolean => {
+export const isBinaryFileByExtension = (filePath: string): boolean => {
   const binaryExtensions = new Set([
     '.dll', '.exe', '.so', '.dylib', '.bin', '.obj', '.o', '.a', '.lib',
     '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp', '.ico',
@@ -127,18 +127,12 @@ export const isPotentiallyBinaryFileByExtension = (filePath: string): boolean =>
   return binaryExtensions.has(extname(filePath).toLowerCase());
 };
 
-export const isLikelyTextFile = async (filePath: string): Promise<boolean> => {
+export const isTextFile = async (filePath: string): Promise<boolean> => {
   try {
     const type = await fileTypeFromFile(filePath);
-    // If file-type detects a specific type, check if it starts with 'text/'
-    // If file-type doesn't detect a type (returns undefined), assume it might be text
-    // unless the extension strongly suggests otherwise.
     return !type || type.mime.startsWith('text/');
   } catch (error) {
-    // If file-type fails (e.g., permissions), err on the side of caution?
-    // Or assume text if extension isn't binary? Let's assume text for now.
-    // console.warn(`Could not determine file type for ${filePath}:`, error);
-    return !isPotentiallyBinaryFileByExtension(filePath);
+    return !isBinaryFileByExtension(filePath);
   }
 };
 
@@ -149,17 +143,14 @@ export async function shouldSkipFile(filePath: string, stats: Stats): Promise<bo
   if (stats.size > MAX_FILE_SIZE) {
     return true;
   }
-  // Check potentially binary extension first as it's synchronous and faster
-  if (isPotentiallyBinaryFileByExtension(filePath)) {
-      // Double check with async check if extension seems binary
-      if (!await isLikelyTextFile(filePath)) {
-          return true;
-      }
+  if (isBinaryFileByExtension(filePath)) {
+    if (!await isTextFile(filePath)) {
+      return true;
+    }
   } else {
-      // If extension looks like text, still verify with async check
-      if (!await isLikelyTextFile(filePath)) {
-          return true;
-      }
+    if (!await isTextFile(filePath)) {
+      return true;
+    }
   }
 
   return false;

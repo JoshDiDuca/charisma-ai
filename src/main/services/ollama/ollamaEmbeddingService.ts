@@ -1,4 +1,4 @@
-import { Embedding, Metadata } from 'chromadb';
+import { Metadata } from 'chromadb';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path, { extname } from 'path';
@@ -6,10 +6,9 @@ import {
   embedFolder,
   flattenTree,
   readDirectoryNested,
-  readFileInChunks,
   shouldSkipFile,
   TreeNode,
-  MAX_FILE_SIZE
+  readFileByExtension
 } from '../files/fileService';
 import {
   createChromaCollection,
@@ -25,6 +24,7 @@ const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-larg
 const COLLECTION_NAME = 'EMBED-COLLECTION';
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
+
 
 function generatePrompt(prompt: string, data: (string | null)[]): string {
   const context = data.filter(item => item !== null).join('\n');
@@ -73,21 +73,20 @@ export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> 
   const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 
   const resultsToBatch: Array<{ content: string, metadata: Metadata }> = [];
-  let filePaths: string[] = [];
+  let filePaths: TreeNode[] = [];
 
   try {
       const rootNode = await readDirectoryNested(absoluteStartPath);
-      filePaths = flattenTree(rootNode)
-          .filter(node => !node.isFolder)
-          .map(node => node.path);
+      filePaths = flattenTree(rootNode);
   } catch (error) {
       logError(`Failed to read directory structure for ${absoluteStartPath}`, { error, showUI: true });
       return;
   }
 
-  logInfo(`Found ${filePaths.length} potential files to process.`);
+  const filesToProcess = filePaths.filter(node => !node.isFolder).map(node => node.path);
+  logInfo(`Found ${filesToProcess.length} potential files to process.`);
 
-  const queue = filePaths.slice();
+  const queue = filesToProcess.slice();
   const processPromises: Promise<void>[] = [];
 
   const worker = async (): Promise<void> => {
@@ -98,37 +97,42 @@ export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> 
       try {
         const stats = await fs.promises.stat(filePath);
         if (!(await shouldSkipFile(filePath, stats))) {
-          const content = await readFileInChunks(filePath);
-          resultsToBatch.push({
-            content,
-            metadata: {
-              path: filePath,
-              type: extname(filePath).toLowerCase() || 'unknown',
-              last_modified: stats.mtime.getTime()
-            }
-          });
+          const content = await readFileByExtension(filePath);
+          logInfo(`Processed file: ${filePath}
+          ${content}}`);
+          if (content) {
+              resultsToBatch.push({
+                  content,
+                  metadata: {
+                  path: filePath,
+                  type: extname(filePath).toLowerCase() || 'unknown',
+                  last_modified: stats.mtime.getTime()
+                  }
+              });
+          } else {
+              logInfo(`Skipping file due to read error or empty content: ${filePath}`);
+          }
+        } else {
+             logInfo(`Skipping file based on shouldSkipFile: ${filePath}`);
         }
       } catch (error: any) {
-        if (error.message?.includes('File exceeds 50MB limit')) {
-            logInfo(`Skipping large file: ${filePath}`);
-        } else if (error.code === 'ENOENT') {
+         if (error.code === 'ENOENT') {
             logError(`File not found during processing: ${filePath}`, { error: error, category: "Ollama", showUI: false });
-        }
-        else {
+        } else {
             logError(`File processing failed: ${filePath}`, { error: error, category: "Ollama", showUI: false });
         }
       }
     }
   };
 
-  const workerCount = Math.min(CONCURRENT_LIMIT, filePaths.length);
+  const workerCount = Math.min(CONCURRENT_LIMIT, filesToProcess.length);
   for (let i = 0; i < workerCount; i++) {
     processPromises.push(worker());
   }
 
   await Promise.all(processPromises);
 
-  logInfo(`Processed ${filePaths.length} files, found ${resultsToBatch.length} valid documents for embedding.`);
+  logInfo(`Processed files, found ${resultsToBatch.length} valid documents for embedding.`);
 
   if (resultsToBatch.length === 0) {
       logInfo(`No new documents to add to collection ${COLLECTION_NAME}.`);

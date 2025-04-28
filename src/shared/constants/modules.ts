@@ -1,5 +1,6 @@
 export enum Module {
    ChromaDB = "ChromaDB",
    Ollama = "Ollama",
-   GPU = "GPU"
+   GPU = "GPU",
+   FileProcessing = "FileProcessing"
 };

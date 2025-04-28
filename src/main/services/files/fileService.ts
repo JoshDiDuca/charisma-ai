@@ -1,8 +1,12 @@
 import { dialog } from 'electron';
 import { createReadStream, promises as fs, Stats } from 'fs';
+import fsOrginal from 'fs';
+import pdfParse from 'pdf-parse';
 import path, { extname } from 'path';
 import { fileTypeFromFile } from 'file-type';
-import { logError } from '../log/logService';
+import { logError, logInfo } from '../log/logService';
+import { promisify } from 'util';
+import mammoth from 'mammoth';
 
 export const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
@@ -118,9 +122,8 @@ export const isBinaryFileByExtension = (filePath: string): boolean => {
     '.dll', '.exe', '.so', '.dylib', '.bin', '.obj', '.o', '.a', '.lib',
     '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp', '.ico',
     '.mp3', '.wav', '.ogg', '.flac', '.aac',
-    '.mp4', '.avi', '.mov', '.mkv', '.webm',
+    '.mp4', '.pdf', '.avi', '.mov', '.mkv', '.webm',
     '.zip', '.rar', '.gz', '.tar', '.7z',
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
     '.sqlite', '.db', '.mdb',
     '.woff', '.woff2', '.ttf', '.otf', '.eot'
   ]);
@@ -136,6 +139,27 @@ export const isTextFile = async (filePath: string): Promise<boolean> => {
   }
 };
 
+export const isPdfFile = async (filePath: string): Promise<boolean> => {
+  try {
+    const type = await fileTypeFromFile(filePath);
+    return !type || type.mime.startsWith('application/pdf');
+  } catch (error) {
+    return !isBinaryFileByExtension(filePath);
+  }
+};
+
+export const isDocFile = async (filePath: string): Promise<boolean> => {
+  try {
+    const ext = extname(filePath).toLowerCase();
+    const type = await fileTypeFromFile(filePath);
+    return !type || type.mime.startsWith('application/msword')
+    || type.mime.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    || ext === '.doc' || ext === '.docx';
+  } catch (error) {
+    return !isBinaryFileByExtension(filePath);
+  }
+};
+
 export async function shouldSkipFile(filePath: string, stats: Stats): Promise<boolean> {
   if (stats.isDirectory()) {
     return true;
@@ -143,15 +167,85 @@ export async function shouldSkipFile(filePath: string, stats: Stats): Promise<bo
   if (stats.size > MAX_FILE_SIZE) {
     return true;
   }
-  if (isBinaryFileByExtension(filePath)) {
-    if (!await isTextFile(filePath)) {
-      return true;
-    }
-  } else {
-    if (!await isTextFile(filePath)) {
-      return true;
-    }
-  }
 
-  return false;
+    if (await isPdfFile(filePath)) {
+      return false;
+    }
+     if (await isDocFile(filePath)) {
+      return false;
+    }
+    if (await isTextFile(filePath)) {
+      return false;
+    }
+
+
+    if (isBinaryFileByExtension(filePath)) {
+      return true;
+    }
+
+    return true;
+}
+
+
+
+const readFileAsync = promisify(fsOrginal.readFile);
+
+
+export async function readPdfFile(filePath: string): Promise<string> {
+  try {
+    const dataBuffer = await readFileAsync(filePath);
+    const data = await pdfParse(dataBuffer);
+    return data.text;
+  } catch (error) {
+    logError(`Failed to read PDF file using pdf-parse: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+    return '';
+  }
+}
+
+async function readWordFile(filePath: string): Promise<string> {
+    try {
+        const buffer = await fs.readFile(filePath);
+        const result = await mammoth.extractRawText({ buffer: buffer });
+        return result.value;
+    } catch (error) {
+        logError(`Failed to read Word file using mammoth: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+        return '';
+    }
+}
+
+export async function readBinaryFileAsBase64(filePath: string): Promise<string> {
+  try {
+    const data = await readFileAsync(filePath);
+    return data.toString('base64');
+  } catch (error) {
+    logError(`Failed to read binary file as Base64: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+    return '';
+  }
+}
+
+export async function readTextFileSimple(filePath: string): Promise<string> {
+    try {
+        const content = await fs.readFile(filePath, 'utf-8');
+        if (Buffer.byteLength(content, 'utf8') > MAX_FILE_SIZE * 0.5) {
+             logInfo(`Large text file encountered, might consume significant memory: ${filePath}`);
+        }
+        return content;
+    } catch(error) {
+        logError(`Failed to read text file: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+        return '';
+    }
+}
+
+export async function readFileByExtension(filePath: string): Promise<string | undefined> {
+  if (await isPdfFile(filePath)) {
+    logInfo(`Reading PDF: ${filePath}`);
+    return await readPdfFile(filePath);
+  }  else if (await isDocFile(filePath)) {
+    logInfo(`Reading Word Document: ${filePath}`);
+    return await readWordFile(filePath);
+  } else if (await isTextFile(filePath)) {
+    logInfo(`Reading Text File: ${filePath}`);
+    return await readTextFileSimple(filePath);
+  }
+    return '';
 }

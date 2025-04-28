@@ -52,8 +52,8 @@ export async function loadOllamaEmbedding(embeddingPath: string) {
   const absoluteStartPath = path.resolve(embeddingPath);
   const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 
-  const BATCH_SIZE = 10;
-  const CONCURRENT_LIMIT = 20;
+  const BATCH_SIZE = 15;
+  const CONCURRENT_LIMIT = 30;
   let batch: Array<{content: string, metadata: Metadata}> = [];
   let activePromises = 0;
 
@@ -73,7 +73,6 @@ export async function loadOllamaEmbedding(embeddingPath: string) {
     .filter(file => !file.isFolder && isTextFile(file.path))
     .map(file => file.path);
 
-  // Create promise queue for concurrency control
   const processFile = async (file: string) => {
     try {
       const stats = await fs.promises.stat(file);
@@ -81,7 +80,6 @@ export async function loadOllamaEmbedding(embeddingPath: string) {
 
       const content = await readFileInChunks(file);
 
-      // Synchronized batch management
       batch.push({
         content,
         metadata: {

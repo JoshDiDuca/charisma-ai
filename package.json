@@ -2,7 +2,7 @@
   "displayName": "Charisma",
   "name": "charisma-ai",
   "description": "Charisma AI LLM Client",
-  "version": "6.0.0",
+  "version": "0.0.0",
   "main": "./node_modules/.dev/main/index.js",
   "resources": "src/resources",
   "author": {

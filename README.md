@@ -1,123 +1,114 @@
-# Charisma AI
+# 🌟 Charisma Studio 🌟
 
-**Ask questions about your local folders using local and remote Large Language Models.**
+**Ask questions about your local folders using local and remote LLMs with RAG-powered insights.**
 
-Charisma AI is a desktop client application designed to help you understand the contents of local folders (like codebases, research papers, project files, etc.) by leveraging the power of Large Language Models (LLMs). Connect to your local Ollama instance, select a folder, and start asking questions!
-
-<!-- Add a compelling screenshot or GIF of the application in action -->
-## Screenshot / Demo
-
-![Screenshot Placeholder](placeholder.png) <!-- Replace placeholder.png with the actual path/URL -->
-*(Add your screenshot here showing the main interface: folder selection, chat window, etc.)*
+Charisma Studio is a desktop client that transforms how you interact with local directories (codebases, research papers, projects) by combining LLMs like Ollama with Retrieval-Augmented Generation (RAG) and ChromaDB vector search. Select any folder, and get AI-powered context about its contents through an intuitive chat interface.
 
 ---
 
-## Features
+## 🚀 Features
 
-*   **Local LLM Integration:** Connects directly to a running Ollama instance on your machine.
-*   **Folder Context:** Select any folder on your local filesystem to provide context for your questions.
-*   **Intuitive Chat Interface:** Ask questions about the selected folder's content in a natural language chat interface.
-*   **Cross-Platform:** Built with web technologies (React, TypeScript) aiming for cross-platform compatibility (potentially via Electron in the future).
-*   **Extensible:** Planned support for additional local and remote LLM providers.
+### Core Capabilities
 
-## Technology Stack
+- **Local LLM Integration** - Direct connection to Ollama instances
+- **RAG-Powered Insights** - ChromaDB vector search for precise context
+- **Multi-Format Support** - Process code, text, Markdown, and PDFs
+- **Real-Time Streaming** - Typewriter-style response delivery
 
-*   **Frontend:** React, TypeScript
-*   **Styling:** Tailwind CSS (or specify your choice)
-*   **State Management:** React Context API / Zustand (or specify your choice)
-*   **LLM Backend (Initial):** Ollama
+### Developer Experience
 
-## Prerequisites
+- **Electron Packaging** - Cross-platform desktop app
+- **TypeSafe Architecture** - Built with React + TypeScript
 
-Before you begin, ensure you have the following installed and running:
+---
 
-1.  **Node.js and npm/yarn/pnpm:** [Download Node.js](https://nodejs.org/) (LTS version recommended).
-2.  **Ollama:** Install Ollama from [ollama.com](https://ollama.com/).
-3.  **Running Ollama Instance:** Make sure the Ollama application or service is running.
-4.  **Ollama Model:** Pull at least one model using the Ollama CLI (e.g., `ollama pull llama3`). The application will need a model to communicate with.
-5. **chromadb** Download and install chromadb
+## 🛠 Technology Stack
 
-## Installation
+| Component | Choice | Why? |
+| :-- | :-- | :-- |
+| **Frontend** | React + TypeScript | Type safety, component reuse |
+| **Styling** | Tailwind CSS + Headless UI | Rapid UI development |
+| **State** | Zustand | Lightweight global management |
+| **LLM Core** | Ollama + ChromaDB | Local-first, privacy focused |
+| **Packaging** | Electron + Vite | Cross-platform binaries |
 
-1.  **Clone the repository:**
-    ```
-    git clone <your-repository-url>
-    cd <your-repository-name>
-    ```
-2.  **Install dependencies:**
-    ```
-    pnpm install
-    ```
 
-## Running the Application
+---
 
-1.  **Ensure Ollama is running** locally with a model available.
-2.  **Start the electron app:**
-    ```
-    pnpm start
-    ```
-## Usage Guide
+## ⚙️ Installation
 
-## Publishing
+### Prerequisites Checklist
 
-1.  **Ensure Ollama is running** locally with a model available.
-2.  **Start the electron app:**
-    ```
-    pnpm build
-    ```
-## Usage Guide
+- [ ] Node.js 18+ ([download](https://nodejs.org/))
+**Not Required**
+- [ ] Ollama running locally ([setup guide](https://ollama.com/)) (or use the bundled version with project)
+- [ ] ChromaDB installed (`pip install chromadb`) (or use the bundled version with the project)
 
-1.  Launch the application.
-2.  Use the "Select Folder" button or designated area to choose the local directory you want to ask questions about.
-3.  The application will process the folder content to provide context to the LLM (details depend on implementation - e.g., reading file contents, creating summaries, or embeddings).
-4.  Type your questions about the folder's contents into the chat input and press Enter.
-5.  The application will send your question along with the folder context to your configured Ollama instance and display the response.
+```bash
+# 1. Clone repository
+git clone https://github.com/yourusername/charisma-studio.git
+cd charisma-studio
 
-## ToDo / Planned Features
+# 2. Install dependencies
+pnpm install
 
-*   **Core Functionality:**
-    *   [ ] Explore Retrieval-Augmented Generation (RAG) using embeddings (e.g., Ollama embeddings, Sentence Transformers) for more accurate answers on large folders.
-    *   [✔️] Allow specifying *which* Ollama model to use (if multiple are available).
-    *   [✔️] Download ollama models with downloading status.
-    *   [ ] Background processing/indexing for large folders.
-    *   [ ] Allow different file processing and reading.
-    *   [ ] Allow multiple data sources.
-    *   [ ] Allow filtering by file type (e.g., only include `.ts`, `.py` files).
-    *   [ ] Image processing with an image model?
-*   **UI/UX Improvements:**
-    *   [ ] Implement robust studio like UI.
-    *   [✔️] Loading indicators while processing folders and waiting for LLM responses.
-    *   [ ] Better error handling and display (e.g., Ollama connection issues, model not found). Displaying a toast when there's a backend error
-    *   [✔️] Streaming responses from the LLM.
-    *   [ ] Chat history persistence (session or local storage).
-    *   [ ] Copy code snippets from responses.
-    *   [ ] Syntax highlighting for code in responses.
-    *   [ ] Progress indicator for initial folder processing/indexing.
-*   **LLM Provider Expansion:**
-    *   [ ] Integration with other local LLM servers (e.g., LM Studio, Jan).
-    *   [ ] UI for selecting the desired LLM provider and model.
-    *   [ ] Support for remote APIs (OpenAI, Anthropic, Gemini) with API key management.
-*   **Packaging:**
-    *   [x] Package as a standalone desktop application using Electron.
+# 3. Start dev server
+pnpm dev
+```
 
-## Future Vision
 
-Looking further ahead, Charisma AI could evolve into a more powerful developer and knowledge worker tool:
+---
 
-*   **Advanced RAG:** Implement more sophisticated RAG techniques (re-ranking, query transformation) for highly accurate, context-aware responses.
-*   **Multi-Modal Support:** Allow asking questions about images, diagrams, or other non-text files within the folder (requires multi-modal LLMs).
-*   **Code Generation & Modification:** Enable the LLM to suggest code changes, generate boilerplate, or refactor code based on the folder context.
-*   **Deeper IDE Integration:** Develop plugins for IDEs like VS Code to provide contextual insights directly within the coding environment.
-*   **Cross-Platform Native:** Explore building fully native versions for optimal performance and system integration.
-*   **Collaboration:** Allow sharing sessions or insights derived from a folder context (with appropriate privacy controls).
-*   **Plugin System:** Allow third-party developers to extend functionality (e.g., custom data loaders, specific domain knowledge injectors).
+## 🏁 Quick Start
 
-## Contributing
+```bash
+# Pull a model (try different sizes)
+ollama pull llama3:8b
 
-Contributions are welcome! Please follow standard GitHub practices: fork the repository, create a feature branch, and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
+# Launch studio with debug mode
+DEBUG=true pnpm start
+```
 
-*(Add more specific contribution guidelines if you have them)*
+1. Click **Folder Select** and choose a codebase
+2. Type questions like:
+    - "Explain the main architecture"
+    - "Find all TypeScript interfaces"
+    - "What dependencies are we using?"
 
-## License
+---
 
-This project is licensed under the [MIT License](LICENSE).
+## 🛣 Roadmap
+
+### Next Release (v0.5)
+
+- [ ] Multi-model conversations
+- [ ] Code modification suggestions
+- [ ] Local storage for frequent queries
+
+
+### Future Vision
+
+- **AI Pair Programmer** - Refactor code via chat
+- **Multi-Modal Analysis** - Images/PDFs support
+- **Team Collaboration** - Shared session histories
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow our [contribution guidelines](CONTRIBUTING.md) and:
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feat/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push branch (`git push origin feat/amazing-feature`)
+5. Open Pull Request
+
+---
+
+## 📜 License
+
+MIT Licensed - See [LICENSE](LICENSE) for details.
+*Ollama and ChromaDB have their own licenses - please review separately.*[^1][^4][^11]
+
+<div style="text-align: center">⁂</div>

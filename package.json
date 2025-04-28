@@ -1,7 +1,7 @@
 {
   "displayName": "Charisma",
-  "name": "charisma-ai",
-  "description": "Charisma AI LLM Client",
+  "name": "charisma-ai-studio",
+  "description": "Charisma Studio",
   "version": "0.0.1",
   "main": "./node_modules/.dev/main/index.js",
   "resources": "src/resources",

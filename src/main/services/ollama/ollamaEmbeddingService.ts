@@ -52,8 +52,8 @@ export async function loadOllamaEmbedding(embeddingPath: string) {
   const absoluteStartPath = path.resolve(embeddingPath);
   const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 
-  const BATCH_SIZE = 15;
-  const CONCURRENT_LIMIT = 30;
+  const BATCH_SIZE = 50;
+  const CONCURRENT_LIMIT = 100;
   let batch: Array<{content: string, metadata: Metadata}> = [];
   let activePromises = 0;
 

@@ -6,7 +6,6 @@ import { Module } from "shared/constants/modules";
 export type LogArgs = {
   error?: Error | any;
   showUI?: boolean;
-  throwError?: boolean;
   category?: keyof typeof Module;
 };
 
@@ -15,7 +14,7 @@ type LogLevel = 'error' | 'info' | 'warn';
 const logMessage = (
   level: LogLevel,
   message: string,
-  { error, showUI, category, throwError }: LogArgs = {}
+  { error, showUI, category }: LogArgs = {}
 ) => {
   const logPrefix = category ? `[${category}] ${message}` : message;
   const consoleMethod = console[level] || console.log;
@@ -30,9 +29,6 @@ const logMessage = (
 
   if (error) {
     consoleMethod(JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    if (throwError) {
-      throw error instanceof Error ? error : new Error(String(error));
-    }
   }
 
   if (showUI && mainWindow?.webContents) {

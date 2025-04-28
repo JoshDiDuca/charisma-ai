@@ -12,6 +12,9 @@
 /chroma
 /release
 
+/python-server/dist
+/python-server/build
+
 # misc
 .DS_Store
 .env

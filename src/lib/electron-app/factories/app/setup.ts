@@ -11,8 +11,14 @@ import { makeAppId } from 'shared/utils'
 import { ChromaInstanceService } from 'main/services/chroma/chromaInstanceService'
 import { OllamaInstanceService } from 'main/services/ollama/ollamaInstanceService'
 import { logError, logWarning } from 'main/services/log/logService'
+import { TTSInstanceService } from 'main/services/tts/ttsService'
 
 ignoreConsoleWarnings(['Manifest version 2 is deprecated'])
+
+
+const chromaService = new ChromaInstanceService()
+const ollamaService = new OllamaInstanceService()
+export const ttsService = new TTSInstanceService()
 
 export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
   if (ENVIRONMENT.IS_DEV) {
@@ -26,15 +32,20 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
   let window = await createWindow()
 
 
-  const chromaService = new ChromaInstanceService()
-  const ollamaService = new OllamaInstanceService()
   await ollamaService.start()
   await chromaService.start()
+  await ttsService.start()
+
+  const killServices = async () => {
+    await chromaService.stop()
+    await ollamaService.stop()
+    await ttsService.stop()
+
+  }
 
   app.on('will-quit', async (e) => {
     e.preventDefault()
-    await chromaService.stop()
-    await ollamaService.stop()
+    await killServices();
     app.exit()
   })
 
@@ -74,7 +85,10 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
     )
   )
 
-  app.on('window-all-closed', () => !PLATFORM.IS_MAC && app.quit())
+  app.on('window-all-closed', async () => {
+    await killServices();
+    return (!PLATFORM.IS_MAC && app.quit());
+   })
 
   return window
 }

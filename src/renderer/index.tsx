@@ -8,6 +8,8 @@ import { HeroUIProvider, ToastProvider } from '@heroui/react'
 import 'resources/styles/globals.sass'
 import './output.css'
 
+import "./scripts/audioRenderer"
+
 ReactDom.createRoot(document.querySelector('app') as HTMLElement).render(
   <React.StrictMode>
     <WindowStoreProvider>

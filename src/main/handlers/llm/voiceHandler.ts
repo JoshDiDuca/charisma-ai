@@ -6,6 +6,7 @@ import path from 'path';
 import { ipcMain, shell } from 'electron';
 import { getEligibleGpu } from 'main/services/gpuService';
 import { logError, logInfo } from 'main/services/log/logService';
+import { ttsService } from 'lib/electron-app/factories/app/setup';
 
 // FFmpeg conversion utility
 async function convertWebmToWav(inputPath: string, outputPath: string): Promise<void> {
@@ -81,4 +82,5 @@ export const registerVoiceHandlers = () => {
   // Keep existing recording handlers
   ipcMain.handle('start-recording', async () => ({ success: true }))
   ipcMain.handle('stop-recording', async () => ({ success: true }))
+  ipcMain.handle('text-to-speech', (_, text: string) => ttsService.streamPiperTTS(text, (chuck) => console.log(chuck), () => console.log("Doneeeeee")))
 };

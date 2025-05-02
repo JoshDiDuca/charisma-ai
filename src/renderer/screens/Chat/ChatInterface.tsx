@@ -40,6 +40,7 @@ export const ChatInterface = ({
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasFirstResponse, setHasFirstResponse] = useState(true);
+  const [conversationId, setConversationId] = useState<string | undefined>();
   const [isRecording, setIsRecording] = useState(false);
 
   // Audio recording references
@@ -67,24 +68,34 @@ export const ChatInterface = ({
       const response = await App.invoke(
         'send-message',
         inputValue,
-        model
+        model,
+        conversationId
       );
+      console.log(response);
 
-      // Add final message
-      setMessages((prev) => [
-        ...prev.filter(e => !e.incomplete),
-        {
-          id: Date.now(),
-          text: response.content,
-          sender: 'bot',
-          incomplete: false
-        },
+      if (response && response.conversationId) {
 
-      ]);
-      const voice = await App.invoke(
-        'text-to-speech',
-        response.content
-      );
+        setConversationId(response.conversationId);
+
+        // Add final message
+        setMessages((prev) => [
+          ...prev.filter(e => !e.incomplete),
+          {
+            id: Date.now(),
+            text: response.content,
+            sender: 'bot',
+            incomplete: false
+          },
+
+        ]);
+        const voice = await App.invoke(
+          'text-to-speech',
+          response.content
+        );
+      } else {
+
+        console.error('Chat error:');
+      }
     } catch (error) {
       console.error('Chat error:', error);
       setMessages((prev) => [
@@ -195,9 +206,12 @@ export const ChatInterface = ({
 
   useEffect(() => {
     const streamHandler = (
-      partial: string
-      ) => {
+      data: { partial: string, conversationId: string }
+    ) => {
+      const { partial, conversationId } = data;
+
       setHasFirstResponse(true);
+      setConversationId(conversationId);
 
       setMessages((prev) => {
         const last = prev[prev.length - 1];
@@ -249,11 +263,10 @@ export const ChatInterface = ({
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`max-w-[80%] px-4 py-2 rounded-large ${
-              message.sender === 'user'
+            className={`max-w-[80%] px-4 py-2 rounded-large ${message.sender === 'user'
                 ? 'self-end bg-primary text-primary-foreground'
                 : 'self-start bg-default-300 text-default-foreground'
-            }`}
+              }`}
           >
             <Markdown>{message.text}</Markdown>
           </div>

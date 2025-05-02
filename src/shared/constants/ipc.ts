@@ -10,9 +10,22 @@ export const IPC = {
     SHOW_UI_INFO: 'ui:info',
     SHOW_UI_WARN: 'ui:warn'
   },
-  LLM : {
-    UPDATE_ALL_MODELS: 'update-all-models',
-    UPDATE_ALL_EMBEDDING_MODELS: 'update-all-embedding-models',
-    STREAM_UPDATE: 'stream-update',
+  LLM: {
+    GET_STATUS: 'llm:get-status',
+    GET_ALL_MODELS: 'llm:get-all-models',
+    UPDATE_ALL_MODELS: 'llm:update-all-models',
+    DOWNLOAD_MODEL: 'llm:download-model',
+    SEND_MESSAGE: 'llm:send-message',
+    STREAM_UPDATE: 'llm:stream-update',
+    GET_MODEL_INFO: 'llm:get-model-info'
+  },
+  CONVERSATION: {
+    GET_ALL: 'conversation:get-all',
+    GET: 'conversation:get',
+    CREATE: 'conversation:create',
+    DELETE: 'conversation:delete',
+    UPDATE_TITLE: 'conversation:update-title',
+    ADD_MESSAGE: 'conversation:add-message',
+    GENERATE_TITLE: 'conversation:generate-title'
   }
 }

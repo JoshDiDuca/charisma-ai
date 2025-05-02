@@ -185,7 +185,7 @@ export async function getOllamaEmbeddingRetrieve(prompt: string): Promise<(strin
   }
 }
 
-export async function sendMessageWithEmbedding(message: string, model: string): Promise<{ content: string, [key: string]: any }> {
+export async function sendMessageWithEmbedding(message: string, model: string, conversationId?: string): Promise<{ content: string, [key: string]: any }> {
   try {
     if (embedFolder) {
       logInfo(`Checking for updates in embedding folder: ${embedFolder}`);
@@ -206,7 +206,8 @@ export async function sendMessageWithEmbedding(message: string, model: string): 
     }
 
     logInfo(`Sending message to model ${model}.`);
-    const response = await sendMessage(finalPrompt, model, []);
+    const response = await sendMessage(finalPrompt, model, [], conversationId);
+    console.log(response);
 
     return {
       ...response,

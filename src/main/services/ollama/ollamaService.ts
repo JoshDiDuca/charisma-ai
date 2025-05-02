@@ -1,9 +1,17 @@
+// Update src/main/services/ollamaService.ts
+
 import axios from 'axios';
 import { mainWindow } from 'main/windows/main';
 import { Ollama, Tool } from 'ollama';
 import { OllamaModels } from './ollamaCatalog';
 import { IPC } from 'shared/constants';
 import { logError, logInfo } from '../log/logService';
+import {
+  getConversation,
+  createNewConversation,
+  addMessageToConversation,
+  generateConversationTitle
+} from './ollamaConversationService';
 
 const modelPollIntervals: Map<string, NodeJS.Timeout> = new Map();
 export const currentlyInstallingModels: Set<string> = new Set();
@@ -35,17 +43,17 @@ export const getOllamaStatus = async (): Promise<boolean> => {
 };
 
 export const getInstalledModels = async (): Promise<string[]> => {
-    try {
-        const response = await ollama.list();
-        return response.models
-            .map((m) => m.name)
-            .filter(modelName =>
-                OllamaModels.some(catalogModel => modelName.startsWith(catalogModel.name))
-            );
-    } catch (error) {
-        logError(`Failed to get installed models`, { error, category: "Ollama", showUI: true });
-        return [];
-    }
+  try {
+    const response = await ollama.list();
+    return response.models
+      .map((m) => m.name)
+      .filter(modelName =>
+        OllamaModels.some(catalogModel => modelName.startsWith(catalogModel.name))
+      );
+  } catch (error) {
+    logError(`Failed to get installed models`, { error, category: "Ollama", showUI: true });
+    return [];
+  }
 };
 
 export const getAllModels = async () => {
@@ -110,43 +118,87 @@ export const downloadModel = async (modelName: string) => {
   return { status: 'download_started' };
 };
 
-
 export const sendMessage = async (
   message: string,
   model: string,
-  tools: Tool[],
+  tools: Tool[] = [],
+  conversationId?: string,
   systemMessage?: string
 ) => {
   try {
+    let conversation;
+
+    if (conversationId) {
+      conversation = await getConversation(conversationId);
+      if (!conversation) {
+        throw new Error(`Conversation with ID ${conversationId} not found`);
+      }
+    } else {
+      conversation = await createNewConversation(model, systemMessage);
+    }
+
+    // Add user message to conversation
+    await addMessageToConversation(conversation.id, {
+      role: 'user',
+      content: message
+    });
+
+    // Get updated conversation with the new message
+    conversation = await getConversation(conversation.id);
+    if (!conversation) {
+      throw new Error("Failed to retrieve conversation after adding user message");
+    }
+
+    // Get all messages for context
+    const ollamaMessages = conversation.messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+
+    // Send to Ollama
     const responseStream = await ollama.chat({
       model,
-      messages: [
-        ...(systemMessage ? [{ role: 'system', content: systemMessage }] : []),
-        { role: 'user', content: message },
-      ],
+      messages: ollamaMessages,
       stream: true,
       tools,
-    })
+    });
 
-    let fullResponse = ''
+    let fullResponse = '';
     for await (const chunk of responseStream) {
-      fullResponse += chunk.message.content
-      mainWindow?.webContents.send(IPC.LLM.STREAM_UPDATE, chunk.message.content)
+      fullResponse += chunk.message.content;
+      mainWindow?.webContents.send(IPC.LLM.STREAM_UPDATE, {
+        content: chunk.message.content,
+        conversationId: conversation.id
+      });
+    }
+
+    // Add assistant response to conversation
+    await addMessageToConversation(conversation.id, {
+      role: 'assistant',
+      content: fullResponse
+    });
+
+    // If this is a new conversation with just a few messages, generate a better title
+    conversation = await getConversation(conversation.id);
+    if (conversation && conversation.messages.length <= 3 && conversation.title.startsWith('Conversation')) {
+      await generateConversationTitle(conversation.id, model);
     }
 
     return {
       status: 'complete',
       content: fullResponse,
-    }
+      conversationId: conversation?.id
+    };
   } catch (error) {
-    logError(`Chat error`, { error, category: "Ollama", showUI: true })
+    logError(`Chat error`, { error, category: "Ollama", showUI: true });
     return {
       status: 'error',
       error: error,
-    }
+    };
   }
-}
+};
+
 export const getModelInfo = async (modelName: string) => {
-  const response = await ollama.list()
-  return response.models.find((m) => m.name === modelName)
-}
+  const response = await ollama.list();
+  return response.models.find((m) => m.name === modelName);
+};

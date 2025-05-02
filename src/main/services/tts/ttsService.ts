@@ -13,6 +13,7 @@ const execAsync = promisify(exec);
 export class TTSInstanceService {
   private process: any;
   private isRunning: boolean = false;
+  private ignoreRun: boolean = false;
   private onAudioChunk: (chunk: Buffer) => void = () => {};
   private modelToUse = "en_GB-northern_english_male-medium.onnx";
 
@@ -21,27 +22,6 @@ export class TTSInstanceService {
       return path.join(process.resourcesPath, 'bin', 'piper');
     } else {
       return path.join(app.getAppPath(), 'resources', getPlatform(), 'bin', 'piper');
-    }
-  }
-
-  async isPiperRunning(): Promise<boolean> {
-    try {
-      const platform = process.platform;
-      let cmd = '';
-
-      if (platform === 'win32') {
-        cmd = 'tasklist /FI "IMAGENAME eq piper.exe" /NH';
-      } else if (platform === 'darwin' || platform === 'linux') {
-        cmd = 'ps aux | grep piper | grep -v grep';
-      } else {
-        return false;
-      }
-
-      const { stdout } = await execAsync(cmd);
-      return stdout.toLowerCase().includes('piper');
-    } catch (error) {
-      logError(`Error checking if Piper is running: ${error}`);
-      return false;
     }
   }
 
@@ -61,15 +41,7 @@ export class TTSInstanceService {
 
   async start() {
     // Check if already running internally
-    if (this.isRunning) return true;
-
-    // Check if piper is running as a separate process
-    const piperAlreadyRunning = await this.isPiperRunning();
-    if (piperAlreadyRunning) {
-      this.isRunning = true;
-      logInfo('Piper is already running in another process');
-      return true;
-    }
+    if (this.isRunning || this.ignoreRun) return true;
 
     const binaryPath = this.getBinaryPath();
     const execName = process.platform === 'win32' ? 'piper.exe' : 'piper';

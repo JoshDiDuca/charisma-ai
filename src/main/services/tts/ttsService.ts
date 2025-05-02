@@ -25,7 +25,12 @@ export class TTSInstanceService {
     }
   }
 
+  cleanText(text: string) {
+    return text.replaceAll("*", "").replaceAll("#", "").replaceAll("_", "").replaceAll(":", ".");
+  }
+
   async streamPiperTTS(text: string, onAudioChunk: (chunk: Buffer) => void, onEnd: () => void) {
+    text = this.cleanText(text);
     logInfo(`tts ${text}`);
     if (!this.isRunning) {
       throw Error('TTS is not running');
@@ -82,7 +87,7 @@ export class TTSInstanceService {
 
   async stop() {
     if (!this.isRunning) return;
-    this.process.kill();
+    this.process?.kill();
     this.isRunning = false;
   }
 }

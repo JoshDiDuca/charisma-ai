@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 
-import { Container, Heading, Button } from 'renderer/components'
+import { Container } from 'renderer/components'
 import { useWindowStore } from 'renderer/store'
 import { ChatInterface } from '../Chat/ChatInterface'
 import { Sidebar } from 'renderer/components/Sidebar/Sidebar'
@@ -16,9 +16,9 @@ export function MainScreen() {
   const navigate = useNavigate()
   const store = useWindowStore().about;
 
-  const [model, setModel] = useState<string>('llama3:latest');
+  const [model, setModel] = useState<string>('');
   const [conversation, setConversation] = useState<Conversation | undefined>();
-  const [embeddingModel, setEmbeddingModel] = useState<string>('mxbai-embed-large:latest');
+  const [embeddingModel, setEmbeddingModel] = useState<string>('');
 
   useEffect(() => {
     App.sayHelloFromBridge()

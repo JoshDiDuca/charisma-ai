@@ -6,6 +6,8 @@ import { FaSpinner, FaPlus, FaComments, FaTrash } from 'react-icons/fa';
 import { AppStatus } from 'shared/types/AppStatus';
 import { Conversation } from 'shared/types/Conversation';
 import { IPC } from 'shared/constants';
+import { isNil } from 'lodash';
+import { CustomSelect } from '../Common/Select';
 
 const { App } = window;
 
@@ -137,6 +139,28 @@ export const Sidebar = ({
   });
 
   useEffect(() => {
+    if (embeddingModels.length > 0 && !isNil(embeddingModel)) {
+      const installedModel = embeddingModels.find(m => m.type == "Embedding" && m.installed);
+      if (installedModel) {
+        setEmbeddingModel(installedModel.name);
+      } else if (embeddingModels[0]) {
+        setEmbeddingModel(embeddingModels[0].name);
+      }
+    }
+  }, [embeddingModels, embeddingModel]);
+
+  useEffect(() => {
+    if (models.length > 0 && !isNil(model)) {
+      const installedModel = models.find(m => m.type == "LLM" && m.installed);
+      if (installedModel) {
+        setModel(installedModel.name);
+      } else if (models[0]) {
+        setModel(models[0].name);
+      }
+    }
+  }, [models, model]);
+
+  useEffect(() => {
     loadStatus();
     loadEmbeddingModels();
     loadModels();
@@ -190,26 +214,46 @@ export const Sidebar = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Model</label>
-          <Select value={model} onChange={(e) => downloadModel(e.target.value, 'LLM')}>
-            {models.map((m) => (
-              <SelectItem key={m.name} textValue={m.name}>
-                {m.name} {m.installed ? "✔️" : m.installing ? <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
-              </SelectItem>
-            ))}
-          </Select>
-        </div>
+        <label className="text-sm font-medium">Model</label>
+        <CustomSelect
+          value={model}
+          onChange={(value) => downloadModel(value, 'LLM')}
+          options={models.map((m) => ({
+            key: m.name,
+            value: m.name,
+            label: (
+              <div className="flex items-center justify-between w-full">
+                <span>{m.name}</span>
+                <span>
+                  {m.installed ? "✔️" : m.installing ? 
+                    <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
+                </span>
+              </div>
+            )
+          }))}
+        />
+      </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Embedding Model</label>
-          <Select value={embeddingModel} onChange={(e) => downloadModel(e.target.value, 'Embedding')}>
-            {embeddingModels.map((m) => (
-              <SelectItem key={m.name} textValue={m.name}>
-                {m.name} {m.installed ? "✔️" : m.installing ? <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
-              </SelectItem>
-            ))}
-          </Select>
-        </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium">Embedding Model</label>
+        <CustomSelect
+          value={embeddingModel}
+          onChange={(value) => downloadModel(value, 'Embedding')}
+          options={embeddingModels.map((m) => ({
+            key: m.name,
+            value: m.name,
+            label: (
+              <div className="flex items-center justify-between w-full">
+                <span>{m.name}</span>
+                <span>
+                  {m.installed ? "✔️" : m.installing ? 
+                    <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
+                </span>
+              </div>
+            )
+          }))}
+        />
+      </div>
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">

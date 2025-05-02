@@ -167,10 +167,7 @@ export const sendMessage = async (
     for await (const chunk of responseStream) {
       fullResponse += chunk.message.content;
       console.log(chunk.message.content);
-      mainWindow?.webContents.send(IPC.LLM.STREAM_UPDATE, {
-        content: chunk.message.content,
-        conversationId: conversation.id
-      });
+      mainWindow?.webContents.send(IPC.LLM.STREAM_UPDATE, chunk.message.content);
     }
 
     // Add assistant response to conversation

@@ -1,14 +1,11 @@
 import { logInfo } from 'main/services/log/logService';
-import { initializeFileHandler } from './fileHandler'
-import { LlmHandlers, registerConversationHandlers } from './llm/llmHandler'
-import { registerVoiceHandlers } from './llm/voiceHandler';
+import { LlmHandlers } from './llm/llmHandler'
+import { FileHandlers } from './fileHandler';
+import { VoiceHandlers } from './llm/voiceHandler';
 
-export const handlers: object[] = [LlmHandlers];
+export const handlers: object[] = [LlmHandlers, FileHandlers, VoiceHandlers];
 
 export const initializeHandlers = () => {
   logInfo('Registering handles')
-  logInfo('Registered ' + LlmHandlers.name)
-  registerVoiceHandlers()
-  initializeFileHandler()
-  registerConversationHandlers()
+  logInfo('Registered ' + handlers.map((handler: any) => handler.name).join(', '))
 }

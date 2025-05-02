@@ -9,7 +9,6 @@ import {
   Spacer,
   Spinner,
 } from '@heroui/react';
-import { ModelManager } from 'renderer/components';
 import Markdown from 'react-markdown';
 import { inc } from 'semver';
 import { IPC } from 'shared/constants';
@@ -66,7 +65,7 @@ export const ChatInterface = ({
     try {
       // Send message and receive stream
       const response = await App.invoke(
-        'send-message',
+        IPC.LLM.SEND_MESSAGE,
         inputValue,
         model,
         conversationId
@@ -89,7 +88,7 @@ export const ChatInterface = ({
 
         ]);
         const voice = await App.invoke(
-          'text-to-speech',
+          IPC.VOICE.TEXT_TO_SPEECH,
           response.content
         );
       } else {

@@ -3,12 +3,13 @@ import { nodewhisper } from 'nodejs-whisper'
 import ollama from 'ollama';
 import fs from 'fs/promises';
 import path from 'path';
-import { ipcMain, shell } from 'electron';
+import { shell } from 'electron';
 import { getEligibleGpu } from 'main/services/gpuService';
 import { logError, logInfo } from 'main/services/log/logService';
 import { ttsService } from 'lib/electron-app/factories/app/setup';
+import { IpcHandle } from '../IpcHandle';
+import { IPC } from 'shared/constants';
 
-// FFmpeg conversion utility
 async function convertWebmToWav(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const ffmpeg = spawn('ffmpeg', [
@@ -28,47 +29,47 @@ async function convertWebmToWav(inputPath: string, outputPath: string): Promise<
   });
 }
 
-export async function transcribeAudio(audioData: string) {
-  const tempDir = path.join(process.cwd(), 'temp_audio');
-  await fs.mkdir(tempDir, { recursive: true });
+export class VoiceHandlers {
+  async transcribeAudio(audioData: string) {
+    const tempDir = path.join(process.cwd(), 'temp_audio');
+    await fs.mkdir(tempDir, { recursive: true });
 
-  try {
-    // Write WebM file
-    const webmPath = path.join(tempDir, `audio_${Date.now()}.webm`);
-    await fs.writeFile(webmPath, Buffer.from(audioData, 'base64'));
-
-    // Convert to WAV
-    const wavPath = path.join(tempDir, `audio_${Date.now()}.wav`);
-    await convertWebmToWav(webmPath, wavPath);
-
-    // Whisper transcription
-    const transcript = await nodewhisper(wavPath, {
-      modelName: 'base',
-      autoDownloadModelName: 'base',
-      withCuda: !!(await getEligibleGpu())
-    });
-
-    // Ollama processing
-    const processed = await ollama.generate({
-      model: 'llama3.1',
-      prompt: transcript,
-      stream: false
-    });
-
-    return {
-      raw: transcript,
-      processed: processed.response
-    };
-  } finally {
-    await fs.rm(tempDir, { recursive: true, force: true });
-  }
-}
-
-// Electron IPC handler example
-export const registerVoiceHandlers = () => {
-  ipcMain.handle('transcribe-audio', async (_, audioData: string) => {
     try {
-      const result = await transcribeAudio(audioData);
+      // Write WebM file
+      const webmPath = path.join(tempDir, `audio_${Date.now()}.webm`);
+      await fs.writeFile(webmPath, Buffer.from(audioData, 'base64'));
+
+      // Convert to WAV
+      const wavPath = path.join(tempDir, `audio_${Date.now()}.wav`);
+      await convertWebmToWav(webmPath, wavPath);
+
+      // Whisper transcription
+      const transcript = await nodewhisper(wavPath, {
+        modelName: 'base',
+        autoDownloadModelName: 'base',
+        withCuda: !!(await getEligibleGpu())
+      });
+
+      // Ollama processing
+      const processed = await ollama.generate({
+        model: 'llama3.1',
+        prompt: transcript,
+        stream: false
+      });
+
+      return {
+        raw: transcript,
+        processed: processed.response
+      };
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  }
+
+  @IpcHandle(IPC.VOICE.TRANSCRIBE_AUDIO)
+  async handleTranscribeAudio(audioData: string) {
+    try {
+      const result = await this.transcribeAudio(audioData);
       return { success: true, ...result };
     } catch (error) {
       logError('Transcription failed.', { error, showUI: true });
@@ -77,10 +78,24 @@ export const registerVoiceHandlers = () => {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
-  });
+  }
 
-  // Keep existing recording handlers
-  ipcMain.handle('start-recording', async () => ({ success: true }))
-  ipcMain.handle('stop-recording', async () => ({ success: true }))
-  ipcMain.handle('text-to-speech', (_, text: string) => ttsService.streamPiperTTS(text, (chuck) => console.log(chuck), () => console.log("Doneeeeee")))
-};
+  @IpcHandle(IPC.VOICE.START_RECORDING)
+  async startRecording() {
+    return { success: true };
+  }
+
+  @IpcHandle(IPC.VOICE.STOP_RECORDING)
+  async stopRecording() {
+    return { success: true };
+  }
+
+  @IpcHandle(IPC.VOICE.TEXT_TO_SPEECH)
+  async textToSpeech(text: string) {
+    return ttsService.streamPiperTTS(
+      text,
+      (chunk) => console.log(chunk),
+      () => console.log("Doneeeeee")
+    );
+  }
+}

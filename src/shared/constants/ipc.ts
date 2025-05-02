@@ -10,14 +10,32 @@ export const IPC = {
     SHOW_UI_INFO: 'ui:info',
     SHOW_UI_WARN: 'ui:warn'
   },
+  FILE: {
+    SELECT_FOLDER: "select-folder",
+    GET_FOLDER_FILES: "get-folder-files"
+  },
+  CORE: {
+    GET_APP_STATUS: 'get-app-status'
+  },
   LLM: {
     GET_STATUS: 'llm:get-status',
     GET_ALL_MODELS: 'llm:get-all-models',
+    GET_INSTALLED_MODELS: 'llm:get-installed-models',
+    GET_INSTALLED_EMBEDDING_MODELS: 'llm:get-installed-embedding-models',
+    GET_ALL_EMBEDDING_MODELS: 'llm:get-all-embedding-models',
+    UPDATE_ALL_EMBEDDING_MODELS: "llm:update-all-embedding-models",
     UPDATE_ALL_MODELS: 'llm:update-all-models',
     DOWNLOAD_MODEL: 'llm:download-model',
     SEND_MESSAGE: 'llm:send-message',
     STREAM_UPDATE: 'llm:stream-update',
     GET_MODEL_INFO: 'llm:get-model-info'
+  },
+  VOICE: {
+    STREAM_AUDIO_CHUCK: "stream-audio-chunk",
+    TRANSCRIBE_AUDIO: 'voice:transcribe-audio',
+    START_RECORDING: 'voice:start-recording',
+    STOP_RECORDING: 'voice:stop-recording',
+    TEXT_TO_SPEECH: 'voice:text-to-speech'
   },
   CONVERSATION: {
     GET_ALL: 'conversation:get-all',

@@ -6,6 +6,7 @@ import { logError, logInfo } from '../log/logService';
 import { mainWindow } from 'main/windows/main';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { IPC } from 'shared/constants';
 
 const execAsync = promisify(exec);
 
@@ -87,7 +88,7 @@ export class TTSInstanceService {
       if (Buffer.isBuffer(chunk)) {
         console.log("streaming audio");
         this.onAudioChunk(chunk);
-        mainWindow?.webContents.send("stream-audio-chunk", chunk);
+        mainWindow?.webContents.send(IPC.VOICE.STREAM_AUDIO_CHUCK, chunk);
       } else {
         logError(`Piper error 1`);
       }
@@ -97,7 +98,7 @@ export class TTSInstanceService {
       if (Buffer.isBuffer(err)) {
         console.log("streaming audio");
         this.onAudioChunk(err);
-        mainWindow?.webContents.send("stream-audio-chunk", err);
+        mainWindow?.webContents.send(IPC.VOICE.STREAM_AUDIO_CHUCK, err);
       } else {
         logError(`Piper error 2`);
       }

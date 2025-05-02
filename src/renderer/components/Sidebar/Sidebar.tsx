@@ -24,17 +24,17 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }: 
   const [treeData, setTreeData] = useState<TreeNode>();
 
   const handleSelectFolder = async () => {
-    const folder = await App.invoke('select-folder');
+    const folder = await App.invoke(IPC.FILE.SELECT_FOLDER);
     if (!folder) return;
 
     setFilePath(folder);
-    const fileList = await App.invoke('get-folder-files', folder);
+    const fileList = await App.invoke(IPC.FILE.GET_FOLDER_FILES, folder);
     setTreeData(fileList);
   };
 
   const loadStatus = async () => {
     try {
-      const response: AppStatus = await App.invoke('get-app-status');
+      const response: AppStatus = await App.invoke(IPC.CORE.GET_APP_STATUS);
       if (response) {
         setStatus(response.Ollama === 'Running' ? response : 'Stopped');
       } else {
@@ -47,14 +47,14 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }: 
   };
 
   const loadEmbeddingModels = async () => {
-    const response: OllamaModel[] = await App.invoke('get-all-embedding-models');
+    const response: OllamaModel[] = await App.invoke(IPC.LLM.GET_ALL_EMBEDDING_MODELS);
     if (response) {
       setEmbeddingModels(response);
     }
   };
 
   const loadModels = async () => {
-    const response: OllamaModel[] = await App.invoke('get-all-models');
+    const response: OllamaModel[] = await App.invoke(IPC.LLM.GET_ALL_MODELS);
     if (response) {
       setModels(response);
     }
@@ -76,7 +76,7 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }: 
   }, []);
 
   const downloadModel = async (modelName: string, type: 'LLM' | 'Embedding') => {
-    await App.invoke('download-model', modelName);
+    await App.invoke(IPC.LLM.DOWNLOAD_MODEL, modelName);
     if (type === 'LLM') {
       setModel(modelName);
       loadModels();

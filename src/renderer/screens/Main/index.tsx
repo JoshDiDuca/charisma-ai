@@ -7,6 +7,7 @@ import { ChatInterface } from '../Chat/ChatInterface'
 import { Sidebar } from 'renderer/components/Sidebar/Sidebar'
 import { IPC } from 'shared/constants'
 import { addToast } from '@heroui/react'
+import { Conversation } from 'shared/types/Conversation'
 
 // The "App" comes from the context bridge in preload/index.ts
 const { App } = window
@@ -16,6 +17,7 @@ export function MainScreen() {
   const store = useWindowStore().about;
 
   const [model, setModel] = useState<string>('llama3:latest');
+  const [conversation, setConversation] = useState<Conversation | undefined>();
   const [embeddingModel, setEmbeddingModel] = useState<string>('mxbai-embed-large:latest');
 
   useEffect(() => {
@@ -57,8 +59,8 @@ export function MainScreen() {
   return (
     <Container>
       <div className="inline-flex" style={{ width: '100%' }}>
-        <Sidebar model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
-        <ChatInterface model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
+        <Sidebar onSelectConversation={(conversation) => setConversation(conversation)} model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
+        <ChatInterface conversation={conversation} model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
       </div>
     </Container>
   )

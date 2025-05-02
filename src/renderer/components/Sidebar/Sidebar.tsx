@@ -2,9 +2,10 @@ import { Badge, Button, Card, Select, SelectItem } from '@heroui/react';
 import { useEffect, useState } from 'react';
 import { Tree, TreeNode } from './FileTree';
 import { OllamaModel } from 'shared/types/OllamaModel';
-import { IPC } from 'shared/constants';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaPlus, FaComments, FaTrash } from 'react-icons/fa';
 import { AppStatus } from 'shared/types/AppStatus';
+import { Conversation } from 'shared/types/Conversation';
+import { IPC } from 'shared/constants';
 
 const { App } = window;
 
@@ -13,15 +14,26 @@ export interface SidebarProps {
   embeddingModel: string;
   setModel: React.Dispatch<React.SetStateAction<string>>;
   setEmbeddingModel: React.Dispatch<React.SetStateAction<string>>;
+  onSelectConversation: (conversation?: Conversation) => void;
+  selectedConversationId?: string;
 }
 
-export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }: SidebarProps) => {
+export const Sidebar = ({
+  model,
+  embeddingModel,
+  setModel,
+  setEmbeddingModel,
+  onSelectConversation,
+  selectedConversationId
+}: SidebarProps) => {
   const [status, setStatus] = useState<AppStatus | string>('Loading...');
   const [filePath, setFilePath] = useState<string>('');
   const [files, setFiles] = useState<string[]>([]);
   const [embeddingModels, setEmbeddingModels] = useState<OllamaModel[]>([]);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [treeData, setTreeData] = useState<TreeNode>();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   const handleSelectFolder = async () => {
     const folder = await App.invoke(IPC.FILE.SELECT_FOLDER);
@@ -60,6 +72,40 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }: 
     }
   };
 
+  const loadConversations = async () => {
+    try {
+      const conversations: Conversation[] = await App.invoke(IPC.CONVERSATION.GET_ALL);
+      setConversations(conversations);
+    } catch (error) {
+      console.error("Failed to load conversations:", error);
+    }
+  };
+
+  const handleCreateConversation = async () => {
+    setIsCreatingConversation(true);
+    try {
+      onSelectConversation(undefined);
+    } catch (error) {
+      console.error("Failed to create conversation:", error);
+    } finally {
+      setIsCreatingConversation(false);
+    }
+  };
+
+  const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this conversation?')) return;
+
+    try {
+      const success = await App.invoke(IPC.CONVERSATION.DELETE, id);
+      if (success) {
+        setConversations(prev => prev.filter(conv => conv.id !== id));
+      }
+    } catch (error) {
+      console.error("Failed to delete conversation:", error);
+    }
+  };
+
   useEffect(() => {
     const unlistenModels = App.on(IPC.LLM.UPDATE_ALL_MODELS, (response: OllamaModel[]) => {
       setModels(response);
@@ -86,10 +132,15 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }: 
     }
   };
 
+  App.on(IPC.LLM.SEND_MESSAGE_FINISHED, () => {
+    loadConversations();
+  });
+
   useEffect(() => {
     loadStatus();
     loadEmbeddingModels();
     loadModels();
+    loadConversations();
   }, []);
 
   const getStatusDisplay = () => {
@@ -111,9 +162,13 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }: 
 
   const { text: statusText, color: statusColor } = getStatusDisplay();
 
+  const formatTimestamp = (timestamp: number) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
   return (
-    <Card className="p-4 w-120" style={{ width: '30rem' }}>
-      <div className="flex flex-col gap-4 h-screen">
+    <Card className="p-4" style={{ width: '400px', height: '100vh', overflowY: 'auto' }}>
+      <div className="flex flex-col gap-4 h-full">
         <div className="flex flex-col gap-2">
           <div className="inline-flex items-center">
             <img
@@ -154,6 +209,49 @@ export const Sidebar = ({ model, embeddingModel, setModel, setEmbeddingModel }: 
               </SelectItem>
             ))}
           </Select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Conversations</label>
+            <Button
+              variant="light"
+              size="sm"
+              onClick={handleCreateConversation}
+              disabled={isCreatingConversation}
+            >
+              {isCreatingConversation ? (
+                <FaSpinner style={{ animation: "spin 1s infinite linear" }} />
+              ) : (
+                <><FaPlus size={12} style={{ marginRight: '4px' }} /> New</>
+              )}
+            </Button>
+          </div>
+          <Card className="p-0 flex-grow overflow-y-auto" style={{ maxHeight: '200px' }}>
+            {conversations.length === 0 ? (
+              <div className="p-3 text-sm text-gray-500 text-center">
+                No conversations yet
+              </div>
+            ) : (
+              <div className="divide-y">
+                {conversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className={`p-2 cursor-pointer hover:bg-gray-50 flex justify-between items-start ${
+                      selectedConversationId === conv.id ? 'bg-gray-100' : ''
+                    }`}
+                    onClick={() => onSelectConversation(conv)}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="text-sm font-medium truncate">{conv.title}</div>
+                      <div className="text-xs text-gray-500">{formatTimestamp(conv.updatedAt)}</div>
+                    </div>
+                    <FaTrash onClick={(e) => handleDeleteConversation(conv.id, e)} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
 
         <div className="flex flex-col gap-2 flex-grow">

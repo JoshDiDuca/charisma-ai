@@ -13,6 +13,7 @@ export const getCurrentStatus = async () : Promise<AppStatus> => {
     [Module.ChromaDB]: chroma ? "Running" : "Stopped",
     [Module.Ollama]: ollama ? "Running" : "Stopped",
     [Module.GPU]: gpu ? "Running" : "Stopped",
+    [Module.Conversations]: "Running",
     [Module.FileProcessing]: "Running"
   };
 }

@@ -12,6 +12,7 @@ import {
 import Markdown from 'react-markdown';
 import { inc } from 'semver';
 import { IPC } from 'shared/constants';
+import { Conversation } from 'shared/types/Conversation';
 
 type Message = {
   id: number;
@@ -25,6 +26,7 @@ const { App } = window;
 export interface ChatInterfaceProps {
   model: string;
   embeddingModel: string;
+  conversation?: Conversation;
   setModel: React.Dispatch<React.SetStateAction<string>>;
   setEmbeddingModel: React.Dispatch<React.SetStateAction<string>>;
 }
@@ -33,6 +35,7 @@ export const ChatInterface = ({
   model,
   embeddingModel,
   setModel,
+  conversation,
   setEmbeddingModel,
 }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,6 +49,19 @@ export const ChatInterface = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+      setMessages(conversation?.messages.map((msg) => ({
+        id: msg.timestamp,
+        text: msg.content,
+        sender: msg.role === 'user' ? 'user' : 'bot',
+        incomplete: false
+      })) ?? []);
+      setConversationId(conversation?.id);
+      if(conversation?.model){
+        setModel(conversation.model);
+      }
+  }, [conversation])
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -87,7 +103,7 @@ export const ChatInterface = ({
           },
 
         ]);
-        const voice = await App.invoke(
+        await App.invoke(
           IPC.VOICE.TEXT_TO_SPEECH,
           response.content
         );
@@ -205,12 +221,11 @@ export const ChatInterface = ({
 
   useEffect(() => {
     const streamHandler = (
-      data: { partial: string, conversationId: string }
+      partial: string
     ) => {
-      const { partial, conversationId } = data;
 
+      console.log(partial);
       setHasFirstResponse(true);
-      setConversationId(conversationId);
 
       setMessages((prev) => {
         const last = prev[prev.length - 1];

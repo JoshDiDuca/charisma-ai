@@ -166,6 +166,7 @@ export const sendMessage = async (
     let fullResponse = '';
     for await (const chunk of responseStream) {
       fullResponse += chunk.message.content;
+      console.log(chunk.message.content);
       mainWindow?.webContents.send(IPC.LLM.STREAM_UPDATE, {
         content: chunk.message.content,
         conversationId: conversation.id
@@ -183,6 +184,11 @@ export const sendMessage = async (
     if (conversation && conversation.messages.length <= 3 && conversation.title.startsWith('Conversation')) {
       await generateConversationTitle(conversation.id, model);
     }
+
+    mainWindow?.webContents.send(IPC.LLM.SEND_MESSAGE_FINISHED, {
+      conversationId: conversation?.id
+    });
+
 
     return {
       status: 'complete',

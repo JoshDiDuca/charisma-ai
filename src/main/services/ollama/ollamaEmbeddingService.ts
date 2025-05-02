@@ -16,7 +16,7 @@ import {
   getChromaDocuments,
   getOrCreateChromaCollection
 } from '../chroma/chromaService';
-import { ollama, sendMessage } from './ollamaService';
+import { currentlyInstallingModels, ollama, sendMessage, stopPolling } from './ollamaService';
 import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';
 
@@ -40,10 +40,19 @@ export const getInstalledEmbeddingModels = async (): Promise<string[]> => {
 };
 
 export const getAllEmbeddingModels = async () => {
-  const response = await ollama.list();
-  const installedModelNames = new Set(response.models.map(model => model.name));
-  return OllamaModels.filter(m => m.type === 'Embedding')
-    .map(m => ({ ...m, installed: installedModelNames.has(m.name) }));
+  const installedList = await getInstalledEmbeddingModels();
+  return OllamaModels.filter(m => m.type === 'Embedding').map(m => {
+    const installed = installedList.some(installedName => installedName.startsWith(m.name));
+    const installing = currentlyInstallingModels.has(m.name);
+
+    if (installed && installing) {
+      stopPolling(m.name);
+      currentlyInstallingModels.delete(m.name);
+    }
+    const finalInstalling = currentlyInstallingModels.has(m.name);
+
+    return ({ ...m, installed, installing: finalInstalling });
+  });
 };
 
 export async function initOllamaEmbedding(documents: string[]): Promise<string | undefined> {
@@ -76,11 +85,11 @@ export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> 
   let filePaths: TreeNode[] = [];
 
   try {
-      const rootNode = await readDirectoryNested(absoluteStartPath);
-      filePaths = flattenTree(rootNode);
+    const rootNode = await readDirectoryNested(absoluteStartPath);
+    filePaths = flattenTree(rootNode);
   } catch (error) {
-      logError(`Failed to read directory structure for ${absoluteStartPath}`, { error, showUI: true });
-      return;
+    logError(`Failed to read directory structure for ${absoluteStartPath}`, { error, showUI: true });
+    return;
   }
 
   const filesToProcess = filePaths.filter(node => !node.isFolder).map(node => node.path);
@@ -101,25 +110,25 @@ export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> 
           logInfo(`Processed file: ${filePath}
           ${content}}`);
           if (content) {
-              resultsToBatch.push({
-                  content,
-                  metadata: {
-                  path: filePath,
-                  type: extname(filePath).toLowerCase() || 'unknown',
-                  last_modified: stats.mtime.getTime()
-                  }
-              });
+            resultsToBatch.push({
+              content,
+              metadata: {
+                path: filePath,
+                type: extname(filePath).toLowerCase() || 'unknown',
+                last_modified: stats.mtime.getTime()
+              }
+            });
           } else {
-              logInfo(`Skipping file due to read error or empty content: ${filePath}`);
+            logInfo(`Skipping file due to read error or empty content: ${filePath}`);
           }
         } else {
-             logInfo(`Skipping file based on shouldSkipFile: ${filePath}`);
+          logInfo(`Skipping file based on shouldSkipFile: ${filePath}`);
         }
       } catch (error: any) {
-         if (error.code === 'ENOENT') {
-            logError(`File not found during processing: ${filePath}`, { error: error, category: "Ollama", showUI: false });
+        if (error.code === 'ENOENT') {
+          logError(`File not found during processing: ${filePath}`, { error: error, category: "Ollama", showUI: false });
         } else {
-            logError(`File processing failed: ${filePath}`, { error: error, category: "Ollama", showUI: false });
+          logError(`File processing failed: ${filePath}`, { error: error, category: "Ollama", showUI: false });
         }
       }
     }
@@ -135,9 +144,9 @@ export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> 
   logInfo(`Processed files, found ${resultsToBatch.length} valid documents for embedding.`);
 
   if (resultsToBatch.length === 0) {
-      logInfo(`No new documents to add to collection ${COLLECTION_NAME}.`);
-      logInfo(`loadOllamaEmbedding Done`);
-      return;
+    logInfo(`No new documents to add to collection ${COLLECTION_NAME}.`);
+    logInfo(`loadOllamaEmbedding Done`);
+    return;
   }
 
   logInfo(`Upserting ${resultsToBatch.length} documents into ${COLLECTION_NAME} in batches of ${BATCH_SIZE}...`);
@@ -146,14 +155,14 @@ export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> 
     const batch = resultsToBatch.slice(i, i + BATCH_SIZE);
     if (batch.length > 0) {
       try {
-          await collection.upsert({
-              ids: batch.map(() => uuidv4()),
-              documents: batch.map(e => e.content),
-              metadatas: batch.map(e => e.metadata),
-          });
-          logInfo(`Upserted batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} documents)`);
-      } catch(error) {
-          logError(`Failed to upsert batch ${Math.floor(i / BATCH_SIZE) + 1}`, { error, category: "Ollama", showUI: true });
+        await collection.upsert({
+          ids: batch.map(() => uuidv4()),
+          documents: batch.map(e => e.content),
+          metadatas: batch.map(e => e.metadata),
+        });
+        logInfo(`Upserted batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} documents)`);
+      } catch (error) {
+        logError(`Failed to upsert batch ${Math.floor(i / BATCH_SIZE) + 1}`, { error, category: "Ollama", showUI: true });
       }
     }
   }
@@ -191,9 +200,9 @@ export async function sendMessageWithEmbedding(message: string, model: string): 
       : message;
 
     if (embeddings.length > 0) {
-        logInfo(`Generated prompt with context from ${embeddings.length} documents.`);
+      logInfo(`Generated prompt with context from ${embeddings.length} documents.`);
     } else {
-        logInfo(`No relevant documents found, sending original message.`);
+      logInfo(`No relevant documents found, sending original message.`);
     }
 
     logInfo(`Sending message to model ${model}.`);

@@ -1,13 +1,15 @@
-import { BrowserWindow, session } from 'electron'
+import { app, BrowserWindow, session, Tray, Menu, nativeImage } from 'electron'
 import path, { join } from 'node:path'
 import log from 'electron-log';
 
 import { createWindow } from 'lib/electron-app/factories/windows/create'
 import { ENVIRONMENT } from 'shared/constants'
 import { displayName } from '~/package.json'
-import { logError } from 'main/services/log/logService';
+import { logError, logInfo } from 'main/services/log/logService';
 
 export let mainWindow: Electron.BrowserWindow | null = null
+let tray: Tray | null = null;
+let isQuittingApp = false;
 
 export async function MainWindow() {
   const window = createWindow({
@@ -28,6 +30,7 @@ export async function MainWindow() {
       nodeIntegration: false,
     },
   })
+
   // Auto-approve media permissions
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
     if (permission === 'media') {
@@ -43,13 +46,105 @@ export async function MainWindow() {
     }
 
     window.show()
+    setupTray()
   })
 
-  window.on('close', () => {
-    for (const window of BrowserWindow.getAllWindows()) {
-      window.destroy()
+  // Modify close behavior to hide instead of close
+  window.on('close', (event) => {
+    if (!isQuittingApp) {
+      event.preventDefault();
+      window.hide();
+      return false;
     }
+
+    // If we are quitting, close all windows
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.destroy()
+    }
+    return true;
   })
+
   mainWindow = window;
   return window
 }
+
+function setupTray() {
+  try {
+    // Determine icon path based on whether app is packaged
+    let iconPath: string;
+    if (app.isPackaged) {
+      iconPath = join(process.resourcesPath, 'icon.png');
+    } else {
+      iconPath = join(app.getAppPath(), 'resources', 'icon.png');
+    }
+
+    // Create a native image for the tray icon
+    const icon = nativeImage.createFromPath(iconPath);
+
+    // Create the tray instance
+    tray = new Tray(icon);
+
+    // Set a tooltip
+    tray.setToolTip(displayName);
+
+    // Create a context menu
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Show App',
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        }
+      },
+      {
+        label: "Dev Tools",
+        click: () => {
+          if (mainWindow) {
+            mainWindow.webContents.openDevTools({ mode: 'detach' })
+          }
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'Exit',
+        click: () => {
+          isQuittingApp = true;
+          app.quit();
+        }
+      }
+    ]);
+
+    // Set the context menu
+    tray.setContextMenu(contextMenu);
+
+    // Handle left-click on the tray icon
+    tray.on('click', () => {
+      if (mainWindow) {
+        if (mainWindow.isVisible()) {
+          mainWindow.hide();
+        } else {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    });
+
+    logInfo('Tray icon created successfully');
+  } catch (error) {
+    logError(`Failed to create tray icon: ${error}`);
+  }
+}
+
+// Add this to your main.ts
+app.on('before-quit', () => {
+  isQuittingApp = true;
+});
+
+// Clean up tray icon when app is about to quit
+app.on('will-quit', () => {
+  if (tray) {
+    tray.destroy();
+  }
+});

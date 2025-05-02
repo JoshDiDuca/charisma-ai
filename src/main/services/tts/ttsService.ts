@@ -29,13 +29,10 @@ export class TTSInstanceService {
     this.onAudioChunk = onAudioChunk;
 
     this.process.stdin.write(text + '\n');
-    //this.process.stdin.end();
-
 
     this.process.stdout.on('end', () => {
       onEnd();
     });
-
   }
 
   async start() {

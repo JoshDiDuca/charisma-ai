@@ -14,7 +14,23 @@ export const OllamaModels: OllamaModel[] = [
     type: "LLM"
   },
   {
+    name: 'llama4:latest',
+    type: "LLM"
+  },
+  {
     name: 'llama3:latest',
+    type: "LLM"
+  },
+  {
+    name: 'gemma3:latest',
+    type: "LLM"
+  },
+  {
+    name: 'qwq:latest',
+    type: "LLM"
+  },
+  {
+    name: 'mistral:latest',
     type: "LLM"
   },
   {
@@ -29,11 +45,6 @@ export const OllamaModels: OllamaModel[] = [
     name: 'llama3.1:latest',
     type: "LLM"
   },
-  {
-    name: 'mistral:latest',
-    type: "LLM"
-  }
-  ,
   {
     name: 'qwen2.5:latest',
     type: "LLM"
@@ -61,16 +72,6 @@ export const OllamaModels: OllamaModel[] = [
   {
     name: 'codellama:latest',
     type: "LLM"
-  }
-  ,
-  {
-    name: 'gemma3:latest',
-    type: "LLM"
-  }
-  ,
-  {
-    name: 'qwq:latest',
-    type: "Reasoning"
   }
 
 ]

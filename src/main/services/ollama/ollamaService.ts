@@ -2,13 +2,11 @@ import axios from 'axios';
 import { mainWindow } from 'main/windows/main';
 import { Ollama, Tool } from 'ollama';
 import { OllamaModels } from './ollamaCatalog';
-import { OllamaModel } from 'shared/types/OllamaModel';
-import { ipcMain } from 'electron';
 import { IPC } from 'shared/constants';
-import { logError, logInfo, logWarning } from '../log/logService';
+import { logError, logInfo } from '../log/logService';
 
 const modelPollIntervals: Map<string, NodeJS.Timeout> = new Map();
-const currentlyInstallingModels: Set<string> = new Set();
+export const currentlyInstallingModels: Set<string> = new Set();
 
 export const ollamaURL = process.env.OLLAMA_API_BASE || 'http://localhost:11434';
 export const ollama = new Ollama({ host: ollamaURL });
@@ -18,7 +16,7 @@ const sendDownloadProgress = async (modelName: string, status: string, error?: a
   mainWindow?.webContents.send(IPC.LLM.UPDATE_ALL_MODELS, await getAllModels());
 };
 
-const stopPolling = (modelName: string) => {
+export const stopPolling = (modelName: string) => {
   if (modelPollIntervals.has(modelName)) {
     clearInterval(modelPollIntervals.get(modelName)!);
     modelPollIntervals.delete(modelName);
@@ -106,7 +104,7 @@ export const downloadModel = async (modelName: string) => {
       logError(`Error checking model status`, { error, category: "Ollama", showUI: true })
       await sendDownloadProgress(modelName, 'checking_error', error);
     }
-  }, 5000);
+  }, 10000);
 
   modelPollIntervals.set(modelName, intervalId);
   return { status: 'download_started' };
@@ -120,7 +118,6 @@ export const sendMessage = async (
   systemMessage?: string
 ) => {
   try {
-    console.log(message);
     const responseStream = await ollama.chat({
       model,
       messages: [

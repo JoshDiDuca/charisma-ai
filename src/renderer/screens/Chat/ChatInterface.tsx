@@ -47,26 +47,6 @@ export const ChatInterface = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  function downloadAudio() {
-    const totalLength = recordedChunks.reduce((sum, arr) => sum + arr.length, 0);
-    const merged = new Int16Array(totalLength);
-    let offset = 0;
-    for (const chunk of recordedChunks) {
-      merged.set(chunk, offset);
-      offset += chunk.length;
-    }
-    const blob = new Blob([merged.buffer], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'audio_output.pcm';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -83,12 +63,6 @@ export const ChatInterface = ({
     setHasFirstResponse(false);
 
     try {
-
-      // Send message and receive stream
-      const voice = await App.invoke(
-        'text-to-speech',
-        inputValue
-      );
       // Send message and receive stream
       const response = await App.invoke(
         'send-message',
@@ -105,7 +79,12 @@ export const ChatInterface = ({
           sender: 'bot',
           incomplete: false
         },
+
       ]);
+      const voice = await App.invoke(
+        'text-to-speech',
+        response.content
+      );
     } catch (error) {
       console.error('Chat error:', error);
       setMessages((prev) => [
@@ -309,7 +288,7 @@ export const ChatInterface = ({
           onClick={handleMicClick}
           disabled={isLoading}
         >
-          {isRecording ? <FaStop /> : <FaMicrophone onClick={downloadAudio} />}
+          {isRecording ? <FaStop /> : <FaMicrophone />}
         </Button>
         <Button
           color="primary"

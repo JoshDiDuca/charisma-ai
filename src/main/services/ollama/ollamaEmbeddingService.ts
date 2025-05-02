@@ -25,7 +25,6 @@ const COLLECTION_NAME = 'EMBED-COLLECTION';
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 
-
 function generatePrompt(prompt: string, data: (string | null)[]): string {
   const context = data.filter(item => item !== null).join('\n');
   return `Context: ${context}\n\nQuestion: ${prompt}`;
@@ -166,8 +165,6 @@ export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> 
       }
     }
   }
-
-  logInfo(`loadOllamaEmbedding Done`);
 }
 
 

@@ -11,14 +11,14 @@ import { makeAppId } from 'shared/utils'
 import { ChromaInstanceService } from 'main/services/chroma/chromaInstanceService'
 import { OllamaInstanceService } from 'main/services/ollama/ollamaInstanceService'
 import { logError, logWarning } from 'main/services/log/logService'
-import { TTSInstanceService } from 'main/services/tts/ttsService'
+import { TTSWorkerService } from 'main/services/tts/ttsService'
 
 ignoreConsoleWarnings(['Manifest version 2 is deprecated'])
 
 
 const chromaService = new ChromaInstanceService()
 const ollamaService = new OllamaInstanceService()
-export const ttsService = new TTSInstanceService()
+export const ttsService = new TTSWorkerService()
 
 export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
   if (ENVIRONMENT.IS_DEV) {

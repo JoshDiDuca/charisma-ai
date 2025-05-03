@@ -34,6 +34,7 @@ export const IPC = {
   VOICE: {
     STREAM_AUDIO_START: "stream-audio-chunk-starting",
     STREAM_AUDIO_CHUCK: "stream-audio-chunk",
+    STREAM_AUDIO_ERROR: "stream-audio-error",
     STREAM_AUDIO_END: "stream-audio-chunk-end",
     TRANSCRIBE_AUDIO: 'voice:transcribe-audio',
     START_RECORDING: 'voice:start-recording',

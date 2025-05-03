@@ -92,20 +92,18 @@ export class VoiceHandlers {
 
   @IpcHandle(IPC.VOICE.TEXT_TO_SPEECH)
   async textToSpeech(text: string) {
-    return ttsService.streamPiperTTS(
-      text,
-      (chunk) => {},
-      () => logInfo("Done streaming audio")
+    return ttsService.stream(
+      text
     );
   }
 
   @IpcHandle(IPC.VOICE.TOGGLE_TEXT_TO_SPEECH)
   async toggleTextToSpeech(boolean?: boolean) {
-    return ttsService.toggleTTS(boolean);
+    return true;
   }
 
   @IpcHandle(IPC.VOICE.TEXT_TO_SPEECH_STATUS)
   async getTextToSpeechStatus() {
-    return !ttsService.playerDisabled;
+    return true;
   }
 }

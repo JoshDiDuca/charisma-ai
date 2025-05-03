@@ -25,6 +25,7 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve('src/main/index.ts'),
+          tts_worker: resolve('src/main/tts.worker.ts'),
         },
 
         output: {
@@ -53,6 +54,14 @@ export default defineConfig({
     },
 
     plugins: [
+      {
+        name: 'node-worker-loader',
+        transform(_, id) {
+          if (id.includes('?nodeWorker')) {
+            return { code: `export default () => new Worker(new URL('${id.replace('?nodeWorker', '')}', import.meta.url))` }
+          }
+        }
+      },
       tsconfigPaths,
       tailwindcss(),
       reactPlugin(),

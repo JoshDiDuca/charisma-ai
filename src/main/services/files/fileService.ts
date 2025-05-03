@@ -7,6 +7,7 @@ import { fileTypeFromFile } from 'file-type';
 import { logError, logInfo } from '../log/logService';
 import { promisify } from 'util';
 import mammoth from 'mammoth';
+import { ENVIRONMENT } from 'shared/constants';
 
 export const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
@@ -46,12 +47,18 @@ export function flattenTree(nodes: TreeNode[]): TreeNode[] {
   return flatList;
 }
 
+export const shouldSkipFolderName = (folderName: string) => {
+  return ENVIRONMENT.DISABLE_WALK_FOLDERS.some((skipFolder) => folderName.includes(skipFolder));
+}
 
 export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> {
   const entries = await fs.readdir(dirPath, { withFileTypes: true });
-  const nodePromises = entries.map(async (entry): Promise<TreeNode> => {
-    const fullPath = path.join(dirPath, entry.name);
+  const nodePromises = entries.map(async (entry): Promise<TreeNode | undefined> => {
     const isFolder = entry.isDirectory();
+    if (isFolder && shouldSkipFolderName(entry.name)) {
+      return undefined;
+    }
+    const fullPath = path.join(dirPath, entry.name);
     const node: TreeNode = {
       id: fullPath,
       name: entry.name,
@@ -67,14 +74,12 @@ export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> 
 
   const nodes = await Promise.all(nodePromises);
 
-  nodes.sort((a, b) => {
+  return (nodes.filter(e => e) as TreeNode[]).sort((a, b) => {
     if (a.isFolder !== b.isFolder) {
       return a.isFolder ? -1 : 1;
     }
     return a.name.localeCompare(b.name);
   });
-
-  return nodes;
 }
 
 export async function readFileInChunks(filePath: string): Promise<string> {
@@ -133,7 +138,8 @@ export const isBinaryFileByExtension = (filePath: string): boolean => {
 export const isTextFile = async (filePath: string): Promise<boolean> => {
   try {
     const type = await fileTypeFromFile(filePath);
-    return !type || type.mime.startsWith('text/');
+    if(!type) return false;
+    return type.mime.startsWith('text/');
   } catch (error) {
     return !isBinaryFileByExtension(filePath);
   }
@@ -142,7 +148,8 @@ export const isTextFile = async (filePath: string): Promise<boolean> => {
 export const isPdfFile = async (filePath: string): Promise<boolean> => {
   try {
     const type = await fileTypeFromFile(filePath);
-    return !type || type.mime.startsWith('application/pdf');
+    if(!type) return false;
+    return type.mime?.startsWith('application/pdf') ?? false;
   } catch (error) {
     return !isBinaryFileByExtension(filePath);
   }
@@ -152,7 +159,8 @@ export const isDocFile = async (filePath: string): Promise<boolean> => {
   try {
     const ext = extname(filePath).toLowerCase();
     const type = await fileTypeFromFile(filePath);
-    return !type || type.mime.startsWith('application/msword')
+    if(!type) return false;
+    return type.mime.startsWith('application/msword')
     || type.mime.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
     || ext === '.doc' || ext === '.docx';
   } catch (error) {
@@ -247,5 +255,5 @@ export async function readFileByExtension(filePath: string): Promise<string | un
     logInfo(`Reading Text File: ${filePath}`);
     return await readTextFileSimple(filePath);
   }
-    return '';
+    return undefined;
 }

@@ -106,9 +106,8 @@ export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> 
         const stats = await fs.promises.stat(filePath);
         if (!(await shouldSkipFile(filePath, stats))) {
           const content = await readFileByExtension(filePath);
-          logInfo(`Processed file: ${filePath}
-          ${content}}`);
           if (content) {
+            logInfo(`Processed file: ${filePath} with content: {${content}}`);
             resultsToBatch.push({
               content,
               metadata: {

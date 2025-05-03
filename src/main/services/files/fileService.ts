@@ -130,18 +130,19 @@ export const isBinaryFileByExtension = (filePath: string): boolean => {
     '.mp4', '.pdf', '.avi', '.mov', '.mkv', '.webm',
     '.zip', '.rar', '.gz', '.tar', '.7z',
     '.sqlite', '.db', '.mdb',
-    '.woff', '.woff2', '.ttf', '.otf', '.eot'
+    '.woff', '.woff2', '.ttf', '.otf', '.eot', '.bin'
   ]);
+  console.log(extname(filePath))
   return binaryExtensions.has(extname(filePath).toLowerCase());
 };
 
 export const isTextFile = async (filePath: string): Promise<boolean> => {
   try {
     const type = await fileTypeFromFile(filePath);
-    if(!type) return false;
-    return type.mime.startsWith('text/');
+    return !type || type.mime.startsWith('text/');
   } catch (error) {
-    return !isBinaryFileByExtension(filePath);
+    logError(`Failed to determine file type: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+    return false;
   }
 };
 
@@ -151,7 +152,8 @@ export const isPdfFile = async (filePath: string): Promise<boolean> => {
     if(!type) return false;
     return type.mime?.startsWith('application/pdf') ?? false;
   } catch (error) {
-    return !isBinaryFileByExtension(filePath);
+    logError(`Failed to determine file type: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+    return false;
   }
 };
 
@@ -164,17 +166,21 @@ export const isDocFile = async (filePath: string): Promise<boolean> => {
     || type.mime.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
     || ext === '.doc' || ext === '.docx';
   } catch (error) {
-    return !isBinaryFileByExtension(filePath);
+    logError(`Failed to determine file type: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+    return false;
   }
 };
 
 export async function shouldSkipFile(filePath: string, stats: Stats): Promise<boolean> {
-  if (stats.isDirectory()) {
-    return true;
-  }
-  if (stats.size > MAX_FILE_SIZE) {
-    return true;
-  }
+    if (stats.isDirectory()) {
+      return true;
+    }
+    if (isBinaryFileByExtension(filePath)) {
+      return true;
+    }
+    if (stats.size > MAX_FILE_SIZE) {
+      return true;
+    }
 
     if (await isPdfFile(filePath)) {
       return false;
@@ -184,11 +190,6 @@ export async function shouldSkipFile(filePath: string, stats: Stats): Promise<bo
     }
     if (await isTextFile(filePath)) {
       return false;
-    }
-
-
-    if (isBinaryFileByExtension(filePath)) {
-      return true;
     }
 
     return true;

@@ -8,6 +8,7 @@ import { Conversation } from 'shared/types/Conversation';
 import { IPC } from 'shared/constants';
 import { isNil } from 'lodash';
 import { CustomSelect } from '../Common/Select';
+import { MultiButton } from '../MultiButton';
 
 const { App } = window;
 
@@ -299,8 +300,27 @@ export const Sidebar = ({
 
         <div className="flex flex-col gap-2 flex-grow">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Files:</label>
-            <Button variant="light" size="sm" onClick={handleSelectFolder}>Add Folder</Button>
+            <label className="text-sm font-medium">Sources:</label>
+            <MultiButton options={{
+                folder: {
+                  label: "Add Folder",
+                  description: "Add sources from a folder on your PC.",
+                  onClick: () => handleSelectFolder(),
+                  disabled: false
+                },
+                web: {
+                  label: "Add Web",
+                  description: "Search, find and add sources from the internet.",
+                  onClick: () => console.log("Web clicked"),
+                  disabled: true
+                },
+                database: {
+                  label: "Add Database",
+                  description: "Connect to a relational database and search data.",
+                  onClick: () => console.log("Database clicked"),
+                  disabled: true
+                }
+              }} />
           </div>
           <Card className="p-2 flex-grow overflow-y-auto" style={{ minHeight: '200px' }}>
             <div className="text-sm">

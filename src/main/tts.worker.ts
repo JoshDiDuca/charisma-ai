@@ -1,8 +1,6 @@
 import { parentPort, workerData, MessagePort } from 'worker_threads'
 import { spawn, ChildProcess } from 'child_process'
 import path from 'path'
-import { ENVIRONMENT } from 'shared/constants'
-import { app } from 'electron'
 import getPlatform from './services/platformService'
 
 interface TTSWorkerMessage {
@@ -28,8 +26,6 @@ class TTSWorker {
     const fullPath = path.resolve(binaryPath, execName)
     const modelPath = path.resolve(binaryPath, this.model)
 
-    console.log('Using binary path:', fullPath)
-    console.log('Using model path:', modelPath)
 
     this.process = spawn(fullPath, [
       '--model', modelPath,

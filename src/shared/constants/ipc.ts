@@ -32,11 +32,15 @@ export const IPC = {
     GET_MODEL_INFO: 'llm:get-model-info'
   },
   VOICE: {
+    STREAM_AUDIO_START: "stream-audio-chunk-starting",
     STREAM_AUDIO_CHUCK: "stream-audio-chunk",
+    STREAM_AUDIO_END: "stream-audio-chunk-end",
     TRANSCRIBE_AUDIO: 'voice:transcribe-audio',
     START_RECORDING: 'voice:start-recording',
     STOP_RECORDING: 'voice:stop-recording',
-    TEXT_TO_SPEECH: 'voice:text-to-speech'
+    TEXT_TO_SPEECH: 'voice:text-to-speech',
+    TOGGLE_TEXT_TO_SPEECH: 'voice:toggle-text-to-speech',
+    TEXT_TO_SPEECH_STATUS: 'voice:text-to-speech-status'
   },
   CONVERSATION: {
     GET_ALL: 'conversation:get-all',

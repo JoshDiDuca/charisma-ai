@@ -30,7 +30,6 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const [status, setStatus] = useState<AppStatus | string>('Loading...');
   const [filePath, setFilePath] = useState<string>('');
-  const [files, setFiles] = useState<string[]>([]);
   const [embeddingModels, setEmbeddingModels] = useState<OllamaModel[]>([]);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [treeData, setTreeData] = useState<TreeNode>();
@@ -225,7 +224,7 @@ export const Sidebar = ({
               <div className="flex items-center justify-between w-full">
                 <span>{m.name}</span>
                 <span>
-                  {m.installed ? "✔️" : m.installing ? 
+                  {m.installed ? "✔️" : m.installing ?
                     <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
                 </span>
               </div>
@@ -246,7 +245,7 @@ export const Sidebar = ({
               <div className="flex items-center justify-between w-full">
                 <span>{m.name}</span>
                 <span>
-                  {m.installed ? "✔️" : m.installing ? 
+                  {m.installed ? "✔️" : m.installing ?
                     <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
                 </span>
               </div>

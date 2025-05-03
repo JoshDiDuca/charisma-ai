@@ -9,13 +9,16 @@ import 'resources/styles/globals.sass'
 import './output.css'
 
 import "./scripts/audioRenderer"
+import { AudioPlayerProvider } from './scripts/audioRenderer'
 
 ReactDom.createRoot(document.querySelector('app') as HTMLElement).render(
   <React.StrictMode>
     <WindowStoreProvider>
       <HeroUIProvider>
-        <ToastProvider />
-        <AppRoutes />
+        <AudioPlayerProvider>
+          <ToastProvider />
+          <AppRoutes />
+        </AudioPlayerProvider>
       </HeroUIProvider>
     </WindowStoreProvider>
   </React.StrictMode>

@@ -6,14 +6,14 @@ import { logError, logInfo } from '../log/logService';
 import { mainWindow } from 'main/windows/main';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { IPC } from 'shared/constants';
+import { ENVIRONMENT, IPC } from 'shared/constants';
 
 const execAsync = promisify(exec);
 
 export class TTSInstanceService {
   private process: any;
   private isRunning: boolean = false;
-  private ignoreRun: boolean = false;
+  public playerDisabled: boolean = ENVIRONMENT.DISABLE_TTS_ON_START;
   private onAudioChunk: (chunk: Buffer) => void = () => {};
   private modelToUse = "en_GB-northern_english_male-medium.onnx";
 
@@ -29,24 +29,35 @@ export class TTSInstanceService {
     return text.replaceAll("*", "").replaceAll("#", "").replaceAll("_", "").replaceAll(":", ".");
   }
 
-  async streamPiperTTS(text: string, onAudioChunk: (chunk: Buffer) => void, onEnd: () => void) {
+  async streamPiperTTS(text: string, onAudioChunk?: (chunk: Buffer) => void, onEnd?: () => void) {
     text = this.cleanText(text);
     logInfo(`tts ${text}`);
+    if(this.playerDisabled) return;
     if (!this.isRunning) {
       throw Error('TTS is not running');
     }
 
-    this.onAudioChunk = onAudioChunk;
+    if(onAudioChunk){
+      this.onAudioChunk = onAudioChunk;
+    }
     this.process.stdin.write(text + '\n');
 
     this.process.stdout.on('end', () => {
-      onEnd();
+      onEnd?.();
+      mainWindow?.webContents.send(IPC.VOICE.STREAM_AUDIO_END);
     });
+  }
+
+  async toggleTTS(on?: boolean) {
+    this.playerDisabled = on ?? !this.playerDisabled;
+    if(!this.playerDisabled && !this.isRunning){
+      await this.start();
+    }
   }
 
   async start() {
     // Check if already running internally
-    if (this.isRunning || this.ignoreRun) return true;
+    if (this.isRunning || this.playerDisabled) return true;
 
     const binaryPath = this.getBinaryPath();
     const execName = process.platform === 'win32' ? 'piper.exe' : 'piper';
@@ -54,6 +65,8 @@ export class TTSInstanceService {
     const fullModelPath = path.resolve(binaryPath, this.modelToUse);
 
     console.log(`${fullPath} --model ${fullModelPath} --output_raw -`);
+
+    mainWindow?.webContents.send(IPC.VOICE.STREAM_AUDIO_START);
 
     this.process = spawn(fullPath, [
       '--model', fullModelPath,

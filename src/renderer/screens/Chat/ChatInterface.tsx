@@ -13,6 +13,7 @@ import Markdown from 'react-markdown';
 import { inc } from 'semver';
 import { IPC } from 'shared/constants';
 import { Conversation } from 'shared/types/Conversation';
+import { SettingsDropdown } from 'renderer/components/SettingsIcon';
 
 type Message = {
   id: number;
@@ -267,9 +268,10 @@ export const ChatInterface = ({
 
   return (
     <Card
-      className="p-4"
+      className="p-4 pt-2"
       style={{ height: '100vh', width: '100%', overflowY: 'auto' }}
     >
+      <SettingsDropdown />
       <CardBody
         className="flex-1 flex flex-col gap-2 bg-default-200 rounded-medium mb-2 p-4"
         style={{ overflowY: 'auto' }}

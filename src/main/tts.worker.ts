@@ -73,6 +73,9 @@ class TTSWorker {
           break
         case 'stream':
           if (typeof msg.data === 'string') {
+            if(!this.process) {
+              this.startProcess();
+            }
             this.handleStream(msg.data)
           }
           break

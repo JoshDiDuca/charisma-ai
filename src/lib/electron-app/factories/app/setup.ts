@@ -34,7 +34,9 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
 
   await ollamaService.start()
   await chromaService.start()
-  await ttsService.start()
+  if(!ENVIRONMENT.DISABLE_TTS_ON_START){
+    ttsService.start()
+  }
 
   const killServices = async () => {
     await chromaService.stop()

@@ -17,7 +17,7 @@ const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(und
 export const AudioPlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [playerDisabled, setPlayerDisabled] = useState(ENVIRONMENT.DISABLE_TTS_ON_START);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(DEFAULT_VOLUME / 10);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const playerRef = useRef<PCMPlayer | null>(null);
 
   const createNewPlayer = () => {
@@ -33,7 +33,8 @@ export const AudioPlayerProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Initialize player on mount
   useEffect(() => {
     playerRef.current = createNewPlayer();
-    playerRef.current.volume(volume);
+    console.log(playerRef.current.gainNode.gain.value);
+    playerRef.current.volume(volume / 100);
 
     // Clean up on unmount
     return () => {
@@ -86,7 +87,7 @@ export const AudioPlayerProvider: React.FC<{ children: ReactNode }> = ({ childre
         }
       } else {
         playerRef.current = createNewPlayer();
-        playerRef.current.volume(volume);
+        playerRef.current.volume(volume / 100);
       }
 
       return newState;
@@ -97,7 +98,7 @@ export const AudioPlayerProvider: React.FC<{ children: ReactNode }> = ({ childre
     setVolume(vol);
 
     if (playerRef.current) {
-      playerRef.current.volume(vol);
+      playerRef.current.volume(vol / 100);
     }
   };
 

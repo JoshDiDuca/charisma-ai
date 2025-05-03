@@ -74,7 +74,7 @@ export const MediaPlayer: React.FC<MediaPlayerProps> = ({
       <input
         type="range"
         min={0}
-        max={50}
+        max={100}
         value={volume}
         onChange={handleVolumeChange}
         disabled={!isPoweredOn || isLoading}

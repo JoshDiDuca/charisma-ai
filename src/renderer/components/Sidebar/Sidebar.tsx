@@ -322,7 +322,7 @@ export const Sidebar = ({
               database: {
                 label: "Add Database",
                 description: "Connect to a relational database and search data.",
-                onClick: () => console.log("Database clicked"),
+                onClick: () => { },
                 disabled: true
               }
             }} />

@@ -75,11 +75,8 @@ export const AudioPlayerProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [playerDisabled]);
 
   const togglePlayer = () => {
-    console.log("toggle");
     setPlayerDisabled(prevState => {
       const newState = !prevState;
-      console.log('Player disabled:', newState);
-
       if (newState) {
         if (playerRef.current) {
           playerRef.current.destroy();

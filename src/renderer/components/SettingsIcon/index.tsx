@@ -1,4 +1,4 @@
-// SettingsDropdown.tsx
+
 import React from 'react';
 import { FaCog, FaUser, FaLanguage, FaFileAlt, FaInfoCircle } from 'react-icons/fa';
 import { CustomDropdown } from '../Common/Dropdown';
@@ -17,8 +17,7 @@ export const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ className = 
 
   const { isPlaying, player, playerDisabled, volume, setVolume, togglePlayer } = useAudioPlayer();
    const handleItemClick = (action: string) => {
-    console.log(`Action clicked: ${action}`);
-    // Implement your action handlers here
+
   };
   return (
     <CustomDropdown
@@ -32,7 +31,7 @@ export const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ className = 
       <div className="py-2">
         <div className="px-4 py-2 text-sm font-medium border-b">Settings</div>
 
-{/*         <div className="mt-2">
+        {/*<div className="mt-2">
           <div
             className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer"
             onClick={() => handleItemClick('profile')}

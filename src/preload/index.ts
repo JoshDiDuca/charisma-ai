@@ -10,7 +10,7 @@ declare global {
 
 const API = {
   ...ipcs,
-  sayHelloFromBridge: () => console.log('\nHello from bridgeAPI! 👋\n\n'),
+  checkBridge: () => console.log('\nBridge Working Fine! 👋\n\n'),
   username: process.env.USER,
   invoke: (channel: string, ...args: any[]) =>
     ipcRenderer.invoke(channel, ...args),

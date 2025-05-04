@@ -11,7 +11,6 @@ export const addSources = async (
   conversationId: string | undefined,
   systemMessage: string | undefined
 ): Promise<Conversation> => {
-  console.log("Adding sources", input);
   const sources: Source[] = [];
   for (const sourceInput of input) {
     switch (sourceInput.type) {

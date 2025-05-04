@@ -87,8 +87,6 @@ export const ChatInterface = ({
         model,
         conversationId
       );
-      console.log(response);
-
       if (response && response.conversationId) {
 
         setConversationId(response.conversationId);
@@ -224,8 +222,6 @@ export const ChatInterface = ({
     const streamHandler = (
       partial: string
     ) => {
-
-      console.log(partial);
       setHasFirstResponse(true);
 
       setMessages((prev) => {

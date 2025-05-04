@@ -21,11 +21,9 @@ export function MainScreen() {
   const [embeddingModel, setEmbeddingModel] = useState<string>('');
 
   useEffect(() => {
-    App.sayHelloFromBridge()
+    App.checkBridge()
 
     App.whenAboutWindowClose(({ message }) => {
-      console.log(message)
-
       store.setAboutWindowState(false)
     })
   }, [])

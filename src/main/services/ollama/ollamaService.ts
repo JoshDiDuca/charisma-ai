@@ -10,7 +10,8 @@ import {
   getConversation,
   createNewConversation,
   addMessageToConversation,
-  generateConversationTitle
+  generateConversationTitle,
+  getOrCreateConversation
 } from './ollamaConversationService';
 
 const modelPollIntervals: Map<string, NodeJS.Timeout> = new Map();
@@ -126,25 +127,10 @@ export const sendMessage = async (
   systemMessage?: string
 ) => {
   try {
-    let conversation;
-
-    if (conversationId) {
-      conversation = await getConversation(conversationId);
-      if (!conversation) {
-        throw new Error(`Conversation with ID ${conversationId} not found`);
-      }
-    } else {
-      conversation = await createNewConversation(model, systemMessage);
-    }
-
-    // Add user message to conversation
-    await addMessageToConversation(conversation.id, {
+    let conversation = await addMessageToConversation(model, conversationId, systemMessage, {
       role: 'user',
       content: message
     });
-
-    // Get updated conversation with the new message
-    conversation = await getConversation(conversation.id);
     if (!conversation) {
       throw new Error("Failed to retrieve conversation after adding user message");
     }
@@ -171,13 +157,11 @@ export const sendMessage = async (
     }
 
     // Add assistant response to conversation
-    await addMessageToConversation(conversation.id, {
+    conversation = await addMessageToConversation(model, conversation.id, systemMessage, {
       role: 'assistant',
       content: fullResponse
     });
 
-    // If this is a new conversation with just a few messages, generate a better title
-    conversation = await getConversation(conversation.id);
     if (conversation && conversation.messages.length <= 3 && conversation.title.startsWith('Conversation')) {
       await generateConversationTitle(conversation.id, model);
     }

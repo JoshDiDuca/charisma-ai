@@ -59,7 +59,7 @@ export function MainScreen() {
   return (
     <Container>
       <div className="inline-flex" style={{ width: '100%' }}>
-        <Sidebar onSelectConversation={(conversation) => setConversation(conversation)} model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
+        <Sidebar conversation={conversation} onSelectConversation={(conversation) => setConversation(conversation)} model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
         <ChatInterface conversation={conversation} model={model} embeddingModel={embeddingModel} setModel={setModel} setEmbeddingModel={setEmbeddingModel} />
       </div>
     </Container>

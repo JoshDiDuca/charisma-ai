@@ -10,6 +10,7 @@ import { ipcMain } from 'electron';
 import { mainWindow } from 'main/windows/main';
 import { ollama } from './ollamaService';
 import { Conversation, Message } from 'shared/types/Conversation';
+import { Source } from 'shared/types/Sources/SourceInput';
 
 const conversationsDir = path.join(app.getPath('userData'), 'conversations');
 
@@ -91,6 +92,7 @@ export const createNewConversation = async (
     id: uuidv4(),
     title: `Conversation ${new Date(now).toLocaleString()}`,
     model,
+    sources: [],
     messages: initialSystemMessage
       ? [{ role: 'system', content: initialSystemMessage, timestamp: now }]
       : [],
@@ -116,11 +118,12 @@ export const updateConversationTitle = async (
 };
 
 export const addMessageToConversation = async (
-  conversationId: string,
+  model: string,
+  conversationId: string | undefined,
+  systemMessage: string | undefined,
   message: Omit<Message, 'timestamp'>
-): Promise<Conversation | null> => {
-  const conversation = await getConversation(conversationId);
-  if (!conversation) return null;
+): Promise<Conversation> => {
+  const conversation = await getOrCreateConversation(model, conversationId, systemMessage);
 
   const completeMessage: Message = {
     ...message,
@@ -131,6 +134,20 @@ export const addMessageToConversation = async (
   conversation.updatedAt = Date.now();
 
   return saveConversation(conversation);
+};
+
+export const addSourcesToConversation = async (
+  model: string,
+  conversationId: string | undefined,
+  systemMessage: string | undefined,
+  sources: Source[]
+): Promise<Conversation> => {
+  const conversation = await getOrCreateConversation(model, conversationId, systemMessage);
+
+  return saveConversation({
+    ...conversation,
+    sources: [...conversation.sources, ...sources]
+  });
 };
 
 export const generateConversationTitle = async (
@@ -165,3 +182,29 @@ export const generateConversationTitle = async (
     return false;
   }
 };
+
+
+export const getOrCreateConversation = async ( model: string, conversationId?: string, systemMessage?: string): Promise<Conversation> => {
+  try {
+    let conversation;
+
+    if (conversationId) {
+      conversation = await getConversation(conversationId);
+      if (!conversation) {
+        throw new Error(`Conversation with ID ${conversationId} not found`);
+      }
+    } else {
+      conversation = await createNewConversation(model, systemMessage);
+    }
+    // Get updated conversation with the new message
+    conversation = await getConversation(conversation.id);
+    if (!conversation) {
+      throw new Error("Failed to retrieve conversation after adding user message");
+    }
+    return conversation;
+  } catch (error) {
+    logInfo(`Failed to get or create conversation`, { error, category: "Conversations" });
+    throw error;
+  }
+}
+

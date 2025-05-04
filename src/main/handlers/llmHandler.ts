@@ -9,7 +9,7 @@ import {
   getInstalledModels,
   getOllamaStatus,
 } from 'main/services/ollama/ollamaService'
-import { IpcHandle } from '../IpcHandle'
+import { IpcHandle } from '../decorators/IpcHandle'
 import { getCurrentStatus } from 'main/services/statusService'
 import { IPC } from 'shared/constants'
 import { addMessageToConversation, createNewConversation, deleteConversation, generateConversationTitle, getAllConversations, getConversation, updateConversationTitle } from 'main/services/ollama/ollamaConversationService'

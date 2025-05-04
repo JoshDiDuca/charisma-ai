@@ -1,10 +1,9 @@
 import { logInfo } from 'main/services/log/logService';
-import { LlmHandlers } from './llm/llmHandler'
-import { FileHandlers } from './fileHandler';
-import { VoiceHandlers } from './llm/voiceHandler';
-import { WebHandlers } from './llm/webHandler';
+import { LlmHandlers } from './llmHandler'
+import { SourceHandlers } from './sourceHandler';
+import { VoiceHandlers } from './voiceHandler';
 
-export const handlers: object[] = [LlmHandlers, FileHandlers, VoiceHandlers, WebHandlers];
+export const handlers: object[] = [LlmHandlers, SourceHandlers, VoiceHandlers];
 
 export const initializeHandlers = () => {
   logInfo('Registering handles')

@@ -1,3 +1,5 @@
+import { Source } from "./Sources/SourceInput";
+
 export interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -9,6 +11,7 @@ export interface Conversation {
   title: string;
   model: string;
   messages: Message[];
+  sources: Source[];
   createdAt: number;
   updatedAt: number;
 }

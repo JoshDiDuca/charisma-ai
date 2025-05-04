@@ -10,9 +10,10 @@ export const IPC = {
     SHOW_UI_INFO: 'ui:info',
     SHOW_UI_WARN: 'ui:warn'
   },
-  FILE: {
-    SELECT_FOLDER: "select-folder",
-    GET_FOLDER_FILES: "get-folder-files"
+  SOURCE: {
+    SELECT_FOLDER: "source:select-folder",
+    ADD_SOURCES: "source:add-sources",
+    QUERY: "source::query",
   },
   CORE: {
     GET_APP_STATUS: 'get-app-status'
@@ -51,8 +52,5 @@ export const IPC = {
     UPDATE_TITLE: 'conversation:update-title',
     ADD_MESSAGE: 'conversation:add-message',
     GENERATE_TITLE: 'conversation:generate-title'
-  },
-  WEB: {
-    QUERY: "web:query",
   }
 }

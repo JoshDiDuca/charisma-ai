@@ -1,11 +1,9 @@
 import { Metadata } from 'chromadb';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
-import path, { extname } from 'path';
+import { extname } from 'path';
 import {
-  embedFolder,
   flattenTree,
-  readDirectoryNested,
   shouldSkipFile,
   TreeNode,
   readFileByExtension
@@ -19,6 +17,8 @@ import {
 import { currentlyInstallingModels, ollama, sendMessage, stopPolling } from './ollamaService';
 import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';
+import { getOrCreateConversation } from './ollamaConversationService';
+import { Source } from 'shared/types/Sources/SourceInput';
 
 const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large';
 const COLLECTION_NAME = 'EMBED-COLLECTION';
@@ -75,21 +75,19 @@ export async function initOllamaEmbedding(documents: string[]): Promise<string |
   }
 }
 
-export async function loadOllamaEmbedding(embeddingPath: string): Promise<void> {
-  logInfo(`loadOllamaEmbedding start for path: ${embeddingPath}`);
-  const absoluteStartPath = path.resolve(embeddingPath);
+export async function loadOllamaEmbedding(sources: Source[]): Promise<void> {
+  for (const source of sources) {
+    if (source.type === 'Directory') {
+      const filePaths = flattenTree(source.fileTree?.children ?? []);
+      await loadOllamaFileEmbedding(filePaths);
+    }
+  }
+}
+
+export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<void> {
   const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 
   const resultsToBatch: Array<{ content: string, metadata: Metadata }> = [];
-  let filePaths: TreeNode[] = [];
-
-  try {
-    const rootNode = await readDirectoryNested(absoluteStartPath);
-    filePaths = flattenTree(rootNode);
-  } catch (error) {
-    logError(`Failed to read directory structure for ${absoluteStartPath}`, { error, showUI: true });
-    return;
-  }
 
   const filesToProcess = filePaths.filter(node => !node.isFolder).map(node => node.path);
   logInfo(`Found ${filesToProcess.length} potential files to process.`);
@@ -183,10 +181,8 @@ export async function getOllamaEmbeddingRetrieve(prompt: string): Promise<(strin
 
 export async function sendMessageWithEmbedding(message: string, model: string, conversationId?: string): Promise<{ content: string, [key: string]: any }> {
   try {
-    if (embedFolder) {
-      logInfo(`Checking for updates in embedding folder: ${embedFolder}`);
-      await loadOllamaEmbedding(embedFolder);
-    }
+    const conversation = await getOrCreateConversation(model, conversationId);
+    await loadOllamaEmbedding(conversation.sources);
 
     logInfo(`Retrieving relevant documents for prompt.`);
     const embeddings = await getOllamaEmbeddingRetrieve(message);

@@ -10,6 +10,7 @@ import { isNil, set } from 'lodash';
 import { CustomSelect } from '../Common/Select';
 import { MultiButton } from '../MultiButton';
 import SearchModal from 'renderer/screens/Sources/Web/Search';
+import { DirectorySourceInput, SourceInput } from 'shared/types/Sources/SourceInput';
 
 const { App } = window;
 
@@ -19,6 +20,7 @@ export interface SidebarProps {
   setModel: React.Dispatch<React.SetStateAction<string>>;
   setEmbeddingModel: React.Dispatch<React.SetStateAction<string>>;
   onSelectConversation: (conversation?: Conversation) => void;
+  conversation?: Conversation;
   selectedConversationId?: string;
 }
 
@@ -28,24 +30,25 @@ export const Sidebar = ({
   setModel,
   setEmbeddingModel,
   onSelectConversation,
-  selectedConversationId
+  selectedConversationId,
+  conversation
 }: SidebarProps) => {
   const [status, setStatus] = useState<AppStatus | string>('Loading...');
-  const [filePath, setFilePath] = useState<string>('');
   const [embeddingModels, setEmbeddingModels] = useState<OllamaModel[]>([]);
   const [models, setModels] = useState<OllamaModel[]>([]);
-  const [treeData, setTreeData] = useState<TreeNode>();
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   const handleSelectFolder = async () => {
-    const folder = await App.invoke(IPC.FILE.SELECT_FOLDER);
+    const folder = await App.invoke(IPC.SOURCE.SELECT_FOLDER);
     if (!folder) return;
 
-    setFilePath(folder);
-    const fileList = await App.invoke(IPC.FILE.GET_FOLDER_FILES, folder);
-    setTreeData(fileList);
+    const newConversation: Conversation = await App.invoke(IPC.SOURCE.ADD_SOURCES,
+      [
+        { type: "Directory", directoryPath: folder } as SourceInput
+      ], model, undefined, undefined);
+    onSelectConversation(newConversation)
   };
 
   const loadStatus = async () => {
@@ -323,15 +326,23 @@ export const Sidebar = ({
                   disabled: true
                 }
               }} />
-              <SearchModal isOpen={searchOpen} onAdd={() => { }}  onClose={() => setSearchOpen(false)} searchFunction={(query) => App.invoke(IPC.WEB.QUERY, query)} />
+              <SearchModal isOpen={searchOpen} onAdd={() => { }}  onClose={() => setSearchOpen(false)} searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)} />
           </div>
           <Card className="p-2 flex-grow overflow-y-auto" style={{ minHeight: '200px' }}>
             <div className="text-sm">
-              {treeData ? (
-                <Tree node={treeData} onDelete={(_) => { }} />
-              ) : (
-                <span className="text-gray-500">No folder selected.</span>
-              )}
+              {
+                conversation?.sources &&
+                  conversation.sources.map((source) => {
+                    switch (source.type) {
+                      case 'Directory':
+                        return source.fileTree && <Tree node={source.fileTree} />;
+                      case 'File':
+                      case 'Web':
+                        default:
+                        return <div className="text-sm text-gray-500">{source.type} not yet implemented</div>;
+                    }
+                  })
+              }
             </div>
           </Card>
         </div>

@@ -3,11 +3,10 @@ import { nodewhisper } from 'nodejs-whisper'
 import ollama from 'ollama';
 import fs from 'fs/promises';
 import path from 'path';
-import { shell } from 'electron';
 import { getEligibleGpu } from 'main/services/gpuService';
 import { logError, logInfo } from 'main/services/log/logService';
 import { ttsService } from 'lib/electron-app/factories/app/setup';
-import { IpcHandle } from '../IpcHandle';
+import { IpcHandle } from '../decorators/IpcHandle';
 import { IPC } from 'shared/constants';
 
 async function convertWebmToWav(inputPath: string, outputPath: string): Promise<void> {

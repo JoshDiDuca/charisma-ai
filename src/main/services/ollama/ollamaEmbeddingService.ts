@@ -6,15 +6,20 @@ import {
   flattenTree,
   shouldSkipFile,
   TreeNode,
-  readFileByExtension
+  readFileByExtension,
 } from '../files/fileService';
 import {
   createChromaCollection,
   deleteAllChromaCollections,
   getChromaDocuments,
-  getOrCreateChromaCollection
+  getOrCreateChromaCollection,
 } from '../chroma/chromaService';
-import { currentlyInstallingModels, ollama, sendMessage, stopPolling } from './ollamaService';
+import {
+  currentlyInstallingModels,
+  ollama,
+  sendMessage,
+  stopPolling,
+} from './ollamaService';
 import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';
 import { getOrCreateConversation } from './ollamaConversationService';
@@ -26,15 +31,17 @@ const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 
 function generatePrompt(prompt: string, data: (string | null)[]): string {
-  const context = data.filter(item => item !== null).join('\n');
+  const context = data.filter(Boolean).join('\n');
   return `Context: ${context}\n\nQuestion: ${prompt}`;
 }
 
 export const getInstalledEmbeddingModels = async (): Promise<string[]> => {
   const response = await ollama.list();
-  const installedModels = response.models.map((m) => m.name);
+  const installedModels = response.models.map(m => m.name);
   return installedModels.filter(modelName =>
-    OllamaModels.some(baseModel => modelName.startsWith(baseModel.name) && baseModel.type === 'Embedding')
+    OllamaModels.some(
+      baseModel => modelName.startsWith(baseModel.name) && baseModel.type === 'Embedding'
+    )
   );
 };
 
@@ -48,9 +55,7 @@ export const getAllEmbeddingModels = async () => {
       stopPolling(m.name);
       currentlyInstallingModels.delete(m.name);
     }
-    const finalInstalling = currentlyInstallingModels.has(m.name);
-
-    return ({ ...m, installed, installing: finalInstalling });
+    return { ...m, installed, installing: currentlyInstallingModels.has(m.name) };
   });
 };
 
@@ -58,19 +63,17 @@ export async function initOllamaEmbedding(documents: string[]): Promise<string |
   try {
     await deleteAllChromaCollections();
     const collection = await createChromaCollection(COLLECTION_NAME);
-
     const ids = documents.map(() => uuidv4());
-    const metadatas = documents.map((name) => ({ name }));
+    const metadatas = documents.map(name => ({ name }));
 
-    await collection.upsert({
-      ids,
-      documents,
-      metadatas,
-    });
-
+    await collection.upsert({ ids, documents, metadatas });
     return COLLECTION_NAME;
   } catch (e) {
-    logError(`Error intialising ollama embedding with chromaDB`, { category: "Ollama", error: e, showUI: true });
+    logError('Error initializing ollama embedding with chromaDB', {
+      category: 'Ollama',
+      error: e,
+      showUI: true,
+    });
     return undefined;
   }
 }
@@ -86,62 +89,65 @@ export async function loadOllamaEmbedding(sources: Source[]): Promise<void> {
 
 export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<void> {
   const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
-
-  const resultsToBatch: Array<{ content: string, metadata: Metadata }> = [];
+  const resultsToBatch: Array<{ content: string; metadata: Metadata }> = [];
 
   const filesToProcess = filePaths.filter(node => !node.isFolder).map(node => node.path);
   logInfo(`Found ${filesToProcess.length} potential files to process.`);
 
-  const queue = filesToProcess.slice();
-  const processPromises: Promise<void>[] = [];
-
-  const worker = async (): Promise<void> => {
-    while (queue.length > 0) {
-      const filePath = queue.shift();
-      if (!filePath) continue;
-
-      try {
-        const stats = await fs.promises.stat(filePath);
-        if (!(await shouldSkipFile(filePath, stats))) {
-          const content = await readFileByExtension(filePath);
-          if (content) {
-            logInfo(`Processed file: ${filePath} with content: {${content}}`);
-            resultsToBatch.push({
-              content,
-              metadata: {
-                path: filePath,
-                type: extname(filePath).toLowerCase() || 'unknown',
-                last_modified: stats.mtime.getTime()
-              }
-            });
-          } else {
-            logInfo(`Skipping file due to read error or empty content: ${filePath}`);
-          }
+  const queue = [...filesToProcess];
+  const processFile = async (filePath: string) => {
+    try {
+      const stats = await fs.promises.stat(filePath);
+      if (!(await shouldSkipFile(filePath, stats))) {
+        const content = await readFileByExtension(filePath);
+        if (content) {
+          logInfo(`Processed file: ${filePath}`);
+          resultsToBatch.push({
+            content,
+            metadata: {
+              path: filePath,
+              type: extname(filePath).toLowerCase() || 'unknown',
+              last_modified: stats.mtime.getTime(),
+            },
+          });
         } else {
-          logInfo(`Skipping file based on shouldSkipFile: ${filePath}`);
+          logInfo(`Skipping file due to read error or empty content: ${filePath}`);
         }
-      } catch (error: any) {
-        if (error.code === 'ENOENT') {
-          logError(`File not found during processing: ${filePath}`, { error: error, category: "Ollama", showUI: false });
-        } else {
-          logError(`File processing failed: ${filePath}`, { error: error, category: "Ollama", showUI: false });
-        }
+      } else {
+        logInfo(`Skipping file based on shouldSkipFile: ${filePath}`);
+      }
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        logError(`File not found during processing: ${filePath}`, {
+          error,
+          category: 'Ollama',
+          showUI: false,
+        });
+      } else {
+        logError(`File processing failed: ${filePath}`, {
+          error,
+          category: 'Ollama',
+          showUI: false,
+        });
       }
     }
   };
 
-  const workerCount = Math.min(CONCURRENT_LIMIT, filesToProcess.length);
-  for (let i = 0; i < workerCount; i++) {
-    processPromises.push(worker());
-  }
+  const worker = async () => {
+    while (queue.length > 0) {
+      const filePath = queue.shift();
+      if (filePath) await processFile(filePath);
+    }
+  };
 
-  await Promise.all(processPromises);
+  const workerCount = Math.min(CONCURRENT_LIMIT, filesToProcess.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
 
   logInfo(`Processed files, found ${resultsToBatch.length} valid documents for embedding.`);
 
   if (resultsToBatch.length === 0) {
     logInfo(`No new documents to add to collection ${COLLECTION_NAME}.`);
-    logInfo(`loadOllamaEmbedding Done`);
+    logInfo('loadOllamaEmbedding Done');
     return;
   }
 
@@ -158,12 +164,15 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
         });
         logInfo(`Upserted batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} documents)`);
       } catch (error) {
-        logError(`Failed to upsert batch ${Math.floor(i / BATCH_SIZE) + 1}`, { error, category: "Ollama", showUI: true });
+        logError(`Failed to upsert batch ${Math.floor(i / BATCH_SIZE) + 1}`, {
+          error,
+          category: 'Ollama',
+          showUI: true,
+        });
       }
     }
   }
 }
-
 
 export async function getOllamaEmbeddingRetrieve(prompt: string): Promise<(string | null)[]> {
   try {
@@ -171,31 +180,37 @@ export async function getOllamaEmbeddingRetrieve(prompt: string): Promise<(strin
       model: OLLAMA_MODEL_EMBEDDING,
       prompt,
     });
-
     return getChromaDocuments(COLLECTION_NAME, response.embedding);
   } catch (error) {
-    logError(`Error in getting ollama embedding`, { error, category: "Ollama", showUI: true });
+    logError('Error in getting ollama embedding', {
+      error,
+      category: 'Ollama',
+      showUI: true,
+    });
     throw error;
   }
 }
 
-export async function sendMessageWithEmbedding(message: string, model: string, conversationId?: string): Promise<{ content: string, [key: string]: any }> {
+export async function sendMessageWithEmbedding(
+  message: string,
+  model: string,
+  conversationId?: string
+): Promise<{ content: string; [key: string]: any }> {
   try {
     const conversation = await getOrCreateConversation(model, conversationId);
     await loadOllamaEmbedding(conversation.sources);
 
-    logInfo(`Retrieving relevant documents for prompt.`);
+    logInfo('Retrieving relevant documents for prompt.');
     const embeddings = await getOllamaEmbeddingRetrieve(message);
 
-    const finalPrompt = embeddings.length > 0
-      ? generatePrompt(message, embeddings)
-      : message;
+    const finalPrompt =
+      embeddings.length > 0 ? generatePrompt(message, embeddings) : message;
 
-    if (embeddings.length > 0) {
-      logInfo(`Generated prompt with context from ${embeddings.length} documents.`);
-    } else {
-      logInfo(`No relevant documents found, sending original message.`);
-    }
+    logInfo(
+      embeddings.length > 0
+        ? `Generated prompt with context from ${embeddings.length} documents.`
+        : 'No relevant documents found, sending original message.'
+    );
 
     logInfo(`Sending message to model ${model}.`);
     const response = await sendMessage(finalPrompt, model, [], conversationId);
@@ -203,11 +218,14 @@ export async function sendMessageWithEmbedding(message: string, model: string, c
 
     return {
       ...response,
-      content: response.content || "",
+      content: response.content || '',
     };
-
   } catch (e) {
-    logError(`Error sending message with embedding`, { error: e, category: "Ollama", showUI: true });
+    logError('Error sending message with embedding', {
+      error: e,
+      category: 'Ollama',
+      showUI: true,
+    });
     return { content: 'Error processing request due to embedding failure.' };
   }
 }

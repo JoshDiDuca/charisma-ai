@@ -11,6 +11,7 @@ import { CustomSelect } from '../Common/Select';
 import { MultiButton } from '../MultiButton';
 import SearchModal from 'renderer/screens/Sources/Web/Search';
 import { DirectorySourceInput, SourceInput } from 'shared/types/Sources/SourceInput';
+import { FileItem } from './FileItem';
 
 const { App } = window;
 
@@ -219,46 +220,46 @@ export const Sidebar = ({
         </div>
 
         <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium">Model</label>
-        <CustomSelect
-          value={model}
-          onChange={(value) => downloadModel(value, 'LLM')}
-          options={models.map((m) => ({
-            key: m.name,
-            value: m.name,
-            label: (
-              <div className="flex items-center justify-between w-full">
-                <span>{m.name}</span>
-                <span>
-                  {m.installed ? "✔️" : m.installing ?
-                    <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
-                </span>
-              </div>
-            )
-          }))}
-        />
-      </div>
+          <label className="text-sm font-medium">Model</label>
+          <CustomSelect
+            value={model}
+            onChange={(value) => downloadModel(value, 'LLM')}
+            options={models.map((m) => ({
+              key: m.name,
+              value: m.name,
+              label: (
+                <div className="flex items-center justify-between w-full">
+                  <span>{m.name}</span>
+                  <span>
+                    {m.installed ? "✔️" : m.installing ?
+                      <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
+                  </span>
+                </div>
+              )
+            }))}
+          />
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium">Embedding Model</label>
-        <CustomSelect
-          value={embeddingModel}
-          onChange={(value) => downloadModel(value, 'Embedding')}
-          options={embeddingModels.map((m) => ({
-            key: m.name,
-            value: m.name,
-            label: (
-              <div className="flex items-center justify-between w-full">
-                <span>{m.name}</span>
-                <span>
-                  {m.installed ? "✔️" : m.installing ?
-                    <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
-                </span>
-              </div>
-            )
-          }))}
-        />
-      </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium">Embedding Model</label>
+          <CustomSelect
+            value={embeddingModel}
+            onChange={(value) => downloadModel(value, 'Embedding')}
+            options={embeddingModels.map((m) => ({
+              key: m.name,
+              value: m.name,
+              label: (
+                <div className="flex items-center justify-between w-full">
+                  <span>{m.name}</span>
+                  <span>
+                    {m.installed ? "✔️" : m.installing ?
+                      <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
+                  </span>
+                </div>
+              )
+            }))}
+          />
+        </div>
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -286,9 +287,8 @@ export const Sidebar = ({
                 {conversations.map((conv) => (
                   <div
                     key={conv.id}
-                    className={`p-2 cursor-pointer hover:bg-gray-50 flex justify-between items-start ${
-                      selectedConversationId === conv.id ? 'bg-gray-100' : ''
-                    }`}
+                    className={`p-2 cursor-pointer hover:bg-gray-50 flex justify-between items-start ${selectedConversationId === conv.id ? 'bg-gray-100' : ''
+                      }`}
                     onClick={() => onSelectConversation(conv)}
                   >
                     <div className="overflow-hidden">
@@ -307,41 +307,53 @@ export const Sidebar = ({
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">Sources:</label>
             <MultiButton options={{
-                folder: {
-                  label: "Add Folder",
-                  description: "Add sources from a folder on your PC.",
-                  onClick: () => handleSelectFolder(),
-                  disabled: false
-                },
-                web: {
-                  label: "Add Web",
-                  description: "Search, find and add sources from the internet.",
-                  onClick: () => setSearchOpen(true),
-                  disabled: false
-                },
-                database: {
-                  label: "Add Database",
-                  description: "Connect to a relational database and search data.",
-                  onClick: () => console.log("Database clicked"),
-                  disabled: true
-                }
-              }} />
-              <SearchModal isOpen={searchOpen} onAdd={() => { }}  onClose={() => setSearchOpen(false)} searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)} />
+              folder: {
+                label: "Add Folder",
+                description: "Add sources from a folder on your PC.",
+                onClick: () => handleSelectFolder(),
+                disabled: false
+              },
+              web: {
+                label: "Add Web",
+                description: "Search, find and add sources from the internet.",
+                onClick: () => setSearchOpen(true),
+                disabled: false
+              },
+              database: {
+                label: "Add Database",
+                description: "Connect to a relational database and search data.",
+                onClick: () => console.log("Database clicked"),
+                disabled: true
+              }
+            }} />
+            <SearchModal
+              isOpen={searchOpen}
+              onAdd={async (selectedItems) => await App.invoke(IPC.SOURCE.ADD_SOURCES,
+              selectedItems.map((item) => ({
+                type: "Web",
+                url: item.url,
+                description: item.description,
+                title: item.title
+              }) as SourceInput), model, undefined, undefined)}
+              onClose={() => setSearchOpen(false)}
+              searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
+             />
           </div>
           <Card className="p-2 flex-grow overflow-y-auto" style={{ minHeight: '200px' }}>
             <div className="text-sm">
               {
                 conversation?.sources &&
-                  conversation.sources.map((source) => {
-                    switch (source.type) {
-                      case 'Directory':
-                        return source.fileTree && <Tree node={source.fileTree} />;
+                conversation.sources.map((source) => {
+                  switch (source.type) {
+                    case 'Directory':
+                      return source.fileTree && <Tree node={source.fileTree} />;
+                    case 'Web':
+                      return (<div><FileItem icon={'🌍'} id={source.url} name={source.title} depth={0} isExapndable={false} isExpanded={false} /></div>)
                       case 'File':
-                      case 'Web':
-                        default:
-                        return <div className="text-sm text-gray-500">{source.type} not yet implemented</div>;
-                    }
-                  })
+                    default:
+                      return <div className="text-sm text-gray-500">{source.type} not yet implemented</div>;
+                  }
+                })
               }
             </div>
           </Card>

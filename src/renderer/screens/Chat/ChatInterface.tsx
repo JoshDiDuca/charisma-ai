@@ -52,13 +52,13 @@ export const ChatInterface = ({
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
+      setConversationId(conversation?.id);
       setMessages(conversation?.messages.map((msg) => ({
         id: msg.timestamp,
         text: msg.content,
         sender: msg.role === 'user' ? 'user' : 'bot',
         incomplete: false
       })) ?? []);
-      setConversationId(conversation?.id);
       if(conversation?.model){
         setModel(conversation.model);
       }

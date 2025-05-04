@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaTrash } from 'react-icons/fa';
+import { FileItem } from './FileItem';
 
 export type TreeNode = {
   id: string;
@@ -32,34 +33,7 @@ export const Tree = ({
   return (
     <div>
       {/* Add 'group' class here for hover detection */}
-      <div
-        className="group flex items-center gap-1 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
-        style={indentStyle}
-        onClick={handleToggle}
-      >
-        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-          {node.isFolder ? (canExpand ? (isExpanded ? '▼' : '▶') : '') : ''}
-        </span>
-
-        <span className="flex-shrink-0">{node.isFolder ? '📁' : '📄'}</span>
-
-        <span className="truncate flex-grow mr-2" title={node.path}>
-          {node.name}
-        </span>
-
-        {/* Delete button: Start hidden (opacity-0), show on group-hover */}
-        {onDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(node.path);
-            }}
-            className="text-red hover:text-red text-xs ml-auto mr-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 flex-shrink-0"
-          >
-            <FaTrash />
-          </button>
-        )}
-      </div>
+      <FileItem icon={node.isFolder ? '📁' : '📄'} id={node.id} name={node.name} depth={depth} handleClick={handleToggle} isExapndable={canExpand} isExpanded={isExpanded} onDelete={onDelete} />
 
       {node.isFolder && isExpanded && node.children && (
         <div>
@@ -76,3 +50,4 @@ export const Tree = ({
     </div>
   );
 };
+

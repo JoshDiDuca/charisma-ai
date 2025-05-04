@@ -25,9 +25,7 @@ export const addSources = async (
         sources.push(await getWebSource(sourceInput));
     }
   }
-  console.log(sources);
   const conversation = await addSourcesToConversation(model, conversationId, systemMessage, sources);
-  console.log(conversation);
   return conversation;
 }
 

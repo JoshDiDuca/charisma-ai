@@ -23,7 +23,8 @@ import {
 import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';
 import { getOrCreateConversation } from './ollamaConversationService';
-import { Source } from 'shared/types/Sources/SourceInput';
+import { FileSourceInput, Source, WebSourceInput } from 'shared/types/Sources/SourceInput';
+import axios from 'axios';
 
 const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large';
 const COLLECTION_NAME = 'EMBED-COLLECTION';
@@ -83,6 +84,9 @@ export async function loadOllamaEmbedding(sources: Source[]): Promise<void> {
     if (source.type === 'Directory') {
       const filePaths = flattenTree(source.fileTree?.children ?? []);
       await loadOllamaFileEmbedding(filePaths);
+    }
+    if (source.type === 'Web') {
+      await loadOllamaWebEmbedding(source as WebSourceInput);
     }
   }
 }
@@ -173,6 +177,36 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
     }
   }
 }
+export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<void> {
+  try {
+    const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
+
+    const response = await axios.get(source.url);
+    const toProcess = ({
+      content: response.data,
+      metadata: {
+        url: source.url,
+        type: 'text/html',
+        last_modified: Date.now(),
+      },
+    });
+    await collection.upsert({
+      ids: uuidv4(),
+      documents: toProcess.content,
+      metadatas: toProcess.metadata,
+    });
+    logInfo(`Processed web page: ${source.url}`);
+    console.log(`${response.data}`);
+
+  } catch (error: any) {
+    logError(`Failed to fetch web content from ${source.url}`, {
+      error,
+      category: 'Ollama',
+      showUI: true,
+    });
+  }
+}
+
 
 export async function getOllamaEmbeddingRetrieve(prompt: string): Promise<(string | null)[]> {
   try {
@@ -195,7 +229,7 @@ export async function sendMessageWithEmbedding(
   message: string,
   model: string,
   conversationId?: string
-): Promise<{ content: string; [key: string]: any }> {
+): Promise<{ content: string;[key: string]: any }> {
   try {
     const conversation = await getOrCreateConversation(model, conversationId);
     await loadOllamaEmbedding(conversation.sources);

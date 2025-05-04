@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { FaMicrophone, FaPaperclip, FaStop } from 'react-icons/fa';
+import { FaMicrophone, FaPaperclip, FaSpinner, FaStop } from 'react-icons/fa';
 import {
   Button,
   Input,
@@ -16,6 +16,7 @@ import { Conversation, Message } from 'shared/types/Conversation';
 import { SettingsDropdown } from 'renderer/components/SettingsIcon';
 import { useChatBot } from 'renderer/store/conversationProvider';
 import { last } from 'lodash';
+import { useVoiceRecorder } from 'renderer/hooks/useVoiceRecorder';
 
 const { App } = window;
 
@@ -33,15 +34,26 @@ export const ChatInterface = ({
     messages
   } = useChatBot();
 
+
+  const {
+    isLoading: isVoiceLoading,
+    isRecording,
+    startRecording,
+    stopRecording,
+  } = useVoiceRecorder((transcribedText) => setInputValue(transcribedText));
+
+  // Replace handleMicClick with:
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasFirstResponse, setHasFirstResponse] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
-
-  // Audio recording references
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -91,96 +103,6 @@ export const ChatInterface = ({
     }
   };
 
-  // Handle microphone button click
-  const handleMicClick = async () => {
-    if (isRecording) {
-      // Stop recording
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        mediaRecorderRef.current.stop();
-      }
-
-      // We'll handle the rest in the onstop event handler
-    } else {
-      try {
-        // Notify main process that we're starting recording
-        await App.startRecording();
-
-        // Request microphone access
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
-
-        streamRef.current = stream;
-
-        // Create MediaRecorder instance
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-        audioChunksRef.current = [];
-
-        // Handle data available event
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
-
-        // Handle recording stop event
-        mediaRecorder.onstop = async () => {
-          try {
-            // Create audio blob from chunks
-            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-
-            // Convert blob to base64
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-
-            reader.onloadend = async () => {
-              const base64Audio = reader.result?.toString().split(',')[1];
-
-              if (base64Audio) {
-                // Notify main process that recording stopped
-                await App.stopRecording();
-
-                setIsLoading(true);
-
-                // Send audio for transcription
-                const { text } = await App.transcribeAudio(base64Audio);
-
-                // Set the transcribed text as input
-                setInputValue(text);
-
-                // Optionally auto-send the message
-                // await handleSendMessage();
-              }
-            };
-
-            // Clean up media stream
-            if (streamRef.current) {
-              streamRef.current.getTracks().forEach(track => track.stop());
-              streamRef.current = null;
-            }
-          } catch (error) {
-            console.error('Error processing recording:', error);
-          } finally {
-            setIsRecording(false);
-            setIsLoading(false);
-            setHasFirstResponse(true);
-          }
-        };
-
-        // Start recording
-        mediaRecorder.start();
-        setIsRecording(true);
-      } catch (error) {
-        console.error('Error starting recording:', error);
-        setIsRecording(false);
-      }
-    }
-  };
 
   useEffect(() => {
     const streamHandler = (
@@ -210,19 +132,6 @@ export const ChatInterface = ({
     App.on(IPC.LLM.STREAM_UPDATE, streamHandler);
     return () => {
       App.removeAllListeners(IPC.LLM.STREAM_UPDATE);
-    };
-  }, []);
-
-  // Clean up recording on component unmount
-  useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        mediaRecorderRef.current.stop();
-      }
-
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
     };
   }, []);
 
@@ -275,9 +184,9 @@ export const ChatInterface = ({
           aria-label={isRecording ? "Stop recording" : "Record audio"}
           color={isRecording ? "danger" : "default"}
           onClick={handleMicClick}
-          disabled={isLoading}
+          disabled={true}
         >
-          {isRecording ? <FaStop /> : <FaMicrophone />}
+          {isVoiceLoading ? <FaSpinner style={{ animation: "spin 1s infinite linear" }}  /> : isRecording ? <FaStop /> : <FaMicrophone />}
         </Button>
         <Button
           color="primary"

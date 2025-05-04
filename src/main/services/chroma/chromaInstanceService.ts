@@ -67,9 +67,10 @@ export class ChromaInstanceService {
              }
         });
 
-        this.process.stderr?.on('data', (data) => logError(`ChromaDB ERROR`,{ error:data }));
+        this.process.stderr?.on('data', (data) => logInfo(`ChromaDB DATA`,{ error:data }));
         this.process.on('error', (error) => { logError('ChromaDB spawn error:',{  error }); this.isRunning = false; });
         this.process.on('close', (code) => { logInfo(`ChromaDB exited: ${code}`); this.isRunning = false; });
+
 
         // Simplified readiness - replace with a proper check
         // Wait for the stdout message or use a timeout/ping
@@ -85,19 +86,18 @@ export class ChromaInstanceService {
                     clearTimeout(timeout);
                     this.isRunning = true;
                     resolve(true);
+                } else if(data.toString().toLowerCase().includes(`error`)) {
+                  this.isRunning = false;
+                  resolve(false);
                 }
             });
-             this.process?.on('error', () => { // Resolve false on spawn error
-                 clearTimeout(timeout);
-                 resolve(false);
-             });
         });
     }
 
     async stop(): Promise<void> {
          if (this.process && !this.process.killed) {
              console.log('Stopping ChromaDB...');
-             this.process.kill();
+             this.process.kill("SIGTERM");
          }
         this.isRunning = false;
     }

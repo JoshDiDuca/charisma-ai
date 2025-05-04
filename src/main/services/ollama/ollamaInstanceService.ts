@@ -27,7 +27,6 @@ export class OllamaInstanceService {
         return true;
     }
 
-
     const binaryPath = this.getBinaryPath()
     const execName = process.platform === 'win32' ? 'ollama.exe' : 'ollama'
     const fullPath = path.join(binaryPath, execName)

@@ -6,9 +6,10 @@ import { FaSpinner, FaPlus, FaComments, FaTrash } from 'react-icons/fa';
 import { AppStatus } from 'shared/types/AppStatus';
 import { Conversation } from 'shared/types/Conversation';
 import { IPC } from 'shared/constants';
-import { isNil } from 'lodash';
+import { isNil, set } from 'lodash';
 import { CustomSelect } from '../Common/Select';
 import { MultiButton } from '../MultiButton';
+import SearchModal from 'renderer/screens/Sources/Web/Search';
 
 const { App } = window;
 
@@ -34,6 +35,7 @@ export const Sidebar = ({
   const [embeddingModels, setEmbeddingModels] = useState<OllamaModel[]>([]);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [treeData, setTreeData] = useState<TreeNode>();
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
@@ -311,8 +313,8 @@ export const Sidebar = ({
                 web: {
                   label: "Add Web",
                   description: "Search, find and add sources from the internet.",
-                  onClick: () => console.log("Web clicked"),
-                  disabled: true
+                  onClick: () => setSearchOpen(true),
+                  disabled: false
                 },
                 database: {
                   label: "Add Database",
@@ -321,6 +323,7 @@ export const Sidebar = ({
                   disabled: true
                 }
               }} />
+              <SearchModal isOpen={searchOpen} onAdd={() => { }}  onClose={() => setSearchOpen(false)} searchFunction={(query) => App.invoke(IPC.WEB.QUERY, query)} />
           </div>
           <Card className="p-2 flex-grow overflow-y-auto" style={{ minHeight: '200px' }}>
             <div className="text-sm">

@@ -51,5 +51,8 @@ export const IPC = {
     UPDATE_TITLE: 'conversation:update-title',
     ADD_MESSAGE: 'conversation:add-message',
     GENERATE_TITLE: 'conversation:generate-title'
+  },
+  WEB: {
+    QUERY: "web:query",
   }
 }

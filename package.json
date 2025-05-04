@@ -43,6 +43,7 @@
     "electron-router-dom": "^2.1.0",
     "file-type": "^20.5.0",
     "framer-motion": "^12.9.2",
+    "google-sr": "^5.0.0",
     "lodash": "^4.17.21",
     "nodejs-whisper": "^0.2.6",
     "pcm-player": "^0.0.18",

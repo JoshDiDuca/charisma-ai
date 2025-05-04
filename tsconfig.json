@@ -7,9 +7,10 @@
       "dom",
       "dom.iterable"
     ],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "jsx": "react-jsx",
     "importHelpers": true,
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "sourceMap": true,

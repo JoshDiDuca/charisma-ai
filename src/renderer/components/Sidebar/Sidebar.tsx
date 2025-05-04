@@ -13,6 +13,7 @@ import SearchModal from 'renderer/screens/Sources/Web/Search';
 import { DirectorySourceInput, SourceInput } from 'shared/types/Sources/Source';
 import { FileItem } from './FileItem';
 import { useChatBot } from 'renderer/store/conversationProvider';
+import { WebSearch } from 'shared/types/Sources/WebSearch';
 
 const { App } = window;
 
@@ -49,6 +50,17 @@ export const Sidebar = ({ }: SidebarProps) => {
       [
         { type: "Directory", directoryPath: folder } as SourceInput
       ], model, undefined, undefined);
+      setConversation(newConversation)
+  };
+
+  const addSearchSources = async (selectedItems: WebSearch[]) => {
+    const newConversation: Conversation = await App.invoke(IPC.SOURCE.ADD_SOURCES,
+      selectedItems.map((item) => ({
+        type: "Web",
+        url: item.url,
+        description: item.description,
+        title: item.title
+      }) as SourceInput), model, conversation?.id, undefined);
       setConversation(newConversation)
   };
 
@@ -247,13 +259,7 @@ export const Sidebar = ({ }: SidebarProps) => {
             }} />
             <SearchModal
               isOpen={searchOpen}
-              onAdd={async (selectedItems) => await App.invoke(IPC.SOURCE.ADD_SOURCES,
-                selectedItems.map((item) => ({
-                  type: "Web",
-                  url: item.url,
-                  description: item.description,
-                  title: item.title
-                }) as SourceInput), model, conversation?.id, undefined)}
+              onAdd={async (selectedItems) => addSearchSources(selectedItems)}
               onClose={() => setSearchOpen(false)}
               searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
             />

@@ -147,7 +147,7 @@ export const addSourcesToConversation = async (
 
   return saveConversation({
     ...conversation,
-    sources: [...conversation.sources, ...sources]
+    sources: [...conversation.sources ?? [], ...sources]
   });
 };
 

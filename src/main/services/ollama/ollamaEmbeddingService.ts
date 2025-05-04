@@ -193,9 +193,9 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<vo
       },
     });
     await collection.upsert({
-      ids: uuidv4(),
-      documents: toProcess.content,
-      metadatas: toProcess.metadata,
+      ids: [uuidv4()],
+      documents: [toProcess.content],
+      metadatas: [toProcess.metadata],
     });
     logInfo(`Processed web page: ${source.url}`);
     console.log(`${response.data}`);

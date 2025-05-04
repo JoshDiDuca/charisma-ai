@@ -83,7 +83,7 @@ pnpm dev
 - [x] Multiple conversations with storage
 - [x] TTS
 - [x] Improved data sources
-- [] AI response sources
+- [x] AI response sources
 - [] Web queries
 - [] Relational database queries
 - [] Translate results

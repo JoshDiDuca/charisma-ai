@@ -1,7 +1,6 @@
 import { Metadata } from 'chromadb';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
-import { extname } from 'path';
 import {
   flattenTree,
   shouldSkipFile,
@@ -24,7 +23,7 @@ import {
 import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';
 import { getOrCreateConversation } from './ollamaConversationService';
-import { FileSourceInput, Source, WebSourceInput } from 'shared/types/Sources/Source';
+import { Source, WebSourceInput } from 'shared/types/Sources/Source';
 import axios from 'axios';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 

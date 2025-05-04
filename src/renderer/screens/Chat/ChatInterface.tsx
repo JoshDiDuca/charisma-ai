@@ -163,7 +163,7 @@ export const ChatInterface = ({
 
               }
 
-            {!message.messageSources ? <Markdown>{message.userInput || message.text}</Markdown>
+            {!message.messageSources || message.messageSources.length === 0 ? <Markdown>{message.userInput || message.text}</Markdown>
                        : <Tabs aria-label="Options">
                 <Tab key="answer" title="Answer">
                   <Card>

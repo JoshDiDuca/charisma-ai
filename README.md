@@ -85,6 +85,7 @@ pnpm dev
 - [x] Improved data sources
 - [x] AI response sources
 - [] Web queries
+- [] Switch to Vector from ChromaDB (licensing and more flexible)
 - [] Relational database queries
 - [] Translate results
 - [] LlamaIndex full integration

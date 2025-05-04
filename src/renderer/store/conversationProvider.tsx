@@ -88,10 +88,10 @@ useEffect(() => {
 // Update the conversation effect
 useEffect(() => {
   if (conversation) {
-    setMessages(conversation.messages);
     setModel(prev => conversation.model || prev);
     setEmbeddingModel(prev => embeddingModel || prev);
   }
+  setMessages(conversation?.messages ?? []);
 }, [conversation]);
 
 

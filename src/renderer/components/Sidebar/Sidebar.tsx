@@ -84,6 +84,9 @@ export const Sidebar = ({ }: SidebarProps) => {
     try {
       const success = await App.invoke(IPC.CONVERSATION.DELETE, id);
       if (success) {
+        if(id === conversation?.id){
+          setConversation(undefined);
+        }
         setConversations(prev => prev?.filter(conv => conv.id !== id) ?? []);
       }
     } catch (error) {

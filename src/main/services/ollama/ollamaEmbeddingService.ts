@@ -179,7 +179,9 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
       }
     }
   }
-}export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<void> {
+}
+
+export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<void> {
   try {
     const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 

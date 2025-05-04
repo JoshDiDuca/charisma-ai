@@ -84,12 +84,14 @@ pnpm dev
 - [x] TTS
 - [] Improved data sources
 - [] Web queries
+- [] Relational database queries
 - [] Translate results
 - [] LlamaIndex full integration
 - [] JSON "Tools/Agents"
 - [] Settings
 - [] TTS voice model selection
 - [] Source viewing along with TTS plugged in
+- [] CSV file support
 
 
 ### Future Vision

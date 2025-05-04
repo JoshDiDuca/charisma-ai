@@ -26,10 +26,9 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 
 | Component | Choice | Why? |
 | :-- | :-- | :-- |
-| **Frontend** | React + TypeScript | Type safety, component reuse |
-| **Styling** | Tailwind CSS + Headless UI | Rapid UI development |
-| **State** | Zustand | Lightweight global management |
-| **LLM Core** | Ollama + ChromaDB | Local-first, privacy focused |
+| **Frontend** | React + TypeScript |
+| **Styling** | Tailwind CSS + Headless UI |
+| **LLM Core** | Ollama + ChromaDB | LLamaIndex | Local-first, privacy focused |
 | **Packaging** | Electron + Vite | Cross-platform binaries |
 
 
@@ -66,7 +65,7 @@ pnpm dev
 ollama pull llama3:8b
 
 # Launch studio with debug mode
-DEBUG=true pnpm start
+pnpm dev
 ```
 
 1. Click **Folder Select** and choose a codebase
@@ -79,18 +78,25 @@ DEBUG=true pnpm start
 
 ## 🛣 Roadmap
 
-### Next Release (v0.5)
+### Updates
 
-- [ ] Multi-model conversations
-- [ ] Code modification suggestions
-- [ ] Local storage for frequent queries
+- [x] Multiple conversations with storage
+- [x] TTS
+- [] Improved data sources
+- [] Web queries
+- [] Translate results
+- [] LlamaIndex full integration
+- [] JSON "Tools/Agents"
+- [] Settings
+- [] TTS voice model selection
+- [] Source viewing along with TTS plugged in
 
 
 ### Future Vision
 
 - **AI Pair Programmer** - Refactor code via chat
-- **Multi-Modal Analysis** - Images/PDFs support
-- **Team Collaboration** - Shared session histories
+- **Multi Source Data Analysis** - Images/PDFs/Web Sources/Database support
+- **AI Collaboration** - Shared session histories
 
 ---
 
@@ -108,7 +114,4 @@ We welcome contributions! Please follow our [contribution guidelines](CONTRIBUTI
 
 ## 📜 License
 
-MIT Licensed - See [LICENSE](LICENSE) for details.
 *Ollama and ChromaDB have their own licenses - please review separately.*[^1][^4][^11]
-
-<div style="text-align: center">⁂</div>

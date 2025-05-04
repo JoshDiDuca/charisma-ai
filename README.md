@@ -82,9 +82,10 @@ pnpm dev
 
 - [x] Multiple conversations with storage
 - [x] TTS
-- [x] Improved data sources
+- [x] Improved RAG data sources
 - [x] AI response sources
-- [] Web queries
+- [] Web RAG queries
+- [] Web RAG query pdf/file download support
 - [] Switch to Vector from ChromaDB (licensing and more flexible)
 - [] Relational database queries
 - [] Translate results
@@ -97,6 +98,7 @@ pnpm dev
 - [] Source viewing/editting along with the ability to read using TTS
 - [] CSV file support
 - [] Agents/Pipelines/Custom Reasoning
+- [] Agent tasks such as creating, editting, writing files
 
 ### Future Vision
 

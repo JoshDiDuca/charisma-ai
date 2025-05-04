@@ -8,6 +8,7 @@ import {
   readFileByExtension,
   getFileInfo,
 } from '../files/fileService';
+import * as cheerio from 'cheerio';
 import {
   createChromaCollection,
   deleteAllChromaCollections,
@@ -28,7 +29,7 @@ import axios from 'axios';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 
 const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large';
-const COLLECTION_NAME = 'EMBED-COLLECTION';
+const COLLECTION_NAME = "EMBEDsssss";
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 
@@ -183,38 +184,40 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
     const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 
     const response = await axios.get(source.url);
-    console.log(response.data);
+    const $ = cheerio.load(response.data);
 
-    // Improved cleaning pipeline
-    const cleanedHtml = response.data
-      .replace(/<script[\s\S]*?<\/script>/gi, '') // Remove scripts
-      .replace(/<style[\s\S]*?<\/style>/gi, '') // Remove styles
-      .replace(/<noscript[\s\S]*?<\/noscript>/gi, '') // Remove noscript
-      .replace(/<meta[^>]+>/gi, '') // Remove meta tags
-      .replace(/<link[^>]+>/gi, '') // Remove link tags
-      .replace(/<form[\s\S]*?<\/form>/gi, '') // Remove forms
-      .replace(/<iframe[\s\S]*?<\/iframe>/gi, '') // Remove iframes
-      .replace(/\s+/g, ' '); // Normalize whitespace
+    // Remove unwanted elements
+    $('script, style, noscript, iframe, link, meta, [hidden], path, svg, g, rect, img, audio, video, canvas').remove();
 
-      console.log(cleanedHtml);
+    // Optionally, remove comments
+    $('*').contents().each(function() {
+      if (this.type === 'comment') $(this).remove();
+    });
+
+    // Extract cleaned HTML
+    const cleanedHtml = $.html() || '';
 
     const toProcess = {
-      content: cleanedHtml.trim(),
+      content: cleanedHtml,
       metadata: {
-        url: source.url,
         type: 'text/html',
         last_modified: Date.now(),
+        ...source
       },
     };
 
     await collection.upsert({
       ids: [uuidv4()],
-      documents: [toProcess.content],
+      documents: [`
+        ${JSON.stringify(source)}
+        ${toProcess.content}
+      `],
       metadatas: [toProcess.metadata],
     });
 
     logInfo(`Processed web page: ${source.url}`);
     // console.log(cleanedHtml);
+
 
   } catch (error: any) {
     logError(`Failed to fetch web content from ${source.url}`, {

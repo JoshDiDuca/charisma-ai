@@ -94,7 +94,7 @@ pnpm dev
 - [] TTS voice model selection
 - [] Source viewing/editting along with the ability to read using TTS
 - [] CSV file support
-
+- [] Agents/Pipelines/Custom Reasoning
 
 ### Future Vision
 

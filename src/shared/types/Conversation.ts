@@ -2,7 +2,7 @@ import { Source } from "./Sources/SourceInput";
 
 export interface Message {
   role: 'system' | 'user' | 'assistant';
-  content: string;
+  text: string;
   timestamp: number;
 }
 

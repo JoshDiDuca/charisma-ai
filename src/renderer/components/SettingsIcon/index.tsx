@@ -3,7 +3,7 @@ import React from 'react';
 import { FaCog, FaUser, FaLanguage, FaFileAlt, FaInfoCircle } from 'react-icons/fa';
 import { CustomDropdown } from '../Common/Dropdown';
 import { MediaPlayer } from '../MediaPlayer';
-import { useAudioPlayer } from 'renderer/scripts/audioRenderer';
+import { useAudioPlayer } from 'renderer/store/audioPlayerProvider';
 import { IPC } from 'shared/constants';
 
 interface SettingsDropdownProps {

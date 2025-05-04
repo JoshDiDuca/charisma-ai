@@ -12,38 +12,30 @@ import {
 import Markdown from 'react-markdown';
 import { inc } from 'semver';
 import { IPC } from 'shared/constants';
-import { Conversation } from 'shared/types/Conversation';
+import { Conversation, Message } from 'shared/types/Conversation';
 import { SettingsDropdown } from 'renderer/components/SettingsIcon';
-
-type Message = {
-  id: number;
-  text: string;
-  sender: 'user' | 'bot';
-  incomplete: boolean;
-};
+import { useChatBot } from 'renderer/store/conversationProvider';
+import { last } from 'lodash';
 
 const { App } = window;
 
 export interface ChatInterfaceProps {
-  model: string;
-  embeddingModel: string;
-  conversation?: Conversation;
-  setModel: React.Dispatch<React.SetStateAction<string>>;
-  setEmbeddingModel: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const ChatInterface = ({
-  model,
-  embeddingModel,
-  setModel,
-  conversation,
-  setEmbeddingModel,
 }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const {
+    model,
+    setModel,
+    conversation,
+    setMessages,
+    setConversation,
+    messages
+  } = useChatBot();
+
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasFirstResponse, setHasFirstResponse] = useState(true);
-  const [conversationId, setConversationId] = useState<string | undefined>();
   const [isRecording, setIsRecording] = useState(false);
 
   // Audio recording references
@@ -51,26 +43,13 @@ export const ChatInterface = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  useEffect(() => {
-      setConversationId(conversation?.id);
-      setMessages(conversation?.messages.map((msg) => ({
-        id: msg.timestamp,
-        text: msg.content,
-        sender: msg.role === 'user' ? 'user' : 'bot',
-        incomplete: false
-      })) ?? []);
-      if(conversation?.model){
-        setModel(conversation.model);
-      }
-  }, [conversation])
-
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
     const userMessage = {
-      id: Date.now(),
+      timestamp: Date.now(),
       text: inputValue,
-      sender: 'user' as const,
+      role: 'user' as const,
       incomplete: false
     };
 
@@ -80,44 +59,29 @@ export const ChatInterface = ({
     setHasFirstResponse(false);
 
     try {
-      // Send message and receive stream
-      const response = await App.invoke(
+      const response: Conversation = await App.invoke(
         IPC.LLM.SEND_MESSAGE,
         inputValue,
         model,
-        conversationId
+        conversation?.id
       );
-      if (response && response.conversationId) {
 
-        setConversationId(response.conversationId);
-
-        // Add final message
-        setMessages((prev) => [
-          ...prev.filter(e => !e.incomplete),
-          {
-            id: Date.now(),
-            text: response.content,
-            sender: 'bot',
-            incomplete: false
-          },
-
-        ]);
+      const lastMessage = last(response.messages.filter(m => m.role === 'assistant'))
+      if (response.id && lastMessage) {
+        setConversation(response);
         await App.invoke(
           IPC.VOICE.TEXT_TO_SPEECH,
-          response.content
+          lastMessage.text
         );
-      } else {
-
-        console.error('Chat error:');
       }
     } catch (error) {
       console.error('Chat error:', error);
       setMessages((prev) => [
         ...prev,
         {
-          id: Date.now(),
+          timestamp: Date.now(),
           text: `Error: ${error}`,
-          sender: 'bot',
+          role: 'assistant',
           incomplete: false
         },
       ]);
@@ -230,9 +194,9 @@ export const ChatInterface = ({
           return [
             ...prev,
             {
-              id: Date.now(),
+              timestamp: Date.now(),
               text: partial ?? "",
-              sender: 'bot',
+              role: 'assistant',
               incomplete: true
             },
           ];
@@ -274,10 +238,10 @@ export const ChatInterface = ({
       >
         {messages.map((message) => (
           <div
-            key={message.id}
-            className={`max-w-[80%] px-4 py-2 rounded-large ${message.sender === 'user'
-                ? 'self-end bg-primary text-primary-foreground'
-                : 'self-start bg-default-300 text-default-foreground'
+            key={message.timestamp}
+            className={`max-w-[80%] px-4 py-2 rounded-large ${message.role === 'user'
+              ? 'self-end bg-primary text-primary-foreground'
+              : 'self-start bg-default-300 text-default-foreground'
               }`}
           >
             <Markdown>{message.text}</Markdown>

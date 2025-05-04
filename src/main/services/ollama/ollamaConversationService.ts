@@ -94,7 +94,7 @@ export const createNewConversation = async (
     model,
     sources: [],
     messages: initialSystemMessage
-      ? [{ role: 'system', content: initialSystemMessage, timestamp: now }]
+      ? [{ role: 'system', text: initialSystemMessage, timestamp: now }]
       : [],
     createdAt: now,
     updatedAt: now
@@ -166,7 +166,7 @@ export const generateConversationTitle = async (
       model,
       messages: [
         { role: 'system', content: 'Generate a very short title (max 6 words) for this conversation based on the user query. Return only the title text with no quotes or additional text.' },
-        { role: 'user', content: userMessage.content }
+        { role: 'user', content: userMessage.text }
       ],
     });
 

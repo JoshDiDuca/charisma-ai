@@ -229,7 +229,7 @@ export async function sendMessageWithEmbedding(
   message: string,
   model: string,
   conversationId?: string
-): Promise<{ content: string;[key: string]: any }> {
+) {
   try {
     const conversation = await getOrCreateConversation(model, conversationId);
     await loadOllamaEmbedding(conversation.sources);
@@ -250,10 +250,7 @@ export async function sendMessageWithEmbedding(
     const response = await sendMessage(finalPrompt, model, [], conversationId);
     console.log(response);
 
-    return {
-      ...response,
-      content: response.content || '',
-    };
+    return response;
   } catch (e) {
     logError('Error sending message with embedding', {
       error: e,

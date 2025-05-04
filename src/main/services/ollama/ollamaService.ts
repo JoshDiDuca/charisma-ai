@@ -129,7 +129,7 @@ export const sendMessage = async (
   try {
     let conversation = await addMessageToConversation(model, conversationId, systemMessage, {
       role: 'user',
-      content: message
+      text: message
     });
     if (!conversation) {
       throw new Error("Failed to retrieve conversation after adding user message");
@@ -138,7 +138,7 @@ export const sendMessage = async (
     // Get all messages for context
     const ollamaMessages = conversation.messages.map(msg => ({
       role: msg.role,
-      content: msg.content
+      content: msg.text
     }));
 
     // Send to Ollama
@@ -158,7 +158,7 @@ export const sendMessage = async (
     // Add assistant response to conversation
     conversation = await addMessageToConversation(model, conversation.id, systemMessage, {
       role: 'assistant',
-      content: fullResponse
+      text: fullResponse
     });
 
     if (conversation && conversation.messages.length <= 3 && conversation.title.startsWith('Conversation')) {
@@ -169,18 +169,10 @@ export const sendMessage = async (
       conversationId: conversation?.id
     });
 
-
-    return {
-      status: 'complete',
-      content: fullResponse,
-      conversationId: conversation?.id
-    };
+    return await getConversation(conversation.id);
   } catch (error) {
     logError(`Chat error`, { error, category: "Ollama", showUI: true });
-    return {
-      status: 'error',
-      error: error,
-    };
+    throw error;
   }
 };
 

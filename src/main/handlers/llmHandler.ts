@@ -83,11 +83,6 @@ export class LlmHandlers {
     return await updateConversationTitle(conversationId, title);
   }
 
-  @IpcHandle(IPC.CONVERSATION.ADD_MESSAGE)
-  async addMessageToConversation(conversationId: string, message: Omit<Message, 'timestamp'>) {
-    return await addMessageToConversation(conversationId, message);
-  }
-
   @IpcHandle(IPC.CONVERSATION.GENERATE_TITLE)
   async generateConversationTitle(conversationId: string, model: string) {
     return await generateConversationTitle(conversationId, model);

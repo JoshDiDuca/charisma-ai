@@ -12,33 +12,33 @@ import { MultiButton } from '../MultiButton';
 import SearchModal from 'renderer/screens/Sources/Web/Search';
 import { DirectorySourceInput, SourceInput } from 'shared/types/Sources/SourceInput';
 import { FileItem } from './FileItem';
+import { useChatBot } from 'renderer/store/conversationProvider';
 
 const { App } = window;
 
 export interface SidebarProps {
-  model: string;
-  embeddingModel: string;
-  setModel: React.Dispatch<React.SetStateAction<string>>;
-  setEmbeddingModel: React.Dispatch<React.SetStateAction<string>>;
-  onSelectConversation: (conversation?: Conversation) => void;
-  conversation?: Conversation;
-  selectedConversationId?: string;
 }
 
-export const Sidebar = ({
-  model,
-  embeddingModel,
-  setModel,
-  setEmbeddingModel,
-  onSelectConversation,
-  selectedConversationId,
-  conversation
-}: SidebarProps) => {
-  const [status, setStatus] = useState<AppStatus | string>('Loading...');
-  const [embeddingModels, setEmbeddingModels] = useState<OllamaModel[]>([]);
-  const [models, setModels] = useState<OllamaModel[]>([]);
+export const Sidebar = ({ }: SidebarProps) => {
+  const {
+    model,
+    embeddingModel,
+    setModel,
+    setEmbeddingModel,
+    conversation,
+    setConversation,
+    setConversations,
+    conversations,
+    loadModels,
+    loadEmbeddingModels,
+    loadConversations,
+    status,
+    availableModels,
+    availableEmbeddingModels
+  } = useChatBot();
+
+
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   const handleSelectFolder = async () => {
@@ -49,50 +49,13 @@ export const Sidebar = ({
       [
         { type: "Directory", directoryPath: folder } as SourceInput
       ], model, undefined, undefined);
-    onSelectConversation(newConversation)
-  };
-
-  const loadStatus = async () => {
-    try {
-      const response: AppStatus = await App.invoke(IPC.CORE.GET_APP_STATUS);
-      if (response) {
-        setStatus(response.Ollama === 'Running' ? response : 'Stopped');
-      } else {
-        setStatus('Error');
-      }
-    } catch (error) {
-      console.error("Failed to get app status:", error);
-      setStatus('Error');
-    }
-  };
-
-  const loadEmbeddingModels = async () => {
-    const response: OllamaModel[] = await App.invoke(IPC.LLM.GET_ALL_EMBEDDING_MODELS);
-    if (response) {
-      setEmbeddingModels(response);
-    }
-  };
-
-  const loadModels = async () => {
-    const response: OllamaModel[] = await App.invoke(IPC.LLM.GET_ALL_MODELS);
-    if (response) {
-      setModels(response);
-    }
-  };
-
-  const loadConversations = async () => {
-    try {
-      const conversations: Conversation[] = await App.invoke(IPC.CONVERSATION.GET_ALL);
-      setConversations(conversations);
-    } catch (error) {
-      console.error("Failed to load conversations:", error);
-    }
+      setConversation(newConversation)
   };
 
   const handleCreateConversation = async () => {
     setIsCreatingConversation(true);
     try {
-      onSelectConversation(undefined);
+      setConversation(undefined);
     } catch (error) {
       console.error("Failed to create conversation:", error);
     } finally {
@@ -107,27 +70,12 @@ export const Sidebar = ({
     try {
       const success = await App.invoke(IPC.CONVERSATION.DELETE, id);
       if (success) {
-        setConversations(prev => prev.filter(conv => conv.id !== id));
+        setConversations(prev => prev?.filter(conv => conv.id !== id) ?? []);
       }
     } catch (error) {
       console.error("Failed to delete conversation:", error);
     }
   };
-
-  useEffect(() => {
-    const unlistenModels = App.on(IPC.LLM.UPDATE_ALL_MODELS, (response: OllamaModel[]) => {
-      setModels(response);
-    });
-
-    const unlistenEmbeddingModels = App.on(IPC.LLM.UPDATE_ALL_EMBEDDING_MODELS, (response: OllamaModel[]) => {
-      setEmbeddingModels(response);
-    });
-
-    return () => {
-      App.removeAllListeners(IPC.LLM.UPDATE_ALL_MODELS);
-      App.removeAllListeners(IPC.LLM.UPDATE_ALL_EMBEDDING_MODELS);
-    };
-  }, []);
 
   const downloadModel = async (modelName: string, type: 'LLM' | 'Embedding') => {
     await App.invoke(IPC.LLM.DOWNLOAD_MODEL, modelName);
@@ -143,35 +91,6 @@ export const Sidebar = ({
   App.on(IPC.LLM.SEND_MESSAGE_FINISHED, () => {
     loadConversations();
   });
-
-  useEffect(() => {
-    if (embeddingModels.length > 0 && !isNil(embeddingModel)) {
-      const installedModel = embeddingModels.find(m => m.type == "Embedding" && m.installed);
-      if (installedModel) {
-        setEmbeddingModel(installedModel.name);
-      } else if (embeddingModels[0]) {
-        setEmbeddingModel(embeddingModels[0].name);
-      }
-    }
-  }, [embeddingModels, embeddingModel]);
-
-  useEffect(() => {
-    if (models.length > 0 && !isNil(model)) {
-      const installedModel = models.find(m => m.type == "LLM" && m.installed);
-      if (installedModel) {
-        setModel(installedModel.name);
-      } else if (models[0]) {
-        setModel(models[0].name);
-      }
-    }
-  }, [models, model]);
-
-  useEffect(() => {
-    loadStatus();
-    loadEmbeddingModels();
-    loadModels();
-    loadConversations();
-  }, []);
 
   const getStatusDisplay = () => {
     if (typeof status === 'string') {
@@ -222,9 +141,9 @@ export const Sidebar = ({
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Model</label>
           <CustomSelect
-            value={model}
+            value={model || ''}
             onChange={(value) => downloadModel(value, 'LLM')}
-            options={models.map((m) => ({
+            options={availableModels.map((m) => ({
               key: m.name,
               value: m.name,
               label: (
@@ -243,9 +162,9 @@ export const Sidebar = ({
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Embedding Model</label>
           <CustomSelect
-            value={embeddingModel}
+            value={embeddingModel || ''}
             onChange={(value) => downloadModel(value, 'Embedding')}
-            options={embeddingModels.map((m) => ({
+            options={availableEmbeddingModels.map((m) => ({
               key: m.name,
               value: m.name,
               label: (
@@ -278,18 +197,18 @@ export const Sidebar = ({
             </Button>
           </div>
           <Card className="p-0 flex-grow overflow-y-auto" style={{ maxHeight: '200px' }}>
-            {conversations.length === 0 ? (
+            {conversations?.length === 0 ? (
               <div className="p-3 text-sm text-gray-500 text-center">
                 No conversations yet
               </div>
             ) : (
               <div className="divide-y">
-                {conversations.map((conv) => (
+                {conversations?.map((conv) => (
                   <div
                     key={conv.id}
-                    className={`p-2 cursor-pointer hover:bg-gray-50 flex justify-between items-start ${selectedConversationId === conv.id ? 'bg-gray-100' : ''
+                    className={`p-2 cursor-pointer hover:bg-gray-50 flex justify-between items-start ${conversation?.id === conv.id ? 'bg-gray-100' : ''
                       }`}
-                    onClick={() => onSelectConversation(conv)}
+                    onClick={() => setConversation(conv)}
                   >
                     <div className="overflow-hidden">
                       <div className="text-sm font-medium truncate">{conv.title}</div>
@@ -329,15 +248,15 @@ export const Sidebar = ({
             <SearchModal
               isOpen={searchOpen}
               onAdd={async (selectedItems) => await App.invoke(IPC.SOURCE.ADD_SOURCES,
-              selectedItems.map((item) => ({
-                type: "Web",
-                url: item.url,
-                description: item.description,
-                title: item.title
-              }) as SourceInput), model, undefined, undefined)}
+                selectedItems.map((item) => ({
+                  type: "Web",
+                  url: item.url,
+                  description: item.description,
+                  title: item.title
+                }) as SourceInput), model, conversation?.id, undefined)}
               onClose={() => setSearchOpen(false)}
               searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
-             />
+            />
           </div>
           <Card className="p-2 flex-grow overflow-y-auto" style={{ minHeight: '200px' }}>
             <div className="text-sm">
@@ -349,7 +268,7 @@ export const Sidebar = ({
                       return source.fileTree && <Tree node={source.fileTree} />;
                     case 'Web':
                       return (<div><FileItem icon={'🌍'} id={source.url} name={source.title} depth={0} isExapndable={false} isExpanded={false} /></div>)
-                      case 'File':
+                    case 'File':
                     default:
                       return <div className="text-sm text-gray-500">{source.type} not yet implemented</div>;
                   }

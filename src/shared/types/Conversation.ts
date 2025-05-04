@@ -1,8 +1,11 @@
-import { Source } from "./Sources/SourceInput";
+import { ResponseSourceDocument } from "./Sources/ResponseSourceDocument";
+import { Source } from "./Sources/Source";
 
 export interface Message {
   role: 'system' | 'user' | 'assistant';
+  messageSources?: ResponseSourceDocument[];
   text: string;
+  userInput?: string;
   timestamp: number;
 }
 

@@ -1,8 +1,6 @@
-import { DirectorySourceInput,  FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/SourceInput";
-import { addSourcesToConversation, getOrCreateConversation } from "../ollama/ollamaConversationService";
-import { getFileTree, readDirectoryNested } from "../files/fileService";
-import fs from 'fs';
-import path from "path";
+import { DirectorySourceInput,  FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/Source";
+import { addSourcesToConversation } from "../ollama/ollamaConversationService";
+import { getDirectoryInfo, getFileInfo, getFileTree } from "../files/fileService";
 import { Conversation } from "shared/types/Conversation";
 
 export const addSources = async (
@@ -29,30 +27,21 @@ export const addSources = async (
 }
 
 export const getDirectorySource = async (sourceInput: DirectorySourceInput): Promise<Source> => {
-  const stats = await fs.promises.stat(sourceInput.directoryPath);
+  const stats = await getDirectoryInfo(sourceInput.directoryPath);
   const fileTree = await getFileTree(sourceInput.directoryPath)
 
   return {
     ...sourceInput,
-    fileTree,
-    directoryName: path.dirname(sourceInput.directoryPath),
-    directoryPath: sourceInput.directoryPath,
-    lastModified: stats.mtime,
-    directorySize: stats.size,
+    ...stats
   } as Source;
 }
 
 export const getFileSource = async (sourceInput: FileSourceInput): Promise<Source> => {
-  const stats = await fs.promises.stat(sourceInput.filePath);
+  const stats = await getFileInfo(sourceInput.filePath);
 
   return {
     ...sourceInput,
-    filePath: sourceInput.filePath,
-    fileName: path.basename(sourceInput.filePath),
-    fileSize: stats.size,
-    fileType: path.extname(sourceInput.filePath),
-    lastModified: stats.mtime,
-    fileNameWithoutExtension: path.basename(sourceInput.filePath, path.extname(sourceInput.filePath))
+    ...stats
   } as Source;
 }
 

@@ -8,6 +8,10 @@ import {
   CardHeader,
   Spacer,
   Spinner,
+  Tabs,
+  Tab,
+  Accordion,
+  AccordionItem,
 } from '@heroui/react';
 import Markdown from 'react-markdown';
 import { inc } from 'semver';
@@ -15,7 +19,7 @@ import { IPC } from 'shared/constants';
 import { Conversation, Message } from 'shared/types/Conversation';
 import { SettingsDropdown } from 'renderer/components/SettingsIcon';
 import { useChatBot } from 'renderer/store/conversationProvider';
-import { last } from 'lodash';
+import { get, last } from 'lodash';
 import { useVoiceRecorder } from 'renderer/hooks/useVoiceRecorder';
 
 const { App } = window;
@@ -153,7 +157,49 @@ export const ChatInterface = ({
               : 'self-start bg-default-300 text-default-foreground'
               }`}
           >
-            <Markdown>{message.text}</Markdown>
+
+
+              {
+
+              }
+
+            {!message.messageSources ? <Markdown>{message.userInput || message.text}</Markdown>
+                       : <Tabs aria-label="Options">
+                <Tab key="answer" title="Answer">
+                  <Card>
+                    <CardBody>
+                      <Markdown>{message.userInput || message.text}</Markdown>
+                    </CardBody>
+                  </Card>
+                </Tab>
+                <Tab key="sources" title="Sources">
+                  <Card>
+                    <CardBody>
+                    <Accordion>
+                    {message.messageSources?.map((source, index) => {
+                      const title = get(source.metadata,  "title");
+                      const path = get(source.metadata,  "path");
+                      const url = get(source.metadata,  "url");
+                      const score = source.score;
+
+                      const useTitle = title || path || url || `Source ${index}`;
+                      const elementTitle = useTitle + ` ${score ? `(${score})` : ""}`;
+
+                      return (<AccordionItem
+                        key={index}
+                        aria-label={`Source ${index}`}
+                        subtitle="Press to expand"
+                        title={elementTitle}>
+                          <div>{source.content ?? ""}</div>
+                      </AccordionItem>);
+                    }) ?? []}
+                    </Accordion>
+                    </CardBody>
+                  </Card>
+                </Tab>
+              </Tabs>}
+
+
           </div>
         ))}
         {!hasFirstResponse && (<Spinner />)}

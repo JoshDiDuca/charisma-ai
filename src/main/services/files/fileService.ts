@@ -149,7 +149,7 @@ export const isTextFile = async (filePath: string): Promise<boolean> => {
 export const isPdfFile = async (filePath: string): Promise<boolean> => {
   try {
     const type = await fileTypeFromFile(filePath);
-    if(!type) return false;
+    if (!type) return false;
     return type.mime?.startsWith('application/pdf') ?? false;
   } catch (error) {
     logError(`Failed to determine file type: ${filePath}`, { error, category: "FileProcessing", showUI: false });
@@ -161,10 +161,10 @@ export const isDocFile = async (filePath: string): Promise<boolean> => {
   try {
     const ext = extname(filePath).toLowerCase();
     const type = await fileTypeFromFile(filePath);
-    if(!type) return false;
+    if (!type) return false;
     return type.mime.startsWith('application/msword')
-    || type.mime.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-    || ext === '.doc' || ext === '.docx';
+      || type.mime.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+      || ext === '.doc' || ext === '.docx';
   } catch (error) {
     logError(`Failed to determine file type: ${filePath}`, { error, category: "FileProcessing", showUI: false });
     return false;
@@ -172,27 +172,27 @@ export const isDocFile = async (filePath: string): Promise<boolean> => {
 };
 
 export async function shouldSkipFile(filePath: string, stats: Stats): Promise<boolean> {
-    if (stats.isDirectory()) {
-      return true;
-    }
-    if (isBinaryFileByExtension(filePath)) {
-      return true;
-    }
-    if (stats.size > MAX_FILE_SIZE) {
-      return true;
-    }
-
-    if (await isPdfFile(filePath)) {
-      return false;
-    }
-     if (await isDocFile(filePath)) {
-      return false;
-    }
-    if (await isTextFile(filePath)) {
-      return false;
-    }
-
+  if (stats.isDirectory()) {
     return true;
+  }
+  if (isBinaryFileByExtension(filePath)) {
+    return true;
+  }
+  if (stats.size > MAX_FILE_SIZE) {
+    return true;
+  }
+
+  if (await isPdfFile(filePath)) {
+    return false;
+  }
+  if (await isDocFile(filePath)) {
+    return false;
+  }
+  if (await isTextFile(filePath)) {
+    return false;
+  }
+
+  return true;
 }
 
 
@@ -212,14 +212,14 @@ export async function readPdfFile(filePath: string): Promise<string> {
 }
 
 async function readWordFile(filePath: string): Promise<string> {
-    try {
-        const buffer = await fs.readFile(filePath);
-        const result = await mammoth.extractRawText({ buffer: buffer });
-        return result.value;
-    } catch (error) {
-        logError(`Failed to read Word file using mammoth: ${filePath}`, { error, category: "FileProcessing", showUI: false });
-        return '';
-    }
+  try {
+    const buffer = await fs.readFile(filePath);
+    const result = await mammoth.extractRawText({ buffer: buffer });
+    return result.value;
+  } catch (error) {
+    logError(`Failed to read Word file using mammoth: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+    return '';
+  }
 }
 
 export async function readBinaryFileAsBase64(filePath: string): Promise<string> {
@@ -233,28 +233,55 @@ export async function readBinaryFileAsBase64(filePath: string): Promise<string> 
 }
 
 export async function readTextFileSimple(filePath: string): Promise<string> {
-    try {
-        const content = await fs.readFile(filePath, 'utf-8');
-        if (Buffer.byteLength(content, 'utf8') > MAX_FILE_SIZE * 0.5) {
-             logInfo(`Large text file encountered, might consume significant memory: ${filePath}`);
-        }
-        return content;
-    } catch(error) {
-        logError(`Failed to read text file: ${filePath}`, { error, category: "FileProcessing", showUI: false });
-        return '';
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    if (Buffer.byteLength(content, 'utf8') > MAX_FILE_SIZE * 0.5) {
+      logInfo(`Large text file encountered, might consume significant memory: ${filePath}`);
     }
+    return content;
+  } catch (error) {
+    logError(`Failed to read text file: ${filePath}`, { error, category: "FileProcessing", showUI: false });
+    return '';
+  }
 }
 
 export async function readFileByExtension(filePath: string): Promise<string | undefined> {
   if (await isPdfFile(filePath)) {
     logInfo(`Reading PDF: ${filePath}`);
     return await readPdfFile(filePath);
-  }  else if (await isDocFile(filePath)) {
+  } else if (await isDocFile(filePath)) {
     logInfo(`Reading Word Document: ${filePath}`);
     return await readWordFile(filePath);
   } else if (await isTextFile(filePath)) {
     logInfo(`Reading Text File: ${filePath}`);
     return await readTextFileSimple(filePath);
   }
-    return undefined;
+  return undefined;
+}
+
+
+export const getFileInfo = async (filePath: string, useStats?: fsOrginal.Stats) => {
+  const stats = useStats ?? await fsOrginal.promises.stat(filePath);
+
+  return {
+    filePath: filePath,
+    fileName: path.basename(filePath),
+    type: extname(filePath).toLowerCase(),
+    fileSize: stats.size,
+    fileType: path.extname(filePath),
+    lastModified: stats.mtime,
+    fileNameWithoutExtension: path.basename(filePath, path.extname(filePath))
+  };
+}
+
+
+export const getDirectoryInfo = async (directoryPath: string, useStats?: fsOrginal.Stats) => {
+  const stats = useStats ?? await fsOrginal.promises.stat(directoryPath);
+
+  return {
+      directoryName: path.dirname(directoryPath),
+      directoryPath: directoryPath,
+      lastModified: stats.mtime,
+      directorySize: stats.size,
+  };
 }

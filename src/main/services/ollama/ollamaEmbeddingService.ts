@@ -7,6 +7,7 @@ import {
   shouldSkipFile,
   TreeNode,
   readFileByExtension,
+  getFileInfo,
 } from '../files/fileService';
 import {
   createChromaCollection,
@@ -23,16 +24,17 @@ import {
 import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';
 import { getOrCreateConversation } from './ollamaConversationService';
-import { FileSourceInput, Source, WebSourceInput } from 'shared/types/Sources/SourceInput';
+import { FileSourceInput, Source, WebSourceInput } from 'shared/types/Sources/Source';
 import axios from 'axios';
+import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 
 const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large';
 const COLLECTION_NAME = 'EMBED-COLLECTION';
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 
-function generatePrompt(prompt: string, data: (string | null)[]): string {
-  const context = data.filter(Boolean).join('\n');
+function generatePrompt(prompt: string, data: ResponseSourceDocument[]): string {
+  const context = data.map(d => d.content).filter(Boolean).join('\n');
   return `Context: ${context}\n\nQuestion: ${prompt}`;
 }
 
@@ -104,14 +106,15 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
       const stats = await fs.promises.stat(filePath);
       if (!(await shouldSkipFile(filePath, stats))) {
         const content = await readFileByExtension(filePath);
+        const fileInfo = await getFileInfo(filePath, stats);
         if (content) {
           logInfo(`Processed file: ${filePath}`);
           resultsToBatch.push({
             content,
             metadata: {
               path: filePath,
-              type: extname(filePath).toLowerCase() || 'unknown',
-              last_modified: stats.mtime.getTime(),
+              ...fileInfo,
+              lastModified: fileInfo.lastModified.getTime(),
             },
           });
         } else {
@@ -208,7 +211,7 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<vo
 }
 
 
-export async function getOllamaEmbeddingRetrieve(prompt: string): Promise<(string | null)[]> {
+export async function getOllamaEmbeddingRetrieve(prompt: string) {
   try {
     const response = await ollama.embeddings({
       model: OLLAMA_MODEL_EMBEDDING,
@@ -235,19 +238,24 @@ export async function sendMessageWithEmbedding(
     await loadOllamaEmbedding(conversation.sources);
 
     logInfo('Retrieving relevant documents for prompt.');
-    const embeddings = await getOllamaEmbeddingRetrieve(message);
+    const sources = await getOllamaEmbeddingRetrieve(message);
 
     const finalPrompt =
-      embeddings.length > 0 ? generatePrompt(message, embeddings) : message;
+      sources.length > 0 ? generatePrompt(message, sources) : message;
 
     logInfo(
-      embeddings.length > 0
-        ? `Generated prompt with context from ${embeddings.length} documents.`
+      sources.length > 0
+        ? `Generated prompt with context from ${sources.length} documents.`
         : 'No relevant documents found, sending original message.'
     );
 
     logInfo(`Sending message to model ${model}.`);
-    const response = await sendMessage(finalPrompt, model, [], conversationId);
+    const response = await sendMessage({
+      message: finalPrompt,
+      userMessage: message,
+      model,
+      sources
+    });
     console.log(response);
 
     return response;

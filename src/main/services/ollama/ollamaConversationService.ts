@@ -10,7 +10,8 @@ import { ipcMain } from 'electron';
 import { mainWindow } from 'main/windows/main';
 import { ollama } from './ollamaService';
 import { Conversation, Message } from 'shared/types/Conversation';
-import { Source } from 'shared/types/Sources/SourceInput';
+import { Source } from 'shared/types/Sources/Source';
+import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 
 const conversationsDir = path.join(app.getPath('userData'), 'conversations');
 

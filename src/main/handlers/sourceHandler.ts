@@ -4,7 +4,7 @@ import { IpcHandle } from '../decorators/IpcHandle'
 import { IPC } from 'shared/constants'
 import { searchGoogle } from 'main/services/web/googleSevice'
 import { addSources } from 'main/services/sources/sourceService'
-import { SourceInput } from 'shared/types/Sources/SourceInput'
+import { SourceInput } from 'shared/types/Sources/Source'
 
 export class SourceHandlers {
   @IpcHandle(IPC.SOURCE.SELECT_FOLDER)

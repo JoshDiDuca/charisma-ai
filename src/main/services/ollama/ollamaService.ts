@@ -13,6 +13,7 @@ import {
   generateConversationTitle,
   getOrCreateConversation
 } from './ollamaConversationService';
+import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 
 const modelPollIntervals: Map<string, NodeJS.Timeout> = new Map();
 export const currentlyInstallingModels: Set<string> = new Set();
@@ -119,26 +120,41 @@ export const downloadModel = async (modelName: string) => {
   return { status: 'download_started' };
 };
 
-export const sendMessage = async (
-  message: string,
-  model: string,
-  tools: Tool[] = [],
-  conversationId?: string,
-  systemMessage?: string
-) => {
+export type SendMessageRequest = {
+  message: string;
+  userMessage: string;
+  sources: ResponseSourceDocument[];
+  model: string;
+  tools?: Tool[];
+  conversationId?: string;
+  systemMessage?: string;
+}
+
+export const sendMessage = async ({
+  message,
+  userMessage,
+  sources,
+  model,
+  tools,
+  conversationId,
+  systemMessage
+}: SendMessageRequest) => {
   try {
     let conversation = await addMessageToConversation(model, conversationId, systemMessage, {
       role: 'user',
-      text: message
+      text: message,
+      userInput: userMessage || message
     });
     if (!conversation) {
       throw new Error("Failed to retrieve conversation after adding user message");
     }
 
     // Get all messages for context
-    const ollamaMessages = conversation.messages.map(msg => ({
+    const ollamaMessages = conversation.messages.map((msg, index) => ({
       role: msg.role,
-      content: msg.text
+      content: index === conversation.messages.length - 1
+        ? msg.text
+        : (msg.userInput || msg.text),
     }));
 
     // Send to Ollama
@@ -158,7 +174,8 @@ export const sendMessage = async (
     // Add assistant response to conversation
     conversation = await addMessageToConversation(model, conversation.id, systemMessage, {
       role: 'assistant',
-      text: fullResponse
+      text: fullResponse,
+      messageSources: sources
     });
 
     if (conversation && conversation.messages.length <= 3 && conversation.title.startsWith('Conversation')) {

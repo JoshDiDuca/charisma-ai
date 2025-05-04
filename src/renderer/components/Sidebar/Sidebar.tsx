@@ -10,7 +10,7 @@ import { isNil, set } from 'lodash';
 import { CustomSelect } from '../Common/Select';
 import { MultiButton } from '../MultiButton';
 import SearchModal from 'renderer/screens/Sources/Web/Search';
-import { DirectorySourceInput, SourceInput } from 'shared/types/Sources/SourceInput';
+import { DirectorySourceInput, SourceInput } from 'shared/types/Sources/Source';
 import { FileItem } from './FileItem';
 import { useChatBot } from 'renderer/store/conversationProvider';
 

@@ -1,5 +1,6 @@
-import { ChromaClient, IncludeEnum, OllamaEmbeddingFunction } from 'chromadb'
+import { ChromaClient, IncludeEnum, Metadata, OllamaEmbeddingFunction } from 'chromadb'
 import { logInfo, logWarning } from '../log/logService'
+import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument'
 
 const MIN_SCORE = 0.0001 // Adjust this threshold as needed
 
@@ -59,14 +60,12 @@ export const getChromaDocuments = async (collectionName: string, embedding: numb
         content: doc,
         score: results.distances?.[0]?.[index] || 1,
         metadata: results.metadatas?.[0]?.[index] || 1,
-      })) || []
+      } as ResponseSourceDocument)) || []
 
     const filteredDocs = scoredDocs
       .filter(({ score }) => score >= MIN_SCORE)
       .sort((a, b) => a.score - b.score)
-      .map((d) => d.content)
 
-      console.log(filteredDocs);
     logInfo(`ChromaDB found ${filteredDocs.length} documents to embed`, { category: "ChromaDB" })
     return filteredDocs;
   } else {

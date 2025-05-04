@@ -157,14 +157,10 @@ export const ChatInterface = ({
               : 'self-start bg-default-300 text-default-foreground'
               }`}
           >
-
-
-              {
-
-              }
-
-            {!message.messageSources || message.messageSources.length === 0 ? <Markdown>{message.userInput || message.text}</Markdown>
-                       : <Tabs aria-label="Options">
+            {!message.messageSources || message.messageSources.length === 0 ?
+              <Markdown>{message.userInput || message.text}</Markdown>
+              :
+              <Tabs aria-label="Options">
                 <Tab key="answer" title="Answer">
                   <Card>
                     <CardBody>
@@ -175,25 +171,25 @@ export const ChatInterface = ({
                 <Tab key="sources" title="Sources">
                   <Card>
                     <CardBody>
-                    <Accordion>
-                    {message.messageSources?.map((source, index) => {
-                      const title = get(source.metadata,  "title");
-                      const path = get(source.metadata,  "path");
-                      const url = get(source.metadata,  "url");
-                      const score = source.score;
+                      <Accordion>
+                        {message.messageSources?.map((source, index) => {
+                          const title = get(source.metadata, "title");
+                          const path = get(source.metadata, "path");
+                          const url = get(source.metadata, "url");
+                          const score = source.score;
 
-                      const useTitle = title || path || url || `Source ${index}`;
-                      const elementTitle = useTitle + ` ${score ? `(${score})` : ""}`;
+                          const useTitle = title || path || url || `Source ${index}`;
+                          const elementTitle = useTitle + ` ${score ? `(${score})` : ""}`;
 
-                      return (<AccordionItem
-                        key={index}
-                        aria-label={`Source ${index}`}
-                        subtitle="Press to expand"
-                        title={elementTitle}>
-                          <div>{source.content ?? ""}</div>
-                      </AccordionItem>);
-                    }) ?? []}
-                    </Accordion>
+                          return (<AccordionItem
+                            key={index}
+                            aria-label={`Source ${index}`}
+                            subtitle="Press to expand"
+                            title={elementTitle}>
+                            <div>{source.content ?? ""}</div>
+                          </AccordionItem>);
+                        }) ?? []}
+                      </Accordion>
                     </CardBody>
                   </Card>
                 </Tab>
@@ -232,7 +228,7 @@ export const ChatInterface = ({
           onClick={handleMicClick}
           disabled={true}
         >
-          {isVoiceLoading ? <FaSpinner style={{ animation: "spin 1s infinite linear" }}  /> : isRecording ? <FaStop /> : <FaMicrophone />}
+          {isVoiceLoading ? <FaSpinner style={{ animation: "spin 1s infinite linear" }} /> : isRecording ? <FaStop /> : <FaMicrophone />}
         </Button>
         <Button
           color="primary"

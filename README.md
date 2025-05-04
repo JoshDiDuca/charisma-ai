@@ -82,15 +82,17 @@ pnpm dev
 
 - [x] Multiple conversations with storage
 - [x] TTS
-- [] Improved data sources
+- [x] Improved data sources
 - [] Web queries
 - [] Relational database queries
 - [] Translate results
 - [] LlamaIndex full integration
 - [] JSON "Tools/Agents"
 - [] Settings
+- [] Ignore Paths, Files, Source Settings
+- [] Coding mode setting
 - [] TTS voice model selection
-- [] Source viewing along with TTS plugged in
+- [] Source viewing/editting along with the ability to read using TTS
 - [] CSV file support
 
 

@@ -14,11 +14,10 @@ export async function searchGoogle(query: string) {
       resultTypes: [OrganicResult],
       requestConfig: {
         params: {
-          safe: "active", // Enable safe search
+          safe: "active"
         },
       },
     });
-    console.log("Google Search Results:", results);
 
     return (results as GoogleSearchResult[]).map((result) => ({
       title: result.title,

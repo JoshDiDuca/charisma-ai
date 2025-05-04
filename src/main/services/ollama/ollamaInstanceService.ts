@@ -17,7 +17,6 @@ export class OllamaInstanceService {
       return path.join(app.getAppPath(), 'resources', getPlatform(), 'bin', 'ollama')
     }
   }
-
   async start() {
     if (this.isRunning) return
 
@@ -59,7 +58,7 @@ export class OllamaInstanceService {
 
   async stop() {
     if (!this.isRunning) return
-    this.process.kill()
+    this.process.kill('SIGTERM');
     this.isRunning = false
   }
 }

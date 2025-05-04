@@ -178,27 +178,43 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
       }
     }
   }
-}
-export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<void> {
+}export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<void> {
   try {
     const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 
     const response = await axios.get(source.url);
-    const toProcess = ({
-      content: response.data,
+    console.log(response.data);
+
+    // Improved cleaning pipeline
+    const cleanedHtml = response.data
+      .replace(/<script[\s\S]*?<\/script>/gi, '') // Remove scripts
+      .replace(/<style[\s\S]*?<\/style>/gi, '') // Remove styles
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, '') // Remove noscript
+      .replace(/<meta[^>]+>/gi, '') // Remove meta tags
+      .replace(/<link[^>]+>/gi, '') // Remove link tags
+      .replace(/<form[\s\S]*?<\/form>/gi, '') // Remove forms
+      .replace(/<iframe[\s\S]*?<\/iframe>/gi, '') // Remove iframes
+      .replace(/\s+/g, ' '); // Normalize whitespace
+
+      console.log(cleanedHtml);
+
+    const toProcess = {
+      content: cleanedHtml.trim(),
       metadata: {
         url: source.url,
         type: 'text/html',
         last_modified: Date.now(),
       },
-    });
+    };
+
     await collection.upsert({
       ids: [uuidv4()],
       documents: [toProcess.content],
       metadatas: [toProcess.metadata],
     });
+
     logInfo(`Processed web page: ${source.url}`);
-    console.log(`${response.data}`);
+    // console.log(cleanedHtml);
 
   } catch (error: any) {
     logError(`Failed to fetch web content from ${source.url}`, {

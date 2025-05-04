@@ -21,6 +21,7 @@ import { SettingsDropdown } from 'renderer/components/SettingsIcon';
 import { useChatBot } from 'renderer/store/conversationProvider';
 import { get, last } from 'lodash';
 import { useVoiceRecorder } from 'renderer/hooks/useVoiceRecorder';
+import { error } from 'console';
 
 const { App } = window;
 
@@ -46,7 +47,6 @@ export const ChatInterface = ({
     stopRecording,
   } = useVoiceRecorder((transcribedText) => setInputValue(transcribedText));
 
-  // Replace handleMicClick with:
   const handleMicClick = () => {
     if (isRecording) {
       stopRecording();
@@ -74,23 +74,21 @@ export const ChatInterface = ({
     setIsLoading(true);
     setHasFirstResponse(false);
 
-    try {
-      const response: Conversation = await App.invoke(
-        IPC.LLM.SEND_MESSAGE,
-        inputValue,
-        model,
-        conversation?.id
-      );
-
+    App.invoke(
+      IPC.LLM.SEND_MESSAGE,
+      inputValue,
+      model,
+      conversation?.id
+    ).then((response: Conversation) => {
       const lastMessage = last(response.messages.filter(m => m.role === 'assistant'))
       if (response.id && lastMessage) {
         setConversation(response);
-        await App.invoke(
+        App.invoke(
           IPC.VOICE.TEXT_TO_SPEECH,
           lastMessage.text
         );
       }
-    } catch (error) {
+    }).catch((error) => {
       console.error('Chat error:', error);
       setMessages((prev) => [
         ...prev,
@@ -101,11 +99,11 @@ export const ChatInterface = ({
           incomplete: false
         },
       ]);
-    } finally {
+    }).finally(() => {
       setIsLoading(false);
       setHasFirstResponse(true);
-    }
-  };
+    });
+  }
 
 
   useEffect(() => {

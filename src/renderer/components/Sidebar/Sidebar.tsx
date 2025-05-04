@@ -46,22 +46,24 @@ export const Sidebar = ({ }: SidebarProps) => {
     const folder = await App.invoke(IPC.SOURCE.SELECT_FOLDER);
     if (!folder) return;
 
-    const newConversation: Conversation = await App.invoke(IPC.SOURCE.ADD_SOURCES,
+    App.invoke(IPC.SOURCE.ADD_SOURCES,
       [
         { type: "Directory", directoryPath: folder } as SourceInput
-      ], model, undefined, undefined);
-      setConversation(newConversation)
+      ], model, undefined, undefined)
+      .then((newConversation: Conversation) =>
+        setConversation(newConversation));
   };
 
   const addSearchSources = async (selectedItems: WebSearch[]) => {
-    const newConversation: Conversation = await App.invoke(IPC.SOURCE.ADD_SOURCES,
+    App.invoke(IPC.SOURCE.ADD_SOURCES,
       selectedItems.map((item) => ({
         type: "Web",
         url: item.url,
         description: item.description,
         title: item.title
-      }) as SourceInput), model, conversation?.id, undefined);
-      setConversation(newConversation)
+      }) as SourceInput), model, conversation?.id, undefined)
+      .then((newConversation: Conversation) =>
+        setConversation(newConversation));
   };
 
   const handleCreateConversation = async () => {

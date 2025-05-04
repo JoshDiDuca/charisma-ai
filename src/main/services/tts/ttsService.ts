@@ -13,6 +13,10 @@ export class TTSWorkerService {
     this.initWorker()
   }
 
+  cleanText(text: string) {
+    return text.replaceAll("*", "").replaceAll("#", "").replaceAll("_", "").replaceAll(":", ".");
+  }
+
   private initWorker() {
     const workerPath = path.join(__dirname, './tts_worker.js')
     this.worker = new Worker(workerPath, {
@@ -41,7 +45,7 @@ export class TTSWorkerService {
   public stream(text: string) {
     this.worker?.postMessage({
       type: 'stream',
-      data: text
+      data: this.cleanText(text)
     })
   }
 

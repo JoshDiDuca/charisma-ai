@@ -6,7 +6,7 @@ import {
   ModalBody,
   ModalFooter
 } from '@heroui/modal';
-import { Accordion, AccordionItem, Button } from '@heroui/react';
+import { Accordion, AccordionItem, Button, Spinner } from '@heroui/react';
 import { WebSearch } from 'shared/types/Sources/WebSearch';
 
 interface SearchModalProps {
@@ -29,26 +29,19 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Debounce search function
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedSearch = useDebounce(searchQuery, 700);
 
   // Handle search when debounced value changes
   React.useEffect(() => {
     if (debouncedSearch) {
       handleSearch(debouncedSearch);
-    } else {
-      setResults([]);
     }
   }, [debouncedSearch]);
 
   const handleSearch = async (query: string) => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
+    setIsLoading(true);
 
     try {
-      setIsLoading(true);
-      setError(null);
       const searchResults = await searchFunction(query);
 
       // Preserve selected items in the results
@@ -71,7 +64,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsLoading(true);
     setSearchQuery(e.target.value);
+    if(e.target.value === ""){
+      setResults([]);
+    }
   };
 
   const toggleItemSelection = (item: WebSearch) => {
@@ -226,9 +223,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
             </div>
           )}
 
-          {!isLoading && searchQuery && results.length === 0 && (
+          {searchQuery === '' || results.length === 0 && (
             <div className="text-center py-4 text-gray-500">
-              No results found
+              {isLoading ? <Spinner /> : `No results found`}
             </div>
           )}
         </ModalBody>

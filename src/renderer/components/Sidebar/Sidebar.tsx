@@ -141,7 +141,7 @@ export const Sidebar = ({ }: SidebarProps) => {
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Model</label>
           <CustomSelect
-            value={model || ''}
+            value={model}
             onChange={(value) => downloadModel(value, 'LLM')}
             options={availableModels.map((m) => ({
               key: m.name,
@@ -162,7 +162,7 @@ export const Sidebar = ({ }: SidebarProps) => {
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Embedding Model</label>
           <CustomSelect
-            value={embeddingModel || ''}
+            value={embeddingModel}
             onChange={(value) => downloadModel(value, 'Embedding')}
             options={availableEmbeddingModels.map((m) => ({
               key: m.name,

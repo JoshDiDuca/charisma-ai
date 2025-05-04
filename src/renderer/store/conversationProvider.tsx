@@ -70,24 +70,29 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children  }
     loadConversations();
   }, []);
 
-  useEffect(() => {
-    setMessages(conversation?.messages ?? []);
-    if (conversation?.model) {
-      setModel(conversation.model);
-    }
-  }, [conversation])
+// Update the useEffect dependencies and preselection logic
+useEffect(() => {
+  if (availableModels?.length) {
+    const installedModel = availableModels.find(m => m.installed);
+    setModel(prev => prev || installedModel?.name || availableModels[0]?.name);
+  }
+}, [availableModels]);
 
-  useEffect(() => {
-    if (availableModels && availableModels.length > 0 && !isNil(model)) {
-      const installedModel = availableModels.find(m => m.type == "LLM" && m.installed);
-      if (installedModel) {
-        setModel(installedModel.name);
-      } else if (availableModels[0]) {
-        setModel(availableModels[0].name);
-      }
-    }
-  }, [availableModels, model]);
+useEffect(() => {
+  if (availableEmbeddingModels?.length) {
+    const installedEmbedding = availableEmbeddingModels.find(m => m.installed);
+    setEmbeddingModel(prev => prev || installedEmbedding?.name || availableEmbeddingModels[0]?.name);
+  }
+}, [availableEmbeddingModels]);
 
+// Update the conversation effect
+useEffect(() => {
+  if (conversation) {
+    setMessages(conversation.messages);
+    setModel(prev => conversation.model || prev);
+    setEmbeddingModel(prev => embeddingModel || prev);
+  }
+}, [conversation]);
 
 
   useEffect(() => {
@@ -124,14 +129,6 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children  }
     console.log(response);
     if (response) {
       setAvailableEmbeddingModels(response);
-      if (response && response.length > 0 && !isNil(embeddingModel)) {
-        const installedModel = response.find(m => m.type == "Embedding" && m.installed);
-        if (installedModel) {
-          setEmbeddingModel(installedModel.name);
-        } else if (response[0]) {
-          setEmbeddingModel(response[0].name);
-        }
-      }
     }
   };
 
@@ -139,14 +136,6 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children  }
     const response: OllamaModel[] = await App.invoke(IPC.LLM.GET_ALL_MODELS);
     if (response) {
       setAvailableModels(response);
-      if (response && response.length > 0 && !isNil(embeddingModel)) {
-        const installedModel = response.find(m => m.type == "LLM" && m.installed);
-        if (installedModel) {
-          setModel(installedModel.name);
-        } else if (response[0]) {
-          setModel(response[0].name);
-        }
-      }
     }
   };
 

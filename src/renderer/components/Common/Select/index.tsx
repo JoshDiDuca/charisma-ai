@@ -8,7 +8,7 @@ interface SelectOption {
 
 interface CustomSelectProps {
   options: SelectOption[];
-  value: string;
+  value: string | undefined;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
@@ -56,20 +56,20 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           {selectedOption ? selectedOption.label : placeholder}
         </div>
         <div className="ml-2">
-          <svg 
-            width="12" 
-            height="12" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
             className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
           >
             <path d="M6 9l6 6 6-6" />
           </svg>
         </div>
       </div>
-      
+
       {isOpen && (
         <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-y-auto">
           {options.map((option) => (

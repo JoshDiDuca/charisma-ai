@@ -182,10 +182,6 @@ export const sendMessage = async ({
       await generateConversationTitle(conversation.id, model);
     }
 
-    mainWindow?.webContents.send(IPC.LLM.SEND_MESSAGE_FINISHED, {
-      conversationId: conversation?.id
-    });
-
     return await getConversation(conversation.id);
   } catch (error) {
     logError(`Chat error`, { error, category: "Ollama", showUI: true });

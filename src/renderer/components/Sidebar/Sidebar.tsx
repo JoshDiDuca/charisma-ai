@@ -105,10 +105,6 @@ export const Sidebar = ({ }: SidebarProps) => {
     }
   };
 
-  App.on(IPC.LLM.SEND_MESSAGE_FINISHED, () => {
-    loadConversations();
-  });
-
   const getStatusDisplay = () => {
     if (typeof status === 'string') {
       return {

@@ -28,7 +28,6 @@ export const IPC = {
     UPDATE_ALL_MODELS: 'llm:update-all-models',
     DOWNLOAD_MODEL: 'llm:download-model',
     SEND_MESSAGE: 'llm:send-message',
-    SEND_MESSAGE_FINISHED: 'llm:send-message-finished',
     STREAM_UPDATE: 'llm:stream-update',
     GET_MODEL_INFO: 'llm:get-model-info'
   },

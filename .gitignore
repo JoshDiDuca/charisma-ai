@@ -9,6 +9,7 @@
 # production
 /build
 /dist
+/bin
 /chroma
 /release
 

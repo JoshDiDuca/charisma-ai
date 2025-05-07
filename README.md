@@ -1,8 +1,8 @@
 # 🌟 Charisma Studio 🌟
 
-**Ask questions about your local folders using local and remote LLMs with RAG-powered insights.**
+**Ask questions about your local folders using local LLMs with RAG-powered insights.**
 
-Charisma Studio is a desktop client that transforms how you interact with local directories (codebases, research papers, projects) by combining LLMs like Ollama with Retrieval-Augmented Generation (RAG) and ChromaDB vector search. Select any folder, and get AI-powered context about its contents through an intuitive chat interface.
+Charisma Studio is a desktop client that transforms how you interact with local directories (codebases, research papers, projects) and web sources by combining LLMs like Ollama with Retrieval-Augmented Generation (RAG) and ChromaDB vector search. Select any folder, add/or any sources from the web and get AI-powered context about its contents through an intuitive chat interface.
 
 ---
 
@@ -39,42 +39,22 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 ### Prerequisites Checklist
 
 - [ ] Node.js 18+ ([download](https://nodejs.org/))
-**Not Required**
 - [ ] Ollama running locally ([setup guide](https://ollama.com/)) (or use the bundled version with project)
 - [ ] ChromaDB installed (`pip install chromadb`) (or use the bundled version with the project)
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/charisma-studio.git
-cd charisma-studio
+git clone git@github.com:JoshDiDuca/charisma-ai.git
+cd charisma-ai
 
 # 2. Install dependencies
 pnpm install
 
-# 3. Start dev server
+# 3. Download the piper and ollama binaries and place them into resources/win/bin/ 
+
+# 4. Start dev server
 pnpm dev
 ```
-
-
----
-
-## 🏁 Quick Start
-
-```bash
-# Pull a model (try different sizes)
-ollama pull llama3:8b
-
-# Launch studio with debug mode
-pnpm dev
-```
-
-1. Click **Folder Select** and choose a codebase
-2. Type questions like:
-    - "Explain the main architecture"
-    - "Find all TypeScript interfaces"
-    - "What dependencies are we using?"
-
----
 
 ## 🛣 Roadmap
 
@@ -98,11 +78,13 @@ pnpm dev
 - [] TTS voice model selection
 - [] Source viewing/editting along with the ability to read using TTS
 - [] CSV file support
+- [] Improved handling of ollama being installed and exe files not present in release.
 - [] Agents/Pipelines/Custom Reasoning
 - [] Agent tasks such as creating, editting, writing files
 
 ### Future Vision
 
+- **Easy access to run any AI locally** 
 - **AI Pair Programmer** - Refactor code via chat
 - **Multi Source Data Analysis** - Images/PDFs/Web Sources/Database support
 - **AI Collaboration** - Shared session histories
@@ -123,4 +105,4 @@ We welcome contributions! Please follow our [contribution guidelines](CONTRIBUTI
 
 ## 📜 License
 
-*Ollama and ChromaDB have their own licenses - please review separately.*[^1][^4][^11]
+*Ollama, piper and ChromaDB have their own licenses - please review separately.

@@ -56,6 +56,28 @@ pnpm install
 pnpm dev
 ```
 
+## 📦 Distribution
+
+### For all platforms
+
+**Note**: Check [Electron Builder docs](https://www.electron.build/cli) for more knowledge
+
+```bash
+pnpm build
+```
+
+### For a specific one
+
+```bash
+pnpm build --mac
+# OR
+pnpm build --win
+# OR
+pnpm build --linux
+```
+
+The builded apps will be available on the `dist` folder.
+
 ## 🛣 Roadmap
 
 ### Updates

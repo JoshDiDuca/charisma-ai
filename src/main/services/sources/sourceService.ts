@@ -32,7 +32,8 @@ export const getDirectorySource = async (sourceInput: DirectorySourceInput): Pro
 
   return {
     ...sourceInput,
-    ...stats
+    ...stats,
+    fileTree
   } as Source;
 }
 

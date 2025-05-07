@@ -49,7 +49,7 @@ export const Sidebar = ({ }: SidebarProps) => {
     App.invoke(IPC.SOURCE.ADD_SOURCES,
       [
         { type: "Directory", directoryPath: folder } as SourceInput
-      ], model, undefined, undefined)
+      ], model, conversation?.id, undefined)
       .then((newConversation: Conversation) =>
         setConversation(newConversation));
   };
@@ -84,7 +84,7 @@ export const Sidebar = ({ }: SidebarProps) => {
     try {
       const success = await App.invoke(IPC.CONVERSATION.DELETE, id);
       if (success) {
-        if(id === conversation?.id){
+        if (id === conversation?.id) {
           setConversation(undefined);
         }
         setConversations(prev => prev?.filter(conv => conv.id !== id) ?? []);

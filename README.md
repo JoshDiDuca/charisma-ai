@@ -40,6 +40,10 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 
 - [ ] Node.js 18+ ([download](https://nodejs.org/))
 
+Binaries placed them into their respective folder in: resources/win/bin/
+- [ ] Ollama ([Link](https://github.com/ollama/ollama/releases)) 
+- [ ] Piper ([Link](https://github.com/rhasspy/piper/releases)) 
+
 ```bash
 # 1. Clone repository
 git clone https://github.com/ollama/ollama.git
@@ -49,8 +53,7 @@ cd charisma-ai
 pnpm install
 
 # 3. Download the piper and ollama binaries and place them into their respective folder in: resources/win/bin/ 
-- Ollama ([Link](https://github.com/ollama/ollama/releases)) 
-- Piper ([Link](https://github.com/rhasspy/piper/releases)) 
+
 
 # 4. Start dev server
 pnpm dev
@@ -76,7 +79,7 @@ pnpm build --win
 pnpm build --linux
 ```
 
-The builded apps will be available on the `dist` folder.
+The builded apps will be available on the `release` folder.
 
 ## 🛣 Roadmap
 
@@ -87,22 +90,22 @@ The builded apps will be available on the `dist` folder.
 - [x] Improved RAG data sources
 - [x] AI response sources
 - [x] Web RAG queries
-- [] Web RAG query pdf/file download support
-- [] Ability to add custom models
-- [] Switch to Vector from ChromaDB (licensing and more flexible)
-- [] Relational database queries
-- [] Translate results
-- [] LlamaIndex full integration
-- [] JSON "Tools/Agents"
-- [] Settings
-- [] Ignore Paths, Files, Source Settings
-- [] Coding mode setting
-- [] TTS voice model selection
-- [] Source viewing/editting along with the ability to read using TTS
-- [] CSV file support
-- [] Improved handling of ollama being installed and exe files not present in release.
-- [] Agents/Pipelines/Custom Reasoning
-- [] Agent tasks such as creating, editting, writing files
+- [ ] Web RAG query pdf/file download support
+- [ ] Ability to add custom models
+- [ ] Switch to Vector from ChromaDB (licensing and more flexible)
+- [ ] Relational database queries
+- [ ] Translate results
+- [ ] LlamaIndex full integration
+- [ ] JSON "Tools/Agents"
+- [ ] Settings
+- [ ] Ignore Paths, Files, Source Settings
+- [ ] Coding mode setting
+- [ ] TTS voice model selection
+- [ ] Source viewing/editting along with the ability to read using TTS
+- [ ] CSV file support
+- [ ] Improved handling of ollama being installed and exe files not present in release.
+- [ ] Agents/Pipelines/Custom Reasoning
+- [ ] Agent tasks such as creating, editting, writing files
 
 ### Future Vision
 

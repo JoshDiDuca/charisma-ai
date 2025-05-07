@@ -100,6 +100,7 @@ export const createNewConversation = async (
     createdAt: now,
     updatedAt: now
   };
+  logInfo(`Creating new conversation - ${conversation.id}`);
 
   await saveConversation(conversation);
   return conversation;

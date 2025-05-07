@@ -191,9 +191,15 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<vo
     // Remove unwanted elements
     $('script, style, noscript, iframe, link, meta, [hidden], path, svg, g, rect, img, audio, video, canvas').remove();
 
+    const propsToRemove: string[] = ["src", "class", "style"];
     // Optionally, remove comments
     $('*').contents().each(function() {
-      if (this.type === 'comment') $(this).remove();
+      if (this.type === 'comment')
+        $(this).remove();
+      for (const propToRemove of propsToRemove) {
+        if($(this).attr(propToRemove))
+          $(this).removeAttr(propToRemove);
+      }
     });
 
     // Extract cleaned HTML

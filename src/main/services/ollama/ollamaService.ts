@@ -8,10 +8,8 @@ import { IPC } from 'shared/constants';
 import { logError, logInfo } from '../log/logService';
 import {
   getConversation,
-  createNewConversation,
   addMessageToConversation,
-  generateConversationTitle,
-  getOrCreateConversation
+  generateConversationTitle
 } from './ollamaConversationService';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 
@@ -149,7 +147,6 @@ export const sendMessage = async ({
       throw new Error("Failed to retrieve conversation after adding user message");
     }
 
-    // Get all messages for context
     const ollamaMessages = conversation.messages.map((msg, index) => ({
       role: msg.role,
       content: index === conversation.messages.length - 1
@@ -157,7 +154,6 @@ export const sendMessage = async ({
         : (msg.userInput || msg.text),
     }));
 
-    // Send to Ollama
     const responseStream = await ollama.chat({
       model,
       messages: ollamaMessages,
@@ -171,7 +167,6 @@ export const sendMessage = async ({
       mainWindow?.webContents.send(IPC.LLM.STREAM_UPDATE, chunk.message.content);
     }
 
-    // Add assistant response to conversation
     conversation = await addMessageToConversation(model, conversation.id, systemMessage, {
       role: 'assistant',
       text: fullResponse,

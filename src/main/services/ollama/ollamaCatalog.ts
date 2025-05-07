@@ -34,6 +34,10 @@ export const OllamaModels: OllamaModel[] = [
     type: "LLM"
   },
   {
+    name: 'GandalfBaum/deepseek_r1-claude3.7',
+    type: "LLM"
+  },
+  {
     name: 'llama3.3:latest',
     type: "LLM"
   },

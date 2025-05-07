@@ -42,7 +42,7 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 
 ```bash
 # 1. Clone repository
-git clone git@github.com:JoshDiDuca/charisma-ai.git
+git clone https://github.com/ollama/ollama.git
 cd charisma-ai
 
 # 2. Install dependencies

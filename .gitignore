@@ -12,8 +12,8 @@
 /chroma
 /release
 
-/python-server/dist
-/python-server/build
+python-server/dist/
+python-server/build/
 
 # misc
 .DS_Store

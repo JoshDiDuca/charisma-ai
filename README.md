@@ -39,8 +39,6 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 ### Prerequisites Checklist
 
 - [ ] Node.js 18+ ([download](https://nodejs.org/))
-- [ ] Ollama running locally ([setup guide](https://ollama.com/)) (or use the bundled version with project)
-- [ ] ChromaDB installed (`pip install chromadb`) (or use the bundled version with the project)
 
 ```bash
 # 1. Clone repository
@@ -50,7 +48,9 @@ cd charisma-ai
 # 2. Install dependencies
 pnpm install
 
-# 3. Download the piper and ollama binaries and place them into resources/win/bin/ 
+# 3. Download the piper and ollama binaries and place them into their respective folder in: resources/win/bin/ 
+- Ollama ([Link](https://ollama.com/)) 
+- Piper ([Link](https://github.com/rhasspy/piper/releases)) 
 
 # 4. Start dev server
 pnpm dev

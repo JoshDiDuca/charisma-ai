@@ -49,7 +49,7 @@ cd charisma-ai
 pnpm install
 
 # 3. Download the piper and ollama binaries and place them into their respective folder in: resources/win/bin/ 
-- Ollama ([Link](https://ollama.com/)) 
+- Ollama ([Link](https://github.com/ollama/ollama/releases)) 
 - Piper ([Link](https://github.com/rhasspy/piper/releases)) 
 
 # 4. Start dev server

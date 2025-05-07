@@ -84,8 +84,9 @@ pnpm dev
 - [x] TTS
 - [x] Improved RAG data sources
 - [x] AI response sources
-- [] Web RAG queries
+- [x] Web RAG queries
 - [] Web RAG query pdf/file download support
+- [] Ability to add custom models
 - [] Switch to Vector from ChromaDB (licensing and more flexible)
 - [] Relational database queries
 - [] Translate results

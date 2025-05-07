@@ -2,7 +2,7 @@
 
 **Ask questions about your local folders using local LLMs with RAG-powered insights.**
 
-Charisma Studio is a desktop client that transforms how you interact with local directories (codebases, research papers, projects) and web sources by combining LLMs like Ollama with Retrieval-Augmented Generation (RAG) and ChromaDB vector search. Select any folder, add/or any sources from the web and get AI-powered context about its contents through an intuitive chat interface.
+Charisma Studio is a desktop client that transforms how you interact with local directories (codebases, research papers, projects) and web sources by combining LLMs like Ollama with Retrieval-Augmented Generation (RAG) and ChromaDB vector search. Select any folder, and/or any sources from the web and get AI-powered context about its contents through an intuitive chat interface.
 
 ---
 

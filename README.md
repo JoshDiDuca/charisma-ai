@@ -96,6 +96,8 @@ The builded apps will be available on the `release` folder.
 - [x] AI response sources
 - [x] Web RAG queries
 - [ ] Web RAG query pdf/file download support
+- [ ] Next prompt suggestions
+- [ ] Reasoning model "thinking" support. 
 - [ ] Ability to add custom models
 - [ ] Switch to Vector from ChromaDB (licensing and more flexible)
 - [ ] Relational database queries

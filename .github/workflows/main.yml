@@ -1,6 +1,8 @@
 on:
-  push:
-    tags: ["*"]
+  workflow_dispatch:
+    inputs:
+      name:
+        required: false
 
 jobs:
   release:

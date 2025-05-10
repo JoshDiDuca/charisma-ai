@@ -84,7 +84,7 @@ pnpm build --win
 pnpm build --linux
 ```
 
-The builded apps will be available on the `release` folder.
+The built apps will be available on the `release` folder.
 
 ## 🛣 Roadmap
 
@@ -97,7 +97,7 @@ The builded apps will be available on the `release` folder.
 - [x] Web RAG queries
 - [ ] Web RAG query pdf/file download support
 - [ ] Next prompt suggestions
-- [ ] Reasoning model "thinking" support. 
+- [ ] Reasoning model "thinking" support
 - [ ] Ability to add custom models
 - [ ] Switch to Vector from ChromaDB (licensing and more flexible)
 - [ ] Relational database queries
@@ -108,11 +108,11 @@ The builded apps will be available on the `release` folder.
 - [ ] Ignore Paths, Files, Source Settings
 - [ ] Coding mode setting
 - [ ] TTS voice model selection
-- [ ] Source viewing/editting along with the ability to read using TTS
+- [ ] Source viewing/editing along with the ability to read using TTS
 - [ ] CSV file support
-- [ ] Improved handling of ollama being installed and exe files not present in release.
+- [ ] Improved handling of Ollama being installed and exe files not present in release.
 - [ ] Agents/Pipelines/Custom Reasoning
-- [ ] Agent tasks such as creating, editting, writing files
+- [ ] Agent tasks such as creating, editing, writing files
 
 ### Future Vision
 

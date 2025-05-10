@@ -7,7 +7,7 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 ---
 
 ## 🖼️ Screenshots
-![Screenshot](Screenshots/Screenshot.png)
+![Screenshot](screenshots/Screenshot.png)
 - Charisma explaining it's own code, where ollama is initialised.
 --
 

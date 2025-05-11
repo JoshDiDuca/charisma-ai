@@ -78,6 +78,7 @@ export const ChatInterface = ({
       model,
       conversation?.id
     ).then((response: Conversation) => {
+      loadConversations();
       const lastMessage = last(response.messages.filter(m => m.role === 'assistant'))
       if (response.id && lastMessage) {
         setConversation(response);
@@ -86,7 +87,6 @@ export const ChatInterface = ({
           lastMessage.text
         );
       }
-      loadConversations();
     }).catch((error) => {
       console.error('Chat error:', error);
       setMessages((prev) => [

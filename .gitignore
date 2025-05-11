@@ -15,6 +15,7 @@
 
 resources/win/bin/ollama
 resources/win/bin/piper
+resources/DB
 
 # misc
 .DS_Store

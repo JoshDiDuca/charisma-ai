@@ -105,6 +105,7 @@ The built apps will be available on the `release` folder.
 - [ ] LlamaIndex full integration
 - [ ] JSON "Tools/Agents"
 - [ ] Settings
+- [ ] Dark theme
 - [ ] Ignore Paths, Files, Source Settings
 - [ ] Coding mode setting
 - [ ] TTS voice model selection

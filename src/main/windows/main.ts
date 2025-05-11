@@ -70,7 +70,6 @@ export async function MainWindow() {
 
 function setupTray() {
   try {
-    // Determine icon path based on whether app is packaged
     let iconPath: string;
     if (app.isPackaged) {
       iconPath = join(process.resourcesPath, 'icon.png');
@@ -78,16 +77,10 @@ function setupTray() {
       iconPath = join(app.getAppPath(), 'resources', 'icon.png');
     }
 
-    // Create a native image for the tray icon
     const icon = nativeImage.createFromPath(iconPath);
-
-    // Create the tray instance
     tray = new Tray(icon);
-
-    // Set a tooltip
     tray.setToolTip(displayName);
 
-    // Create a context menu
     const contextMenu = Menu.buildFromTemplate([
       {
         label: 'Show App',

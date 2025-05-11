@@ -364,5 +364,3 @@ export const Sidebar = ({ }: SidebarProps) => {
     </div>
   );
 };
-
-// Existing subcomponents (Tree, FileItem, etc.) remain unchanged

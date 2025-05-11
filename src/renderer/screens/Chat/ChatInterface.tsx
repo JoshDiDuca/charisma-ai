@@ -33,6 +33,7 @@ export const ChatInterface = ({
     conversation,
     setMessages,
     setConversation,
+    loadConversations,
     messages
   } = useChatBot();
 
@@ -85,6 +86,7 @@ export const ChatInterface = ({
           lastMessage.text
         );
       }
+      loadConversations();
     }).catch((error) => {
       console.error('Chat error:', error);
       setMessages((prev) => [
@@ -126,6 +128,7 @@ export const ChatInterface = ({
           i === prev.length - 1 ? { ...msg, text: (msg.text ?? "") + (partial ?? "") } : msg
         );
       });
+
     };
 
     App.on(IPC.LLM.STREAM_UPDATE, streamHandler);

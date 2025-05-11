@@ -264,6 +264,7 @@ export async function sendMessageWithEmbedding(
 
     logInfo(`Sending message to model ${model}.`);
     const response = await sendMessage({
+      conversationId: conversation.id,
       message: finalPrompt,
       userMessage: message,
       model,

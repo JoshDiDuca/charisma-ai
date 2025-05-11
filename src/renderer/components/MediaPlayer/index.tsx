@@ -58,6 +58,7 @@ export const MediaPlayer: React.FC<MediaPlayerProps> = ({
     <div className={`flex items-center gap-3 p-3 ${className} ${!isPoweredOn || isLoading ? 'opacity-50' : ''}`}>
       <button
         onClick={togglePower}
+        title='Power'
         className={`p-2 rounded-full ${isPoweredOn && !isLoading ? 'text-green-500' : 'text-gray-400'}`}
       >
         <FaPowerOff />
@@ -65,6 +66,7 @@ export const MediaPlayer: React.FC<MediaPlayerProps> = ({
 
       <button
         onClick={togglePlay}
+        title='Play/Pause'
         disabled={!isPoweredOn}
         className={`p-2 rounded-full ${!isPoweredOn ? 'cursor-not-allowed' : ''}`}
       >
@@ -74,6 +76,7 @@ export const MediaPlayer: React.FC<MediaPlayerProps> = ({
       <input
         type="range"
         min={0}
+        placeholder='Volume'
         max={100}
         value={volume}
         onChange={handleVolumeChange}

@@ -1,0 +1,11 @@
+
+#message-input-container {
+  margin-bottom: 1.5rem;
+  position: sticky;
+
+  #message-input {
+    [data-slot="input-wrapper"] {
+      width:100%;
+    }
+  }
+}

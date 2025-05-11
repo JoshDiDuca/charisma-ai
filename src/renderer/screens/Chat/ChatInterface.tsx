@@ -1,12 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { FaMicrophone, FaPaperclip, FaSpinner, FaStop } from 'react-icons/fa';
 import {
   Button,
   Input,
   Card,
   CardBody,
-  CardHeader,
-  Spacer,
   Spinner,
   Tabs,
   Tab,
@@ -14,7 +12,6 @@ import {
   AccordionItem,
 } from '@heroui/react';
 import Markdown from 'react-markdown';
-import { inc } from 'semver';
 import { IPC } from 'shared/constants';
 import { Conversation, Message } from 'shared/types/Conversation';
 import { SettingsDropdown } from 'renderer/components/SettingsIcon';
@@ -22,6 +19,7 @@ import { useChatBot } from 'renderer/store/conversationProvider';
 import { get, last } from 'lodash';
 import { useVoiceRecorder } from 'renderer/hooks/useVoiceRecorder';
 import { error } from 'console';
+import "./Chat.scss";
 
 const { App } = window;
 
@@ -32,7 +30,6 @@ export const ChatInterface = ({
 }: ChatInterfaceProps) => {
   const {
     model,
-    setModel,
     conversation,
     setMessages,
     setConversation,
@@ -139,12 +136,12 @@ export const ChatInterface = ({
 
   return (
     <Card
-      className="p-4 pt-2"
+      className="p-4 pt-2 rounded-none inset-shadow-lg"
       style={{ height: '100vh', width: '100%', overflowY: 'auto' }}
     >
       <SettingsDropdown />
       <CardBody
-        className="flex-1 flex flex-col gap-2 bg-default-200 rounded-medium mb-2 p-4"
+        className="flex-1 flex flex-col gap-2 bg-default-200 mb-2 p-4 w-100"
         style={{ overflowY: 'auto' }}
       >
         {messages.map((message) => (
@@ -155,7 +152,7 @@ export const ChatInterface = ({
               : 'self-start bg-default-300 text-default-foreground'
               }`}
           >
-            {!message.messageSources || message.messageSources.length === 0 ?
+            {(message.role === 'user') ?
               <Markdown>{message.userInput || message.text}</Markdown>
               :
               <Tabs aria-label="Options">
@@ -198,15 +195,13 @@ export const ChatInterface = ({
         ))}
         {!hasFirstResponse && (<Spinner />)}
       </CardBody>
-      <div
-        className="flex items-center gap-2 mb-2"
-        style={{ marginBottom: '1.5rem', position: 'sticky' }}
-      >
+      <div id='message-input-container' className="flex items-center gap-2 mb-2">
         <Button isIconOnly variant="bordered" aria-label="Attach file">
           <FaPaperclip />
         </Button>
         <Input
-          className="flex-1"
+          className="flex-1 w-100"
+          id='message-input'
           placeholder="Type your message..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}

@@ -4,7 +4,7 @@ import { FaTrash } from 'react-icons/fa';
 export const FileItem = ({
   icon,
   onDelete,
-  isExapndable,
+  isExpandable,
   isExpanded,
   depth = 0,
   handleClick,
@@ -14,7 +14,7 @@ export const FileItem = ({
   icon: string | React.ReactNode;
   id: string;
   name: string;
-  isExapndable?: boolean;
+  isExpandable?: boolean;
   isExpanded?: boolean;
   onDelete?: (path: string) => void;
   handleClick?: () => void;
@@ -22,7 +22,7 @@ export const FileItem = ({
 }) => {
 
   const indentStyle = { paddingLeft: `${depth * 20}px` };
-  const canExpand = isExapndable;
+  const canExpand = isExpandable;
 
   return (
       <div

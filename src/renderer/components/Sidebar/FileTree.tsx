@@ -33,7 +33,7 @@ export const Tree = ({
   return (
     <div>
       {/* Add 'group' class here for hover detection */}
-      <FileItem icon={node.isFolder ? '📁' : '📄'} id={node.id} name={node.name} depth={depth} handleClick={handleToggle} isExapndable={canExpand} isExpanded={isExpanded} onDelete={onDelete} />
+      <FileItem icon={node.isFolder ? '📁' : '📄'} id={node.id} name={node.name} depth={depth} handleClick={handleToggle} isExpandable={canExpand} isExpanded={isExpanded} onDelete={onDelete} />
 
       {node.isFolder && isExpanded && node.children && (
         <div>

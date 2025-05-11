@@ -285,7 +285,7 @@ export const Sidebar = ({ }: SidebarProps) => {
                       case 'Directory':
                         return source.fileTree && <Tree node={source.fileTree} />;
                       case 'Web':
-                        return (<div><FileItem icon={'🌍'} id={source.url} name={source.title} depth={0} isExapndable={false} isExpanded={false} /></div>)
+                        return (<div><FileItem icon={'🌍'} id={source.url} name={source.title} depth={0} isExpandable={false} isExpanded={false} /></div>)
                       case 'File':
                       default:
                         return <div className="text-sm text-gray-500">{source.type} not yet implemented</div>;

@@ -13,9 +13,6 @@
 /chroma
 /release
 
-python_server/dist/
-python_server/build/
-python_server/venv/
 resources/win/bin/ollama
 resources/win/bin/piper
 

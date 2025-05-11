@@ -134,12 +134,12 @@ export const Sidebar = ({ }: SidebarProps) => {
         color: status === 'Error' ? 'red' : 'green',
       };
     } else {
-      const noChroma = status.ChromaDB === 'Stopped';
+      const noDB = status.Database === 'Stopped';
       const runningText = `Running (${status.GPU ? 'GPU' : 'CPU'})`;
-      const embeddingText = noChroma ? ' - No Embedding' : '';
+      const embeddingText = noDB ? ' - No Embedding' : '';
       return {
         text: runningText + embeddingText,
-        color: noChroma ? 'orange' : 'green',
+        color: noDB ? 'orange' : 'green',
       };
     }
   };

@@ -8,7 +8,6 @@ import {
 import { ignoreConsoleWarnings } from '../../utils/ignore-console-warnings'
 import { PLATFORM, ENVIRONMENT } from 'shared/constants'
 import { makeAppId } from 'shared/utils'
-import { ChromaInstanceService } from 'main/services/chroma/chromaInstanceService'
 import { OllamaInstanceService } from 'main/services/ollama/ollamaInstanceService'
 import { logError, logWarning } from 'main/services/log/logService'
 import { TTSWorkerService } from 'main/services/tts/ttsService'
@@ -16,7 +15,6 @@ import { TTSWorkerService } from 'main/services/tts/ttsService'
 ignoreConsoleWarnings(['Manifest version 2 is deprecated'])
 
 
-const chromaService = new ChromaInstanceService()
 const ollamaService = new OllamaInstanceService()
 export const ttsService = new TTSWorkerService()
 
@@ -33,13 +31,11 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
 
 
   await ollamaService.start()
-  await chromaService.start()
   if(!ENVIRONMENT.DISABLE_TTS_ON_START){
     ttsService.start()
   }
 
   const killServices = async () => {
-    await chromaService.stop()
     await ollamaService.stop()
     await ttsService.stop()
 

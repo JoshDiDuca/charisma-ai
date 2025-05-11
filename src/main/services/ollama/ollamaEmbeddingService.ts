@@ -1,6 +1,7 @@
-import { Metadata } from 'chromadb';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 import {
   flattenTree,
   shouldSkipFile,
@@ -9,12 +10,6 @@ import {
   getFileInfo,
 } from '../files/fileService';
 import * as cheerio from 'cheerio';
-import {
-  createChromaCollection,
-  deleteAllChromaCollections,
-  getChromaDocuments,
-  getOrCreateChromaCollection,
-} from '../chroma/chromaService';
 import {
   currentlyInstallingModels,
   ollama,
@@ -29,9 +24,11 @@ import axios from 'axios';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 
 const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large';
-const COLLECTION_NAME = "EMBEDsssss";
+const STORAGE_PATH = "./vectorstore";
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
+
+let vectorStore: HNSWLib;
 
 function generatePrompt(prompt: string, data: ResponseSourceDocument[]): string {
   const context = data.map(d => d.content).filter(Boolean).join('\n');
@@ -62,23 +59,24 @@ export const getAllEmbeddingModels = async () => {
   });
 };
 
-export async function initOllamaEmbedding(documents: string[]): Promise<string | undefined> {
-  try {
-    await deleteAllChromaCollections();
-    const collection = await createChromaCollection(COLLECTION_NAME);
-    const ids = documents.map(() => uuidv4());
-    const metadatas = documents.map(name => ({ name }));
+async function initializeVectorStore() {
+  const embeddings = new OllamaEmbeddings({
+    model: OLLAMA_MODEL_EMBEDDING,
+    baseUrl: "http://localhost:11434"
+  });
 
-    await collection.upsert({ ids, documents, metadatas });
-    return COLLECTION_NAME;
+  try {
+    vectorStore = await HNSWLib.load(STORAGE_PATH, embeddings);
+    logInfo("Loaded existing vector store");
   } catch (e) {
-    logError('Error initializing ollama embedding with chromaDB', {
-      category: 'Ollama',
-      error: e,
-      showUI: true,
-    });
-    return undefined;
+    logInfo("Creating new vector store");
+    vectorStore = await HNSWLib.fromDocuments([], embeddings);
+    await vectorStore.save(STORAGE_PATH);
   }
+}
+
+export async function initOllamaEmbedding(documents: string[]): Promise<void> {
+  await initializeVectorStore();
 }
 
 export async function loadOllamaEmbedding(sources: Source[]): Promise<void> {
@@ -94,10 +92,9 @@ export async function loadOllamaEmbedding(sources: Source[]): Promise<void> {
 }
 
 export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<void> {
-  const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
-  const resultsToBatch: Array<{ content: string; metadata: Metadata }> = [];
-
+  const resultsToBatch: Array<{ content: string; metadata: any }> = [];
   const filesToProcess = filePaths.filter(node => !node.isFolder).map(node => node.path);
+
   logInfo(`Found ${filesToProcess.length} potential files to process.`);
 
   const queue = [...filesToProcess];
@@ -153,22 +150,18 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
   logInfo(`Processed files, found ${resultsToBatch.length} valid documents for embedding.`);
 
   if (resultsToBatch.length === 0) {
-    logInfo(`No new documents to add to collection ${COLLECTION_NAME}.`);
+    logInfo(`No new documents to add to collection ${STORAGE_PATH}.`);
     logInfo('loadOllamaEmbedding Done');
     return;
   }
 
-  logInfo(`Upserting ${resultsToBatch.length} documents into ${COLLECTION_NAME} in batches of ${BATCH_SIZE}...`);
+  logInfo(`Upserting ${resultsToBatch.length} documents into ${STORAGE_PATH} in batches of ${BATCH_SIZE}...`);
 
   for (let i = 0; i < resultsToBatch.length; i += BATCH_SIZE) {
     const batch = resultsToBatch.slice(i, i + BATCH_SIZE);
     if (batch.length > 0) {
       try {
-        await collection.upsert({
-          ids: batch.map(() => uuidv4()),
-          documents: batch.map(e => e.content),
-          metadatas: batch.map(e => e.metadata),
-        });
+        await vectorStore.addDocuments(batch.map(b => ({ id: uuidv4(), pageContent: b.content, metadata: b.metadata })));
         logInfo(`Upserted batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} documents)`);
       } catch (error) {
         logError(`Failed to upsert batch ${Math.floor(i / BATCH_SIZE) + 1}`, {
@@ -179,11 +172,12 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
       }
     }
   }
+
+  await vectorStore.save(STORAGE_PATH);
 }
 
 export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<void> {
   try {
-    const collection = await getOrCreateChromaCollection(COLLECTION_NAME);
 
     const response = await axios.get(source.url);
     const $ = cheerio.load(response.data);
@@ -214,14 +208,16 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<vo
       },
     };
 
-    await collection.upsert({
-      ids: [uuidv4()],
-      documents: [`
+    await vectorStore.addDocuments([{
+      id: uuidv4(),
+      pageContent: `
         ${JSON.stringify(source)}
         ${toProcess.content}
-      `],
-      metadatas: [toProcess.metadata],
-    });
+      `,
+      metadata: toProcess.metadata
+    }]);
+
+  await vectorStore.save(STORAGE_PATH);
 
     logInfo(`Processed web page: ${source.url}`);
     // console.log(cleanedHtml);
@@ -236,22 +232,13 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<vo
   }
 }
 
-
 export async function getOllamaEmbeddingRetrieve(prompt: string) {
-  try {
-    const response = await ollama.embeddings({
-      model: OLLAMA_MODEL_EMBEDDING,
-      prompt,
-    });
-    return getChromaDocuments(COLLECTION_NAME, response.embedding);
-  } catch (error) {
-    logError('Error in getting ollama embedding', {
-      error,
-      category: 'Ollama',
-      showUI: true,
-    });
-    throw error;
-  }
+  const results = await vectorStore.similaritySearch(prompt, 5);
+  return results.map(doc => ({
+    content: doc.pageContent,
+    metadata: doc.metadata,
+    score: 0
+  }));
 }
 
 export async function sendMessageWithEmbedding(

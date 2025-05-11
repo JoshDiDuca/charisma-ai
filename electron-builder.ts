@@ -34,14 +34,6 @@ export default {
       "from": "./resources/${os}/bin/",
       "to": "./bin/",
       "filter": ["**/*"]
-    },
-    {
-      from: 'python-server/dist',
-      to: 'bin/chroma',
-      filter: [
-        'chroma_server',
-        'chroma_server.exe'
-      ]
     }
   ],
   mac: {

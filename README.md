@@ -51,7 +51,7 @@ Binaries placed them into their respective folder in: resources/win/bin/
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/ollama/ollama.git
+git clone https://github.com/JoshDiDuca/charisma-ai.git
 cd charisma-ai
 
 # 2. Install dependencies

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
+import fs, { existsSync, mkdirSync } from 'fs';
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 import {
@@ -66,6 +66,14 @@ async function initializeVectorStore() {
     model: OLLAMA_MODEL_EMBEDDING,
     baseUrl: "http://localhost:11434"
   });
+
+  try {
+    if (!existsSync(STORAGE_PATH)) {
+      mkdirSync(STORAGE_PATH, { recursive: true });
+    }
+  } catch (error) {
+    logError(`There was an error creating vector DB storage directory: ${STORAGE_PATH}`)
+  }
 
   try {
     vectorStore = await HNSWLib.load(STORAGE_PATH, embeddings);
@@ -189,11 +197,11 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<vo
 
     const propsToRemove: string[] = ["src", "class", "style"];
     // Optionally, remove comments
-    $('*').contents().each(function() {
+    $('*').contents().each(function () {
       if (this.type === 'comment')
         $(this).remove();
       for (const propToRemove of propsToRemove) {
-        if($(this).attr(propToRemove))
+        if ($(this).attr(propToRemove))
           $(this).removeAttr(propToRemove);
       }
     });
@@ -219,7 +227,7 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<vo
       metadata: toProcess.metadata
     }]);
 
-  await vectorStore.save(STORAGE_PATH);
+    await vectorStore.save(STORAGE_PATH);
 
     logInfo(`Processed web page: ${source.url}`);
     // console.log(cleanedHtml);

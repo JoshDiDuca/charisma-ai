@@ -2,7 +2,7 @@
 
 **Ask questions about your local folders using local LLMs with RAG-powered insights.**
 
-Charisma Studio is a desktop client that transforms how you interact with local directories (codebases, research papers, projects) and web sources by combining LLMs like Ollama with Retrieval-Augmented Generation (RAG) and ChromaDB vector search. Select any folder, and/or any sources from the web and get AI-powered context about its contents through an intuitive chat interface.
+Charisma Studio is a desktop client that transforms how you interact with local directories (codebases, research papers, projects) and web sources by combining LLMs like Ollama with Retrieval-Augmented Generation (RAG) and a vector database search. Select any folder, and/or any sources from the web and get AI-powered context about its contents through an intuitive chat interface.
 
 ---
 
@@ -16,7 +16,7 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 ### Core Capabilities
 
 - **Local LLM Integration** - Direct connection to Ollama instances
-- **RAG-Powered Insights** - ChromaDB vector search for precise context
+- **RAG-Powered Insights** - Database vector search for precise context
 - **Multi-Format Support** - Process code, text, Markdown, and PDFs
 - **Real-Time Streaming** - Typewriter-style response delivery
 
@@ -33,7 +33,7 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 | :-- | :-- | :-- |
 | **Frontend** | React + TypeScript |
 | **Styling** | Tailwind CSS + Headless UI |
-| **LLM Core** | Ollama + ChromaDB | LLamaIndex | Local-first, privacy focused |
+| **LLM Core** | Ollama + HNSWLib | LangChain | Local-first, privacy focused |
 | **Packaging** | Electron + Vite | Cross-platform binaries |
 
 
@@ -46,8 +46,8 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 - [ ] Node.js 18+ ([download](https://nodejs.org/))
 
 Binaries placed them into their respective folder in: resources/win/bin/
-- [ ] Ollama ([Link](https://github.com/ollama/ollama/releases)) 
 - [ ] Piper ([Link](https://github.com/rhasspy/piper/releases)) 
+- [ ] Ollama ([Link](https://github.com/ollama/ollama/releases)) 
 
 ```bash
 # 1. Clone repository
@@ -95,11 +95,11 @@ The built apps will be available on the `release` folder.
 - [x] Improved RAG data sources
 - [x] AI response sources
 - [x] Web RAG queries
+- [x] Switch to hnswlib from ChromaDB (licensing and more flexible)
 - [ ] Web RAG query pdf/file download support
 - [ ] Next prompt suggestions
 - [ ] Reasoning model "thinking" support
-- [ ] Switch to hnswlib from ChromaDB (licensing and more flexible)
-- [ ] Automatically download ollama and hnswlib/chroma
+- [ ] Automatically download ollama and dependencies
 - [ ] Ability to add custom models
 - [ ] Relational database queries
 - [ ] Translate results
@@ -139,4 +139,4 @@ We welcome contributions! Please follow our [contribution guidelines](CONTRIBUTI
 
 ## 📜 License
 
-*Ollama, piper and ChromaDB have their own licenses - please review separately.
+*Ollama (MIT), Piper (MIT) and hnswlib/hnswlib-node (Apache) have their own licenses - please review separately.

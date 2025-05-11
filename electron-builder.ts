@@ -34,6 +34,11 @@ export default {
       "from": "./resources/${os}/bin/",
       "to": "./bin/",
       "filter": ["**/*"]
+    },
+    {
+      "from": "./resources/logo.png",
+      "to": "./logo.png",
+      "filter": ["**/*"]
     }
   ],
   mac: {

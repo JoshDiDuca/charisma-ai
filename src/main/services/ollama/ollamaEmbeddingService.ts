@@ -22,9 +22,11 @@ import { getOrCreateConversation } from './ollamaConversationService';
 import { Source, WebSourceInput } from 'shared/types/Sources/Source';
 import axios from 'axios';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
+import { app } from 'electron';
+import path from 'path';
 
 const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large';
-const STORAGE_PATH = "./vectorstore";
+const STORAGE_PATH = path.join(app.getAppPath(), 'resources', 'vectorstore');
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 

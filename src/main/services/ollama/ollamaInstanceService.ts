@@ -17,6 +17,7 @@ export class OllamaInstanceService {
       return path.join(app.getAppPath(), 'resources', getPlatform(), 'bin', 'ollama')
     }
   }
+
   async start() {
     if (this.isRunning) return
 

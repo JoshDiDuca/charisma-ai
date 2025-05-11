@@ -98,8 +98,8 @@ The built apps will be available on the `release` folder.
 - [ ] Web RAG query pdf/file download support
 - [ ] Next prompt suggestions
 - [ ] Reasoning model "thinking" support
-- [ ] Switch to vectra from ChromaDB (licensing and more flexible)
-- [ ] Automatically download ollama and vectra/chroma
+- [ ] Switch to hnswlib from ChromaDB (licensing and more flexible)
+- [ ] Automatically download ollama and hnswlib/chroma
 - [ ] Ability to add custom models
 - [ ] Relational database queries
 - [ ] Translate results

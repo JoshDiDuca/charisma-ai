@@ -39,7 +39,7 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Development
 
 ### Prerequisites Checklist
 
@@ -60,7 +60,7 @@ pnpm install
 # 3. Download the piper and ollama binaries and place them into their respective folder in: resources/win/bin/ 
 
 
-# 4. Start dev server
+# 4. Start dev application
 pnpm dev
 ```
 

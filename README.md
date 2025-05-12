@@ -100,6 +100,7 @@ The built apps will be available on the `release` folder.
 - [ ] Next prompt suggestions
 - [ ] Reasoning model "thinking" support
 - [ ] Automatically download ollama and dependencies
+- [ ] Full download for models instead of ollama pulling 
 - [ ] Hugging face
 - [ ] Ability to add custom models
 - [ ] Relational database queries

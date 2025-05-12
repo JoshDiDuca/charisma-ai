@@ -11,11 +11,13 @@ import { makeAppId } from 'shared/utils'
 import { OllamaInstanceService } from 'main/services/ollama/ollamaInstanceService'
 import { logError, logWarning } from 'main/services/log/logService'
 import { TTSWorkerService } from 'main/services/tts/ttsService'
+import { PiperInstanceService } from 'main/services/piper/piperInstanceService'
 
 ignoreConsoleWarnings(['Manifest version 2 is deprecated'])
 
 
 const ollamaService = new OllamaInstanceService()
+const piperService = new PiperInstanceService()
 export const ttsService = new TTSWorkerService()
 
 export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
@@ -31,6 +33,8 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
 
 
   await ollamaService.start()
+  await piperService.start()
+
   if(!ENVIRONMENT.DISABLE_TTS_ON_START){
     ttsService.start()
   }

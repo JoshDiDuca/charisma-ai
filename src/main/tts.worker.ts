@@ -1,4 +1,4 @@
-import { parentPort, workerData, MessagePort } from 'worker_threads'
+import { parentPort, workerData } from 'worker_threads'
 import { spawn, ChildProcess } from 'child_process'
 import path from 'path'
 import getPlatform from './services/platformService'

@@ -1,64 +1,119 @@
-import { spawn } from 'child_process'
+import { ChildProcessByStdio, ChildProcessWithoutNullStreams, spawn } from 'child_process'
 import { app } from 'electron'
 import path from 'path'
+import fs from 'fs-extra'
 import { getEligibleGpu } from '../gpuService'
 import { logError, logInfo } from '../log/logService'
-import getPlatform from '../platformService'
 import { getOllamaStatus } from './ollamaService'
+import { DownloadProgress, DownloadService } from 'main/download/DownloadService'
+import { isNil } from 'lodash'
+import { Readable } from 'stream'
 
 export class OllamaInstanceService {
-  private process: any
-  private isRunning: boolean = false
+  private process: ChildProcessByStdio<null, Readable, Readable> | null = null;
+  private isRunning = false
+  private downloadService = new DownloadService()
 
-  getBinaryPath() {
-    if (app.isPackaged) {
-      return path.join(process.resourcesPath, 'bin', 'ollama')
-    } else {
-      return path.join(app.getAppPath(), 'resources', getPlatform(), 'bin', 'ollama')
-    }
+  get binaryDir() {
+    return path.join(app.getPath('userData'), 'ollama-bin')
+  }
+
+  get execPath() {
+    return path.join(
+      this.binaryDir,
+      process.platform === 'win32' ? 'ollama.exe' : 'ollama'
+    )
   }
 
   async start() {
-    if (this.isRunning) return
+    if (this.isRunning) return true
 
-    const alreadyExists = await getOllamaStatus();
-
-    if(alreadyExists) {
-        this.isRunning = true;
-        return true;
+    if (await getOllamaStatus()) {
+      this.isRunning = true
+      return true
     }
 
-    const binaryPath = this.getBinaryPath()
-    const execName = process.platform === 'win32' ? 'ollama.exe' : 'ollama'
-    const fullPath = path.join(binaryPath, execName)
+    await this.ensureOllamaBinary()
+    await this.spawnOllamaProcess()
+    return true
+  }
 
-    const eligibleGpu = await getEligibleGpu();
+  private async ensureOllamaBinary() {
+    if (!(await this.needsUpdate())) return
 
-    this.process = spawn(fullPath, ['serve'], {
-      stdio: ['ignore', 'pipe', 'pipe'], // stdin, stdout, stderr
-      env: (eligibleGpu ? {
-        "CUDA_VISIBLE_DEVICES": eligibleGpu.uuid
-      } : {
+    await fs.ensureDir(this.binaryDir)
 
-      })
-    })
-    this.process.stdout.on('data', (data: any) => {
-      logInfo(`stdout: ${data}`, { category: "Ollama" })
+    this.downloadService.on('progress', (progress: DownloadProgress) => {
+      logInfo(`ollama-download Downloading Ollama: ${progress.percentage}% ${progress.percentage}`)
     })
 
-    this.process.on('error', (err: any) => {
-      logError('Error in ollama service',{ error: err, category : "Ollama"})
+    const downloadedPath = await this.downloadService.downloadLatest(
+      'ollama/ollama',
+      this.binaryDir
+    )
+
+    if (process.platform !== 'win32') {
+      await fs.chmod(downloadedPath, 0o755)
+    }
+  }
+
+  private async readStream(stream: NodeJS.ReadableStream): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = ''
+
+    stream.on('data', chunk => {
+      data += chunk.toString()
+    })
+
+    stream.on('end', () => {
+      resolve(data.trim())
+    })
+
+    stream.on('error', error => {
+      reject(error)
+    })
+  })
+}
+
+  private async needsUpdate(): Promise<boolean> {
+    if (!await fs.pathExists(this.execPath)) return true
+
+    const process = spawn(this.execPath, ['--version'])
+    const installedVersion = await this.readStream(process.stdout);
+    return !isNil(await this.downloadService.checkForUpdate('ollama/ollama', installedVersion));
+  }
+
+  private async spawnOllamaProcess() {
+    const eligibleGpu = await getEligibleGpu()
+
+    this.process = spawn(this.execPath, ['serve'], {
+      env: {
+        ...process.env,
+        OLLAMA_EXPERIMENTAL: 'client2',
+        ...(eligibleGpu && { CUDA_VISIBLE_DEVICES: eligibleGpu.uuid })
+      },
+      stdio: ['ignore', 'pipe', 'pipe']
+    })
+
+    this.process.stdout.on('data', (data: Buffer) => {
+      logInfo(`Ollama: ${data.toString()}`, { category: "Ollama" })
+    })
+
+    this.process.stderr.on('data', (data: Buffer) => {
+      logError(`Ollama Error: ${data.toString()}`, { category: "Ollama" })
+    })
+
+    this.process.on('exit', (code: number) => {
       this.isRunning = false
-      throw err
+      logInfo(`Ollama process exited with code ${code}`, { category: "Ollama" })
     })
 
     this.isRunning = true
-    return true
   }
 
   async stop() {
     if (!this.isRunning) return
-    this.process.kill('SIGTERM');
+    this.process?.kill('SIGTERM')
     this.isRunning = false
   }
 }

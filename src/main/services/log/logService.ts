@@ -19,8 +19,6 @@ const logMessage = (
   const logPrefix = category ? `[${category}] ${message}` : message;
   const consoleMethod = console[level] || console.log;
 
-  consoleMethod(logPrefix);
-
   if (error) {
     log[level](logPrefix, error);
   } else {

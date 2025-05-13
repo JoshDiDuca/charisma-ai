@@ -35,8 +35,6 @@ if (!fs.existsSync(STORAGE_PATH)) {
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 
-let vectorStore: HNSWLib;
-
 function generatePrompt(prompt: string, data: ResponseSourceDocument[]): string {
   const context = data.map(d => d.content).filter(Boolean).join('\n');
   return `Context: ${context}\n\nQuestion: ${prompt}`;
@@ -66,47 +64,57 @@ export const getAllEmbeddingModels = async () => {
   });
 };
 
-async function initializeVectorStore() {
+
+export const getVectorStorePath = (conversationId?: string) => {
+  const conversationVectoreStore = conversationId ? path.join(STORAGE_PATH, conversationId) : STORAGE_PATH;
+  return conversationVectoreStore;
+}
+async function initializeVectorStore(conversationId?: string) {
+  const conversationVectoreStore = getVectorStorePath(conversationId);
+
   const embeddings = new OllamaEmbeddings({
     model: OLLAMA_MODEL_EMBEDDING,
     baseUrl: "http://localhost:11434"
   });
 
   try {
-    if (!existsSync(STORAGE_PATH)) {
-      mkdirSync(STORAGE_PATH, { recursive: true });
+    if (!existsSync(conversationVectoreStore)) {
+      mkdirSync(conversationVectoreStore, { recursive: true });
     }
   } catch (error) {
-    logError(`There was an error creating vector DB storage directory: ${STORAGE_PATH}`)
+    logError(`There was an error creating vector DB storage directory: ${conversationVectoreStore}`)
   }
 
   try {
-    vectorStore = await HNSWLib.load(STORAGE_PATH, embeddings);
+    let vectorStore: HNSWLib = await HNSWLib.load(conversationVectoreStore, embeddings);
     logInfo("Loaded existing vector store");
+    return vectorStore;
   } catch (e) {
     logInfo("Creating new vector store");
-    vectorStore = await HNSWLib.fromDocuments([], embeddings);
-    await vectorStore.save(STORAGE_PATH);
+    let vectorStore: HNSWLib = await HNSWLib.fromDocuments([
+      {
+        pageContent: "Initialization document",
+        metadata: { initialization: true }
+      }
+    ], embeddings);
+    await vectorStore.save(conversationVectoreStore);
+    return vectorStore;
   }
 }
 
-export async function initOllamaEmbedding(documents: string[]): Promise<void> {
-  await initializeVectorStore();
-}
-
-export async function loadOllamaEmbedding(sources: Source[]): Promise<void> {
+export async function loadOllamaEmbedding(sources: Source[], vectorStore: HNSWLib): Promise<void> {
   for (const source of sources) {
     if (source.type === 'Directory') {
       const filePaths = flattenTree(source.fileTree?.children ?? []);
-      await loadOllamaFileEmbedding(filePaths);
+      await loadOllamaFileEmbedding(filePaths, vectorStore);
     }
     if (source.type === 'Web') {
-      await loadOllamaWebEmbedding(source as WebSourceInput);
+      await loadOllamaWebEmbedding(source as WebSourceInput, vectorStore);
     }
   }
 }
 
-export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<void> {
+export async function loadOllamaFileEmbedding(filePaths: TreeNode[], vectorStore: HNSWLib): Promise<void> {
   const resultsToBatch: Array<{ content: string; metadata: any }> = [];
   const filesToProcess = filePaths.filter(node => !node.isFolder).map(node => node.path);
 
@@ -191,7 +199,7 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[]): Promise<vo
   await vectorStore.save(STORAGE_PATH);
 }
 
-export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<void> {
+export async function loadOllamaWebEmbedding(source: WebSourceInput, vectorStore: HNSWLib): Promise<void> {
   try {
 
     const response = await axios.get(source.url);
@@ -247,7 +255,7 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput): Promise<vo
   }
 }
 
-export async function getOllamaEmbeddingRetrieve(prompt: string) {
+export async function getOllamaEmbeddingRetrieve(prompt: string, vectorStore: HNSWLib) {
   const results = await vectorStore.similaritySearch(prompt, 5);
   return results.map(doc => ({
     content: doc.pageContent,
@@ -263,10 +271,11 @@ export async function sendMessageWithEmbedding(
 ) {
   try {
     const conversation = await getOrCreateConversation(model, conversationId);
-    await loadOllamaEmbedding(conversation.sources);
+    const vectorStore = await initializeVectorStore(conversation.id);
+    await loadOllamaEmbedding(conversation.sources, vectorStore);
 
     logInfo('Retrieving relevant documents for prompt.');
-    const sources = await getOllamaEmbeddingRetrieve(message);
+    const sources = await getOllamaEmbeddingRetrieve(message, vectorStore);
 
     const finalPrompt =
       sources.length > 0 ? generatePrompt(message, sources) : message;

@@ -12,6 +12,7 @@ import { ollama } from './ollamaService';
 import { Conversation, Message } from 'shared/types/Conversation';
 import { Source } from 'shared/types/Sources/Source';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
+import { getVectorStorePath } from './ollamaEmbeddingService';
 
 const conversationsDir = path.join(app.getPath('userData'), 'conversations');
 
@@ -75,9 +76,12 @@ export const deleteConversation = async (conversationId: string): Promise<boolea
     const filePath = path.join(conversationsDir, `${conversationId}.json`);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      return true;
     }
-    return false;
+    const databaseFolder = getVectorStorePath(conversationId);
+    if (fs.existsSync(databaseFolder) && fs.lstatSync(databaseFolder).isDirectory()) {
+      fs.rmSync(databaseFolder, { recursive: true, force: true });
+    }
+      return true;
   } catch (error) {
     logError(`Failed to delete conversation`, { error, category: "Conversations", showUI: true });
     return false;

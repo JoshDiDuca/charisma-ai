@@ -301,7 +301,6 @@ export const Sidebar = ({ }: SidebarProps) => {
           <Card className="p-4  rounded-none" style={{ height: "100%", minWidth: "400px" }}>
             <div className="flex flex-col gap-4">
               <div className="inline-flex items-center mb-4">
-                <img src="/logo.png" width={25} height={25} alt="Logo" className="mr-1" />
                 <span className="text-sm font-medium">
                   Status: <b style={{ color: statusColor }}>{statusText}</b>
                 </span>

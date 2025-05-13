@@ -109,7 +109,14 @@ export const Sidebar = ({ }: SidebarProps) => {
         if (id === conversation?.id) {
           setConversation(undefined);
         }
-        setConversations(prev => prev?.filter(conv => conv.id !== id) ?? []);
+        const newConversations = conversations?.filter(conv => conv.id !== id) ?? []
+        setConversations(newConversations);
+        //If no conversations, new conversation
+        if (!newConversations.length) {
+          setIsCreatingConversation(true);
+          setConversation(undefined);
+          setIsCreatingConversation(false);
+        }
       }
     } catch (error) {
       console.error("Failed to delete conversation:", error);
@@ -316,7 +323,7 @@ export const Sidebar = ({ }: SidebarProps) => {
                     value: m.name,
                     label: (
                       <div className="flex items-center justify-between w-full">
-                        <span>{m.name}{m.progress && m.progress < 100  && ` - ${m.progress.toFixed(1)}%`}</span>
+                        <span>{m.name}{m.progress && m.progress < 100 && ` - ${m.progress.toFixed(1)}%`}</span>
                         <span>
                           {m.installed ? "✔️" : m.installing || (!!m.progress && m.progress < 100) ?
                             <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
@@ -336,7 +343,7 @@ export const Sidebar = ({ }: SidebarProps) => {
                     value: m.name,
                     label: (
                       <div className="flex items-center justify-between w-full">
-                        <span>{m.name}{m.progress && m.progress < 100  && ` - ${m.progress.toFixed(1)}%`}</span>
+                        <span>{m.name}{m.progress && m.progress < 100 && ` - ${m.progress.toFixed(1)}%`}</span>
                         <span>
                           {m.installed ? "✔️" : m.installing || (!!m.progress && m.progress < 100) ?
                             <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}

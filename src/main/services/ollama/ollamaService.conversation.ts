@@ -8,11 +8,11 @@ import { logError, logInfo } from '../log/logService';
 import { IPC } from 'shared/constants';
 import { ipcMain } from 'electron';
 import { mainWindow } from 'main/windows/main';
-import { ollama } from './ollamaService';
+import { ollama } from './ollamaService.core';
 import { Conversation, Message } from 'shared/types/Conversation';
 import { Source } from 'shared/types/Sources/Source';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
-import { getVectorStorePath } from './ollamaEmbeddingService';
+import { getVectorStorePath } from './ollamaService.embedding';
 
 const conversationsDir = path.join(app.getPath('userData'), 'conversations');
 

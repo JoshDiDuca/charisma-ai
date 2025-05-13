@@ -27,6 +27,7 @@ export const IPC = {
     GET_ALL_EMBEDDING_MODELS: 'llm:get-all-embedding-models',
     UPDATE_ALL_EMBEDDING_MODELS: "llm:update-all-embedding-models",
     UPDATE_ALL_MODELS: 'llm:update-all-models',
+    DOWNLOAD_MODEL_PROGRESS: 'llm:download-model-progress',
     DOWNLOAD_MODEL: 'llm:download-model',
     SEND_MESSAGE: 'llm:send-message',
     STREAM_UPDATE: 'llm:stream-update',

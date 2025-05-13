@@ -317,9 +317,9 @@ export const Sidebar = ({ }: SidebarProps) => {
                     value: m.name,
                     label: (
                       <div className="flex items-center justify-between w-full">
-                        <span>{m.name}</span>
+                        <span>{m.name}{m.progress && m.progress < 100  && ` - ${m.progress.toFixed(1)}%`}</span>
                         <span>
-                          {m.installed ? "✔️" : m.installing ?
+                          {m.installed ? "✔️" : m.installing || (!!m.progress && m.progress < 100) ?
                             <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
                         </span>
                       </div>
@@ -337,10 +337,11 @@ export const Sidebar = ({ }: SidebarProps) => {
                     value: m.name,
                     label: (
                       <div className="flex items-center justify-between w-full">
-                        <span>{m.name}</span>
+                        <span>{m.name}{m.progress && m.progress < 100  && ` - ${m.progress.toFixed(1)}%`}</span>
                         <span>
-                          {m.installed ? "✔️" : m.installing ?
-                            <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
+                          {m.installed ? "✔️" : m.installing || (!!m.progress && m.progress < 100) ?
+                            <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} />
+                              : "❌"}
                         </span>
                       </div>
                     )

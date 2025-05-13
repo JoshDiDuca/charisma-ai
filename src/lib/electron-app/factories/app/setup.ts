@@ -8,7 +8,7 @@ import {
 import { ignoreConsoleWarnings } from '../../utils/ignore-console-warnings'
 import { PLATFORM, ENVIRONMENT } from 'shared/constants'
 import { makeAppId } from 'shared/utils'
-import { OllamaInstanceService } from 'main/services/ollama/ollamaInstanceService'
+import { OllamaInstanceService } from 'main/services/ollama/ollamaService.instance'
 import { logError, logWarning } from 'main/services/log/logService'
 import { TTSWorkerService } from 'main/services/tts/ttsService'
 import { PiperInstanceService } from 'main/services/piper/piperInstanceService'

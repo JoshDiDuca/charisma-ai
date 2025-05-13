@@ -3,7 +3,7 @@ import React, { createContext, useContext, ReactNode, useState, useEffect } from
 import { IPC } from 'shared/constants';
 import { AppStatus } from 'shared/types/AppStatus';
 import { Conversation, Message } from 'shared/types/Conversation';
-import { OllamaModel } from 'shared/types/OllamaModel';
+import { OllamaModel, OllamaModelDownloadProgress } from 'shared/types/OllamaModel';
 
 const { App } = window;
 
@@ -17,11 +17,11 @@ interface ChatBotContextType {
   setConversation: React.Dispatch<React.SetStateAction<Conversation | undefined>>;
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
-  model?:string;
+  model?: string;
   setModel: React.Dispatch<React.SetStateAction<string | undefined>>;
-  embeddingModel?:string;
+  embeddingModel?: string;
   setEmbeddingModel: React.Dispatch<React.SetStateAction<string | undefined>>;
-  voiceModel?:string;
+  voiceModel?: string;
   setVoiceModel: React.Dispatch<React.SetStateAction<string | undefined>>;
 
   // Data
@@ -47,7 +47,7 @@ interface ChatBotContextType {
 }
 const ChatBotContext = createContext<ChatBotContextType | undefined>(undefined);
 
-export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children  }) => {
+export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [conversation, setConversation] = React.useState<Conversation | undefined>();
   const [model, setModel] = React.useState<string | undefined>();
   const [embeddingModel, setEmbeddingModel] = React.useState<string | undefined>();
@@ -70,38 +70,46 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children  }
     loadConversations();
   }, []);
 
-// Update the useEffect dependencies and preselection logic
-useEffect(() => {
-  if (availableModels?.length) {
-    const installedModel = availableModels.find(m => m.installed);
-    setModel(prev => prev || installedModel?.name || availableModels[0]?.name);
-  }
-}, [availableModels]);
+  // Update the useEffect dependencies and preselection logic
+  useEffect(() => {
+    if (availableModels?.length) {
+      const installedModel = availableModels.find(m => m.installed);
+      setModel(prev => prev || installedModel?.name || availableModels[0]?.name);
+    }
+  }, [availableModels]);
 
-useEffect(() => {
-  if (availableEmbeddingModels?.length) {
-    const installedEmbedding = availableEmbeddingModels.find(m => m.installed);
-    setEmbeddingModel(prev => prev || installedEmbedding?.name || availableEmbeddingModels[0]?.name);
-  }
-}, [availableEmbeddingModels]);
+  useEffect(() => {
+    if (availableEmbeddingModels?.length) {
+      const installedEmbedding = availableEmbeddingModels.find(m => m.installed);
+      setEmbeddingModel(prev => prev || installedEmbedding?.name || availableEmbeddingModels[0]?.name);
+    }
+  }, [availableEmbeddingModels]);
 
-// Update the conversation effect
-useEffect(() => {
-  if (conversation) {
-    setModel(prev => conversation.model || prev);
-    setEmbeddingModel(prev => embeddingModel || prev);
-  }
-  setMessages(conversation?.messages ?? []);
-}, [conversation]);
+  // Update the conversation effect
+  useEffect(() => {
+    if (conversation) {
+      setModel(prev => conversation.model || prev);
+      setEmbeddingModel(prev => embeddingModel || prev);
+    }
+    setMessages(conversation?.messages ?? []);
+  }, [conversation]);
 
 
   useEffect(() => {
-    const unlistenModels = App.on(IPC.LLM.UPDATE_ALL_MODELS, (response: OllamaModel[]) => {
+    App.on(IPC.LLM.UPDATE_ALL_MODELS, (response: OllamaModel[]) => {
       setAvailableModels(response);
     });
 
-    const unlistenEmbeddingModels = App.on(IPC.LLM.UPDATE_ALL_EMBEDDING_MODELS, (response: OllamaModel[]) => {
+    App.on(IPC.LLM.UPDATE_ALL_EMBEDDING_MODELS, (response: OllamaModel[]) => {
       setAvailableEmbeddingModels(response);
+    });
+
+    App.on(IPC.LLM.DOWNLOAD_MODEL_PROGRESS, (progress: OllamaModelDownloadProgress) => {
+      console.log("model progress " + JSON.stringify(progress))
+      setAvailableEmbeddingModels(embeddingModels =>
+        embeddingModels?.map(m => ((m.name === progress.model) ? ({ ...m, progress: progress.progress }) : m)));
+      setAvailableModels(models =>
+        models?.map(m => ((m.name === progress.model) ? ({ ...m, progress: progress.progress }) : m)));
     });
 
     return () => {

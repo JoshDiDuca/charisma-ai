@@ -10,20 +10,16 @@ import {
   getFileInfo,
 } from '../files/fileService';
 import * as cheerio from 'cheerio';
-import {
-  currentlyInstallingModels,
-  ollama,
-  sendMessage,
-  stopPolling,
-} from './ollamaService';
 import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';
-import { getOrCreateConversation } from './ollamaConversationService';
+import { getOrCreateConversation } from './ollamaService.conversation';
 import { Source, WebSourceInput } from 'shared/types/Sources/Source';
 import axios from 'axios';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 import { app } from 'electron';
 import path from 'path';
+import { currentlyInstallingModels, ollama, stopPolling } from './ollamaService.core';
+import { sendMessage } from './ollamaService';
 
 const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large';
 const STORAGE_PATH = path.join(app.getPath('userData'), 'DB');

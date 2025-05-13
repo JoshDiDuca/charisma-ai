@@ -2,7 +2,7 @@ import {
   getAllEmbeddingModels,
   getInstalledEmbeddingModels,
   sendMessageWithEmbedding,
-} from 'main/services/ollama/ollamaEmbeddingService'
+} from 'main/services/ollama/ollamaService.embedding'
 import {
   downloadModel,
   getAllModels,
@@ -12,7 +12,7 @@ import {
 import { IpcHandle } from '../decorators/IpcHandle'
 import { getCurrentStatus } from 'main/services/statusService'
 import { IPC } from 'shared/constants'
-import { addMessageToConversation, createNewConversation, deleteConversation, generateConversationTitle, getAllConversations, getConversation, updateConversationTitle } from 'main/services/ollama/ollamaConversationService'
+import { addMessageToConversation, createNewConversation, deleteConversation, generateConversationTitle, getAllConversations, getConversation, updateConversationTitle } from 'main/services/ollama/ollamaService.conversation'
 import { Message } from 'shared/types/Conversation'
 
 export const MODEL_DOCUMENTS = []

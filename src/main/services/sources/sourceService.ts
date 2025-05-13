@@ -1,5 +1,5 @@
 import { DirectorySourceInput,  FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/Source";
-import { addSourcesToConversation } from "../ollama/ollamaConversationService";
+import { addSourcesToConversation } from "../ollama/ollamaService.conversation";
 import { getDirectoryInfo, getFileInfo, getFileTree } from "../files/fileService";
 import { Conversation } from "shared/types/Conversation";
 

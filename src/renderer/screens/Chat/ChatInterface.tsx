@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FaMicrophone, FaPaperclip, FaSpinner, FaStop } from 'react-icons/fa';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import remarkGfm from 'remark-gfm'
 import {
   Button,
   Input,
@@ -20,6 +22,7 @@ import { get, last } from 'lodash';
 import { useVoiceRecorder } from 'renderer/hooks/useVoiceRecorder';
 import { error } from 'console';
 import "./Chat.scss";
+import CopyCodeButton from 'renderer/components/Chat/Markdown/CopyCodeButton';
 
 const { App } = window;
 
@@ -150,6 +153,7 @@ export const ChatInterface = ({
         {messages.map((message) => (
           <div
             key={message.timestamp}
+            style={{ userSelect: "text" }}
             className={`max-w-[80%] px-4 py-2 rounded-large ${message.role === 'user'
               ? 'self-end bg-primary text-primary-foreground'
               : 'self-start bg-default-300 text-default-foreground'
@@ -162,7 +166,31 @@ export const ChatInterface = ({
                 <Tab key="answer" title="Answer">
                   <Card>
                     <CardBody>
-                      <Markdown>{message.userInput || message.text}</Markdown>
+                      <Markdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          code(props) {
+                            const { children, className, node, ...rest } = props
+                            const match = /language-(\w+)/.exec(className || '')
+                            return match ? (
+
+                              <div style={{ position: 'relative' }}>
+                                <CopyCodeButton code={String(children).replace(/\n$/, '')}>{children}</CopyCodeButton>
+                                <SyntaxHighlighter
+                                  language={match[1]}
+                                  PreTag="div"
+                                  {...props}
+                                >
+                                  {String(children).replace(/\n$/, '')}
+                                </SyntaxHighlighter>
+                              </div>
+                            ) : (
+                              <code {...rest} className={className}>
+                                {children}
+                              </code>
+                            )
+                          }
+                        }}>{message.userInput || message.text}</Markdown>
                     </CardBody>
                   </Card>
                 </Tab>

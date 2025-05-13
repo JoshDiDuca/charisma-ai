@@ -339,8 +339,7 @@ export const Sidebar = ({ }: SidebarProps) => {
                         <span>{m.name}{m.progress && m.progress < 100  && ` - ${m.progress.toFixed(1)}%`}</span>
                         <span>
                           {m.installed ? "✔️" : m.installing || (!!m.progress && m.progress < 100) ?
-                            <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} />
-                              : "❌"}
+                            <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
                         </span>
                       </div>
                     )

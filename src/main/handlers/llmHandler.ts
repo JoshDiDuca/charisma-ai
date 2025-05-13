@@ -54,8 +54,8 @@ export class LlmHandlers {
   }
 
   @IpcHandle(IPC.LLM.SEND_MESSAGE)
-  async sendMessageWithEmbedding(message: string, model: string, conversationId: string | undefined) {
-    return sendMessageWithEmbedding(message, model, conversationId)
+  async sendMessageWithEmbedding(message: string, model: string, embeddingModel: string | undefined, conversationId: string | undefined) {
+    return sendMessageWithEmbedding(message, model, embeddingModel, conversationId)
   }
 
   @IpcHandle(IPC.CONVERSATION.GET_ALL)

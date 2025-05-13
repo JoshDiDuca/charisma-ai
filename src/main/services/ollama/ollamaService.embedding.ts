@@ -20,8 +20,8 @@ import { app } from 'electron';
 import path from 'path';
 import { currentlyInstallingModels, ollama, stopPolling } from './ollamaService.core';
 import { sendMessage } from './ollamaService';
+import { isNil } from 'lodash';
 
-const OLLAMA_MODEL_EMBEDDING = process.env.OLLAMA_EMB_MODEL || 'mxbai-embed-large';
 const STORAGE_PATH = path.join(app.getPath('userData'), 'DB');
 
 if (!fs.existsSync(STORAGE_PATH)) {
@@ -65,11 +65,11 @@ export const getVectorStorePath = (conversationId?: string) => {
   const conversationVectoreStore = conversationId ? path.join(STORAGE_PATH, conversationId) : STORAGE_PATH;
   return conversationVectoreStore;
 }
-async function initializeVectorStore(conversationId?: string) {
+async function initializeVectorStore(embeddingModel: string, conversationId?: string) {
   const conversationVectoreStore = getVectorStorePath(conversationId);
 
   const embeddings = new OllamaEmbeddings({
-    model: OLLAMA_MODEL_EMBEDDING,
+    model: embeddingModel,
     baseUrl: "http://localhost:11434"
   });
 
@@ -263,24 +263,44 @@ export async function getOllamaEmbeddingRetrieve(prompt: string, vectorStore: HN
 export async function sendMessageWithEmbedding(
   message: string,
   model: string,
+  embeddingModel?: string,
   conversationId?: string
 ) {
   try {
     const conversation = await getOrCreateConversation(model, conversationId);
-    const vectorStore = await initializeVectorStore(conversation.id);
-    await loadOllamaEmbedding(conversation.sources, vectorStore);
 
-    logInfo('Retrieving relevant documents for prompt.');
-    const sources = await getOllamaEmbeddingRetrieve(message, vectorStore);
+    if (conversation.sources.length > 0 && (!embeddingModel || isNil(embeddingModel))) {
+      throw new Error("No embedding model selected");
+    }
 
-    const finalPrompt =
-      sources.length > 0 ? generatePrompt(message, sources) : message;
+    let finalPrompt = message;
+    const sources: {
+      content: string;
+      metadata: Record<string, any>;
+      score: number;
+    }[] = [];
 
-    logInfo(
-      sources.length > 0
-        ? `Generated prompt with context from ${sources.length} documents.`
-        : 'No relevant documents found, sending original message.'
-    );
+    if (conversation.sources.length > 0) {
+      if (!embeddingModel || isNil(embeddingModel)) {
+        throw new Error("No embedding model selected");
+      }
+
+      const vectorStore = await initializeVectorStore(embeddingModel, conversation.id);
+
+
+      await loadOllamaEmbedding(conversation.sources, vectorStore);
+
+      logInfo('Retrieving relevant documents for prompt.');
+
+      const sourcesToAdd = await getOllamaEmbeddingRetrieve(message, vectorStore);
+
+      sources.push(...sourcesToAdd);
+
+      finalPrompt = generatePrompt(message, sources);
+      logInfo(`Generated prompt with context from ${sources.length} documents.`);
+    } else {
+      logInfo('No relevant documents found, sending original message.');
+    }
 
     logInfo(`Sending message to model ${model}.`);
     const response = await sendMessage({
@@ -290,7 +310,6 @@ export async function sendMessageWithEmbedding(
       model,
       sources
     });
-    console.log(response);
 
     return response;
   } catch (e) {

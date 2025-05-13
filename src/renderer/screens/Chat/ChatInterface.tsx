@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FaMicrophone, FaPaperclip, FaSpinner, FaStop } from 'react-icons/fa';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import remarkGfm from 'remark-gfm'
+import remarkBreaks from 'remark-breaks'
 import {
   Button,
   Input,
@@ -12,17 +13,20 @@ import {
   Tab,
   Accordion,
   AccordionItem,
+  toast,
 } from '@heroui/react';
+import { addToast } from '@heroui/react'
 import Markdown from 'react-markdown';
 import { IPC } from 'shared/constants';
 import { Conversation, Message } from 'shared/types/Conversation';
 import { SettingsDropdown } from 'renderer/components/SettingsIcon';
 import { useChatBot } from 'renderer/store/conversationProvider';
-import { get, last } from 'lodash';
+import { get, isNil, last } from 'lodash';
 import { useVoiceRecorder } from 'renderer/hooks/useVoiceRecorder';
 import { error } from 'console';
 import "./Chat.scss";
 import CopyCodeButton from 'renderer/components/Chat/Markdown/CopyCodeButton';
+import { preprocessMarkdownText } from 'renderer/components/Chat/Markdown/utils';
 
 const { App } = window;
 
@@ -33,6 +37,9 @@ export const ChatInterface = ({
 }: ChatInterfaceProps) => {
   const {
     model,
+    availableModels,
+    embeddingModel,
+    availableEmbeddingModels,
     conversation,
     setMessages,
     setConversation,
@@ -61,7 +68,14 @@ export const ChatInterface = ({
   const [hasFirstResponse, setHasFirstResponse] = useState(true);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    const inputValueTrimmed = inputValue.trim();
+
+    if (isNil(inputValueTrimmed) || inputValueTrimmed === "" || isLoading) return;
+
+    if (isNil(model) || model === "" || availableModels.filter(e => !e.installed).map(e => e.name).includes(model)) {
+      addToast({ title: "Please select a model." })
+      return;
+    }
 
     const userMessage = {
       timestamp: Date.now(),
@@ -79,6 +93,7 @@ export const ChatInterface = ({
       IPC.LLM.SEND_MESSAGE,
       inputValue,
       model,
+      embeddingModel,
       conversation?.id
     ).then((response: Conversation) => {
       loadConversations();
@@ -167,21 +182,17 @@ export const ChatInterface = ({
                   <Card>
                     <CardBody>
                       <Markdown
-                        remarkPlugins={[remarkGfm]}
+                        remarkPlugins={[remarkGfm, remarkBreaks]}
                         components={{
+                          // Existing code component
                           code(props) {
                             const { children, className, node, ...rest } = props
                             const match = /language-(\w+)/.exec(className || '')
                             return match ? (
-
                               <div style={{ position: 'relative' }}>
-                                <CopyCodeButton code={String(children).replace(/\n$/, '')}>{children}</CopyCodeButton>
-                                <SyntaxHighlighter
-                                  language={match[1]}
-                                  PreTag="div"
-                                  {...props}
-                                >
-                                  {String(children).replace(/\n$/, '')}
+                                <CopyCodeButton code={String(children)}>{children}</CopyCodeButton>
+                                <SyntaxHighlighter language={match[1]} {...props}>
+                                  {String(children)}
                                 </SyntaxHighlighter>
                               </div>
                             ) : (
@@ -189,8 +200,18 @@ export const ChatInterface = ({
                                 {children}
                               </code>
                             )
-                          }
-                        }}>{message.userInput || message.text}</Markdown>
+                          },
+                          // Add custom paragraph component for better spacing
+                          p: ({ node, children, ...props }) => (
+                            <p style={{ marginBottom: "1em" }} {...props}>{children}</p>
+                          ),
+                          // Add proper handling for line breaks
+                          br: () => <br style={{ marginBottom: "0.5em" }} />
+                        }}
+                      >
+                        {preprocessMarkdownText(message.userInput || message.text)}
+                      </Markdown>
+
                     </CardBody>
                   </Card>
                 </Tab>

@@ -9,3 +9,15 @@
     }
   }
 }
+
+.markdown-content {
+  white-space: pre-line;
+}
+
+.markdown-content p {
+  margin-bottom: 1em;
+}
+
+.markdown-content pre {
+  white-space: pre-wrap;
+}

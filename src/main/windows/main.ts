@@ -12,6 +12,7 @@ let tray: Tray | null = null;
 let isQuittingApp = false;
 
 export async function MainWindow() {
+
   const window = createWindow({
     id: 'main',
     title: displayName,

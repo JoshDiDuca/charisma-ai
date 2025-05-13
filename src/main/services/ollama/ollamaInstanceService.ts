@@ -8,11 +8,14 @@ import { getOllamaStatus } from './ollamaService'
 import { DownloadProgress, DownloadService } from 'main/download/DownloadService'
 import { isNil } from 'lodash'
 import { Readable } from 'stream'
+import { splashWindow } from 'main/windows/splash'
+import { IPC } from 'shared/constants'
 
 export class OllamaInstanceService {
   private process: ChildProcessByStdio<null, Readable, Readable> | null = null;
   private isRunning = false
-  private downloadService = new DownloadService()
+  public ready = false
+  public downloadService = new DownloadService()
 
   get binaryDir() {
     return path.join(app.getPath('userData'), 'ollama-bin')
@@ -39,12 +42,19 @@ export class OllamaInstanceService {
   }
 
   private async ensureOllamaBinary() {
-    if (!(await this.needsUpdate())) return
+    if (!(await this.needsUpdate())) {
+      this.ready = true;
+       return;
+    }
 
     await fs.ensureDir(this.binaryDir)
 
     this.downloadService.on('progress', (progress: DownloadProgress) => {
-      logInfo(`ollama-download Downloading Ollama: ${progress.percentage}% ${progress.percentage}`)
+      splashWindow?.webContents.send(IPC.CORE.UPDATE_SPLASH, `Downloading Ollama: ${progress.percentage}%`);
+      logInfo(`Downloading Ollama: ${progress.percentage}`)
+    })
+    this.downloadService.on('done', (progress: DownloadProgress) => {
+      this.ready = true;
     })
 
     const downloadedPath = await this.downloadService.downloadLatest(

@@ -9,6 +9,7 @@ import { MainWindow } from './windows/main'
 import { initializeHandlers } from './handlers'
 import { initOllamaEmbedding } from './services/ollama/ollamaEmbeddingService'
 import { logError } from './services/log/logService'
+import { performSplashLoading, SplashWindow } from './windows/splash'
 
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
@@ -18,5 +19,10 @@ makeAppWithSingleInstanceLock(async () => {
   // Setup IPC handlers
   initializeHandlers();
 
-  await makeAppSetup(MainWindow)
+  const splashWindow = await SplashWindow();
+    performSplashLoading().then(() => {
+      splashWindow.hide();
+      makeAppSetup(MainWindow)
+    })
+
 })

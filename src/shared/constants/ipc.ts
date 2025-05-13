@@ -16,7 +16,8 @@ export const IPC = {
     QUERY: "source::query",
   },
   CORE: {
-    GET_APP_STATUS: 'get-app-status'
+    GET_APP_STATUS: 'get-app-status',
+    UPDATE_SPLASH: 'update-splash'
   },
   LLM: {
     GET_STATUS: 'llm:get-status',

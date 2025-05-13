@@ -2,8 +2,11 @@ import { Route } from 'react-router-dom'
 
 import { Router } from 'lib/electron-router-dom'
 
-import { MainScreen } from 'renderer/screens'
+import { MainScreen, SplashScreen } from 'renderer/screens'
 
 export function AppRoutes() {
-  return <Router main={<Route path="/" element={<MainScreen />} />} />
+  return <Router
+    splash={<Route path="/" element={<SplashScreen />} />}
+    main={<Route path="/" element={<MainScreen />}
+  />} />
 }

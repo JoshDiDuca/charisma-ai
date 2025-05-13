@@ -7,10 +7,14 @@ import { DownloadProgress, DownloadService } from 'main/download/DownloadService
 import { isNil } from 'lodash'
 import getPlatform from '../platformService'
 import { app } from 'electron'
+import { IPC } from 'shared/constants'
+import { splashWindow } from 'main/windows/splash'
 
 export class PiperInstanceService {
-  private downloadService = new DownloadService()
+  public downloadService = new DownloadService()
   private model = "en_GB-northern_english_male-medium.onnx"
+  public ready = false
+
 
   constructor() {
 
@@ -36,12 +40,19 @@ export class PiperInstanceService {
   }
 
   private async ensurePiperBinary() {
-    if (!(await this.needsUpdate())) return
+    if (!(await this.needsUpdate())) {
+      this.ready = true;
+       return;
+    }
 
     await fs.ensureDir(this.binaryDir)
 
     this.downloadService.on('progress', (progress: DownloadProgress) => {
-      //logInfo(`piper-download Downloading Piper: ${progress.percentage}%`)
+      splashWindow?.webContents.send(IPC.CORE.UPDATE_SPLASH, `Downloading Piper: ${progress.percentage}%`);
+      logInfo(`Downloading Piper: ${progress.percentage}`)
+    })
+    this.downloadService.on('done', (progress: DownloadProgress) => {
+      this.ready = true;
     })
 
     const downloadedPath = await this.downloadService.downloadLatest(

@@ -117,7 +117,9 @@ export class DownloadService extends EventEmitter {
       }
 
       writer.end()
-      await fsPromises.rename(tempFile, finalFile)
+
+      this.emit('done')
+      await fs.promises.rename(tempFile, finalFile);
 
       if (total && transferred !== total) {
         throw new Error('Size mismatch - possible corrupted download')
@@ -143,7 +145,11 @@ export class DownloadService extends EventEmitter {
         const extractedContents = await fs.promises.readdir(targetDir);
         for (const content of extractedContents) {
           const sourcePath = path.join(targetDir, content);
-          await this.moveContents(sourcePath, targetDir);
+          const stats = await fs.promises.stat(sourcePath);
+          // Only process directories and skip the original ZIP file
+          if (stats.isDirectory() && sourcePath !== finalFile) {
+            await this.moveContents(sourcePath, targetDir);
+          }
         }
       }
 
@@ -155,73 +161,73 @@ export class DownloadService extends EventEmitter {
   }
 
   async downloadFile(url: string, destPath: string): Promise<void> {
-  // Create the directory structure first
-  const destDir = path.dirname(destPath);
-  await fs.promises.mkdir(destDir, { recursive: true });
-
-  const tempPath = `${destPath}${this.tempExtension}`;
-  const controller = new AbortController();
-  this.currentDownload = controller;
-
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: { 'User-Agent': 'ElectronDownloadService' }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Download failed: ${response.status} ${response.statusText}`);
-    }
-
-    const writer = fs.createWriteStream(tempPath);
-    const reader = response.body!.getReader();
-    const total = parseInt(response.headers.get('Content-Length') || '0', 10);
-    let transferred = 0;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      writer.write(Buffer.from(value));
-      transferred += value.length;
-
-      this.emit('progress', {
-        percentage: total ? Math.round((transferred / total) * 100) : -1,
-        transferred,
-        total,
-        version: ''
-      } as DownloadProgress);
-    }
-
-    await new Promise<void>((resolve, reject) => {
-      writer.end();
-      writer.on('finish', resolve);
-      writer.on('error', reject);
-    });
-
-    // Ensure the destination directory exists again (in case it was deleted during download)
+    // Create the directory structure first
+    const destDir = path.dirname(destPath);
     await fs.promises.mkdir(destDir, { recursive: true });
 
-    // Rename the temp file to the final destination
-    try {
-      fs.renameSync(tempPath, destPath);
-    } catch (error) {
-      // If rename fails (can happen across different drives), try copy and delete
-      await fs.promises.copyFile(tempPath, destPath);
-      await fs.promises.unlink(tempPath);
-    }
+    const tempPath = `${destPath}${this.tempExtension}`;
+    const controller = new AbortController();
+    this.currentDownload = controller;
 
-    if (total && transferred !== total) {
-      throw new Error('Size mismatch - possible corrupted download');
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'ElectronDownloadService' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+      }
+
+      const writer = fs.createWriteStream(tempPath);
+      const reader = response.body!.getReader();
+      const total = parseInt(response.headers.get('Content-Length') || '0', 10);
+      let transferred = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        writer.write(Buffer.from(value));
+        transferred += value.length;
+
+        this.emit('progress', {
+          percentage: total ? Math.round((transferred / total) * 100) : -1,
+          transferred,
+          total,
+          version: ''
+        } as DownloadProgress);
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        writer.end();
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+
+      // Ensure the destination directory exists again (in case it was deleted during download)
+      console.log("1")
+      //await fs.promises.mkdir(destDir, { recursive: true });
+
+      // Rename the temp file to the final destination
+      try {
+        fs.renameSync(tempPath, destPath);
+      } catch (error) {
+        // If rename fails (can happen across different drives), try copy and delete
+        await fs.promises.copyFile(tempPath, destPath);
+        await fs.promises.unlink(tempPath);
+      }
+
+      if (total && transferred !== total) {
+        throw new Error('Size mismatch - possible corrupted download');
+      }
+    } catch (error) {
+      this.cleanupTemp(tempPath);
+      throw error;
+    } finally {
+      this.currentDownload = null;
     }
-  } catch (error) {
-    // Clean up temp file if it exists
-    this.cleanupTemp(tempPath);
-    throw error;
-  } finally {
-    this.currentDownload = null;
   }
-}
 
 
   private getPlatformIdentifier(): string {
@@ -244,11 +250,17 @@ export class DownloadService extends EventEmitter {
       fs.unlinkSync(tempPath)
     }
   }
-
   private async moveContents(source: string, target: string) {
     // Add existence check
     if (!fs.existsSync(source)) {
       throw new Error(`Source directory ${source} does not exist`);
+    }
+
+    // Check if source is actually a directory
+    const stats = await fs.promises.stat(source);
+    if (!stats.isDirectory()) {
+      console.log(`Skipping non-directory: ${source}`);
+      return; // Skip files, only process directories
     }
 
     const entries = await fs.promises.readdir(source, { withFileTypes: true });
@@ -269,7 +281,8 @@ export class DownloadService extends EventEmitter {
       }
     }
     await fs.promises.rmdir(source)
-  };
+  }
+
 
   abort(): void {
     this.currentDownload?.abort()

@@ -96,11 +96,11 @@ The built apps will be available on the `release` folder.
 - [x] AI response sources
 - [x] Web RAG queries
 - [x] Switch to hnswlib from ChromaDB (licensing and more flexible)
+- [x] Automatically download Ollama and dependencies
 - [ ] Web RAG query pdf/file download support
 - [ ] Next prompt suggestions
 - [ ] Reasoning model "thinking" support
-- [ ] Automatically download ollama and dependencies
-- [ ] Full download for models instead of ollama pulling 
+- [ ] Full download for models instead of Ollama pulling 
 - [ ] Hugging face
 - [ ] Ability to add custom models
 - [ ] Relational database queries

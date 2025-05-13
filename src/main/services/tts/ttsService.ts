@@ -21,9 +21,7 @@ export class TTSWorkerService {
     const workerPath = path.join(__dirname, './tts_worker.js')
     this.worker = new Worker(workerPath, {
       workerData: {
-        resourcesPath: app.isPackaged
-          ? process.resourcesPath
-          : path.join(app.getAppPath(), 'resources')
+        userData: path.join(app.getPath('userData'), 'piper-bin')
       }
     })
 

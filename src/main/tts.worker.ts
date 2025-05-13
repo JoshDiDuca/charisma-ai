@@ -16,8 +16,7 @@ class TTSWorker {
     this.setupListeners()
   }
   getBinaryPath() {
-    const resourcesPath = workerData.resourcesPath
-    return path.join(resourcesPath, getPlatform(), 'bin', 'piper');
+    return workerData.userData;
   }
 
   private startProcess() {
@@ -26,6 +25,7 @@ class TTSWorker {
     const fullPath = path.resolve(binaryPath, execName)
     const modelPath = path.resolve(binaryPath, this.model)
 
+    console.log(fullPath, modelPath)
 
     this.process = spawn(fullPath, [
       '--model', modelPath,

@@ -31,8 +31,8 @@ export class GitHubService {
     this.ensureDirExists(this.cacheDir);
   }
 
-  async getReleaseInfo(repo: string, checkForV = false): Promise<GitHubRelease> {
-    const cacheKey = `${repo}-${checkForV}`;
+  async getReleaseInfo(repo: string): Promise<GitHubRelease[]> {
+    const cacheKey = `${repo}`;
     const cachePath = path.join(this.cacheDir, `${cacheKey}.json`);
 
     const cache = await this.readCache(cachePath);
@@ -49,22 +49,22 @@ export class GitHubService {
 
       // Return cached data if not modified
       if (response.status === 304 && cache) {
-        return this.processReleases(cache.data, checkForV);
+        return this.processReleases(cache.data);
       }
 
       // Handle API errors
       if (!response.ok) {
-        if (cache) return this.processReleases(cache.data, checkForV);
+        if (cache) return this.processReleases(cache.data);
         throw new Error(`GitHub API failed: ${response.status} ${response.statusText}`);
       }
 
       // Process and cache new data
       const releases: GitHubRelease[] = await response.json();
       await this.updateCache(cachePath, releases, response.headers.get('ETag'));
-      return this.processReleases(releases, checkForV);
+      return this.processReleases(releases);
     } catch (error) {
       // Fallback to cache on network errors
-      if (cache) return this.processReleases(cache.data, checkForV);
+      if (cache) return this.processReleases(cache.data);
       throw error;
     }
   }
@@ -105,19 +105,17 @@ export class GitHubService {
     }
   }
 
-  private processReleases(releases: GitHubRelease[], checkForV: boolean): GitHubRelease {
-    const filteredReleases = checkForV
-      ? releases.filter(release => release.tag_name.startsWith('v'))
-      : releases;
+  private processReleases(releases: GitHubRelease[]): GitHubRelease[] {
+    const filteredReleases = releases;
 
     filteredReleases.sort((a, b) =>
       new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
     );
 
     if (!filteredReleases.length) {
-      throw new Error(`No releases found${checkForV ? ' with v-prefix' : ''}`);
+      throw new Error(`No releases found`);
     }
 
-    return filteredReleases[0];
+    return filteredReleases;
   }
 }

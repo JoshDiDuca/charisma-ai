@@ -5,7 +5,7 @@ import path from 'path'
 import https from 'https'
 import { app } from 'electron'
 import extract from 'extract-zip';
-import { get } from 'lodash'
+import { get, head } from 'lodash'
 import { GitHubService } from './GithubService'
 
 export interface DownloadProgress {
@@ -22,24 +22,36 @@ export class DownloadService extends EventEmitter {
   async getLatestVersionInfo(
     repo: string,
     currentVersion: string,
-    checkForV: boolean = false
+    skipCheckNonV: boolean = true
   ) {
-    const release = await this.githubService.getReleaseInfo(repo, checkForV)
+    const releases = await this.githubService.getReleaseInfo(repo)
+
+    const latest = head(skipCheckNonV ?
+      releases.filter(e => e.tag_name.startsWith("v")) :
+      releases)
+
+    if (!latest) {
+      return {
+        hasUpdate: true,
+        currentVersion
+      }
+    }
+
     return {
       currentVersion,
-      latestVersion: release.tag_name,
-      hasUpdate: this.isNewerVersion(release.tag_name, currentVersion),
-      releaseNotes: release.body,
-      publishedAt: release.published_at
+      latestVersion: latest.tag_name,
+      hasUpdate: this.isNewerVersion(latest.tag_name, currentVersion),
+      releaseNotes: latest.body,
+      publishedAt: latest.published_at
     }
   }
 
   async checkForUpdate(
     repo: string,
     currentVersion: string,
-    checkForV: boolean = false
+    filterV: boolean = false
   ) {
-    const { latestVersion, hasUpdate } = await this.getLatestVersionInfo(repo, currentVersion, checkForV)
+    const { latestVersion, hasUpdate } = await this.getLatestVersionInfo(repo, currentVersion, filterV)
     console.log(currentVersion, latestVersion, hasUpdate)
     return hasUpdate ? latestVersion : undefined
   }
@@ -51,25 +63,28 @@ export class DownloadService extends EventEmitter {
     versionFilter?: string,
     moveOnlyFolder?: boolean
   ): Promise<string> {
-    const release = await this.githubService.getReleaseInfo(repo)
+    const releases = await this.githubService.getReleaseInfo(repo)
     const filter = versionFilter || this.getPlatformIdentifier()
 
-    // Get all matching assets and sort by name length
-    const matchingAssets = release.assets
-      .filter(a => a.name.includes(filter))
-      .sort((a, b) => a.name.length - b.name.length)
+    for (const release of releases) {
+      // Get all matching assets and sort by name length
+      const matchingAssets = release.assets
+        .filter(a => a.name.includes(filter))
+        .sort((a, b) => a.name.length - b.name.length)
 
-    if (!matchingAssets.length) throw new Error('No compatible asset found')
+      if (!matchingAssets.length) continue;
 
-    const asset = matchingAssets[0]
+      const asset = matchingAssets[0]
 
-    return this.downloadReleaseFile(
-      asset.browser_download_url,
-      targetDir,
-      asset.size,
-      release.tag_name,
-      moveOnlyFolder
-    )
+      return this.downloadReleaseFile(
+        asset.browser_download_url,
+        targetDir,
+        asset.size,
+        release.tag_name,
+        moveOnlyFolder
+      )
+    }
+    throw new Error('No compatible asset found')
   }
 
 

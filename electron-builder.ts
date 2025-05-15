@@ -43,7 +43,7 @@ export default {
   ],
   mac: {
     artifactName,
-    icon: `${resources}/build/icons/icon.icns`,
+    icon: `${resources}/logo.png`,
     category: 'public.app-category.utilities',
     target: ['zip', 'dmg', 'dir'],
   },
@@ -57,7 +57,7 @@ export default {
 
   win: {
     artifactName,
-    icon: `${resources}/build/icons/icon.ico`,
+    icon: `${resources}/logo.png`,
     target: [
       'nsis',
       'dir'

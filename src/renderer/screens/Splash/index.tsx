@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import { Container } from 'renderer/components'
 import { IPC } from 'shared/constants'
+import logo1 from "./../../public/logo1.png"
+import logo2 from "./../../public/logo2.png"
+import logo3 from "./../../public/logo3.png"
+import logo4 from "./../../public/logo4.png"
+import logo5 from "./../../public/logo5.png"
 
 // The "App" comes from the context bridge in preload/index.ts
 const { App } = window
 
 const logoImages = [
-  '/logo1.png',
-  '/logo2.png',
-  '/logo3.png',
-  '/logo4.png',
-  '/logo5.png'
+  logo1,
+  logo2,
+  logo3,
+  logo4,
+  logo5
 ]
 
 export function SplashScreen() {

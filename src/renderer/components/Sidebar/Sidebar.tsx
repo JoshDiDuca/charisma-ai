@@ -35,6 +35,7 @@ import { DirectorySourceInput, SourceInput } from 'shared/types/Sources/Source';
 import { FileItem } from './FileItem';
 import { useChatBot } from 'renderer/store/conversationProvider';
 import { WebSearch } from 'shared/types/Sources/WebSearch';
+import logo from "./../../public/logo.png"
 
 const { App } = window;
 
@@ -167,13 +168,13 @@ export const Sidebar = ({ }: SidebarProps) => {
           {/* Top Section */}
           <div className="flex items-left justify-left h-12">
             {isCollapsed ? (
-              <img src="/logo.png"
+              <img src={logo}
                 title="Logo"
                 className="w-8 h-8 cursor-pointer"
               />
             ) : (
               <>
-                <img src="/logo.png"
+                <img src={logo}
                   title="Logo"
                   className="w-8 h-8 cursor-pointer" />
                 <div style={{ marginLeft: "0.2rem" }} className="ml-4 text-lg font-semibold">Charisma</div>

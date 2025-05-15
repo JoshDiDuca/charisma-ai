@@ -13,7 +13,7 @@ import { ollamaService, piperService, ttsService } from 'lib/electron-app/factor
 export let splashWindow: Electron.BrowserWindow | null = null
 let isQuittingApp = false;
 
-export async function SplashWindow() {
+export async function SplashWindow(onLoad?: () => void) {
 const window = createWindow({
   id: 'splash',
   title: `${displayName} - Secondary`,
@@ -35,6 +35,7 @@ const window = createWindow({
     if (ENVIRONMENT.IS_DEV) {
       window.webContents.openDevTools({ mode: 'detach' });
     }
+    onLoad?.();
 
   });
 

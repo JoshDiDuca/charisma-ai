@@ -16,10 +16,10 @@ makeAppWithSingleInstanceLock(async () => {
   // Setup IPC handlers
   initializeHandlers();
 
-  const splashWindow = await SplashWindow();
+  const splashWindow = await SplashWindow(() =>
     performSplashLoading().then(() => {
       splashWindow.hide();
       makeAppSetup(MainWindow)
     })
-
+  );
 })

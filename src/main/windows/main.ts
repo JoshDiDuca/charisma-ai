@@ -1,3 +1,6 @@
+// Add contextMenu boolean switch at the top
+let contextMenu = false; // Boolean switch to enable/disable context tray menu
+
 import { app, BrowserWindow, session, Tray, Menu, nativeImage } from 'electron'
 import path, { join } from 'node:path'
 import log from 'electron-log';
@@ -10,6 +13,13 @@ import { logError, logInfo } from 'main/services/log/logService';
 export let mainWindow: Electron.BrowserWindow | null = null
 let tray: Tray | null = null;
 let isQuittingApp = false;
+
+// Function to toggle contextMenu setting
+export function toggleContextMenu(enable?: boolean) {
+  contextMenu = enable !== undefined ? enable : !contextMenu;
+  setupTray();
+  return contextMenu;
+}
 
 export async function MainWindow() {
 
@@ -52,6 +62,11 @@ export async function MainWindow() {
 
   // Modify close behavior to hide instead of close
   window.on('close', (event) => {
+    if(!contextMenu) {
+      isQuittingApp = true;
+      app.quit();
+    }
+
     if (!isQuittingApp) {
       event.preventDefault();
       window.hide();
@@ -70,64 +85,77 @@ export async function MainWindow() {
 }
 
 function setupTray() {
-  try {
-    let iconPath: string;
-    if (app.isPackaged) {
-      iconPath = join(process.resourcesPath, 'icon.png');
-    } else {
-      iconPath = join(app.getAppPath(), 'resources', 'icon.png');
+  // Check if tray should be removed
+  if (!contextMenu) {
+    if (tray) {
+      tray.destroy();
+      tray = null;
+      logInfo('Tray icon removed due to contextMenu setting');
     }
+    return;
+  }
 
-    const icon = nativeImage.createFromPath(iconPath);
-    tray = new Tray(icon);
-    tray.setToolTip(displayName);
+  // Only proceed with setup if contextMenu is true and tray doesn't exist
+  if (!tray) {
+    try {
+      let iconPath: string;
+      if (app.isPackaged) {
+        iconPath = join(process.resourcesPath, 'icon.png');
+      } else {
+        iconPath = join(app.getAppPath(), 'resources', 'icon.png');
+      }
 
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: 'Show App',
-        click: () => {
-          if (mainWindow) {
+      const icon = nativeImage.createFromPath(iconPath);
+      tray = new Tray(icon);
+      tray.setToolTip(displayName);
+
+      const contextMenu = Menu.buildFromTemplate([
+        {
+          label: 'Show App',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.show();
+              mainWindow.focus();
+            }
+          }
+        },
+        {
+          label: "Dev Tools",
+          click: () => {
+            if (mainWindow) {
+              mainWindow.webContents.openDevTools({ mode: 'detach' })
+            }
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Exit',
+          click: () => {
+            isQuittingApp = true;
+            app.quit();
+          }
+        }
+      ]);
+
+      // Set the context menu
+      tray.setContextMenu(contextMenu);
+
+      // Handle left-click on the tray icon
+      tray.on('click', () => {
+        if (mainWindow) {
+          if (mainWindow.isVisible()) {
+            mainWindow.hide();
+          } else {
             mainWindow.show();
             mainWindow.focus();
           }
         }
-      },
-      {
-        label: "Dev Tools",
-        click: () => {
-          if (mainWindow) {
-            mainWindow.webContents.openDevTools({ mode: 'detach' })
-          }
-        }
-      },
-      { type: 'separator' },
-      {
-        label: 'Exit',
-        click: () => {
-          isQuittingApp = true;
-          app.quit();
-        }
-      }
-    ]);
+      });
 
-    // Set the context menu
-    tray.setContextMenu(contextMenu);
-
-    // Handle left-click on the tray icon
-    tray.on('click', () => {
-      if (mainWindow) {
-        if (mainWindow.isVisible()) {
-          mainWindow.hide();
-        } else {
-          mainWindow.show();
-          mainWindow.focus();
-        }
-      }
-    });
-
-    logInfo('Tray icon created successfully');
-  } catch (error) {
-    logError(`Failed to create tray icon: ${error}`);
+      logInfo('Tray icon created successfully');
+    } catch (error) {
+      logError(`Failed to create tray icon: ${error}`);
+    }
   }
 }
 
@@ -141,4 +169,4 @@ app.on('will-quit', () => {
   if (tray) {
     tray.destroy();
   }
-});
+})

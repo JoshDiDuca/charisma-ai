@@ -7,6 +7,7 @@ export interface Message {
   text: string;
   userInput?: string;
   timestamp: number;
+  incomplete?: boolean;
 }
 
 export interface Conversation {

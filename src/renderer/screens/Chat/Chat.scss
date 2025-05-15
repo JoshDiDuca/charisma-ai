@@ -21,3 +21,17 @@
 .markdown-content pre {
   white-space: pre-wrap;
 }
+
+/* Add to your Chat.scss file */
+.drag-active {
+  outline: none;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

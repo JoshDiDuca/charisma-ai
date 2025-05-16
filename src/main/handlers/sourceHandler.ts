@@ -13,8 +13,8 @@ export class SourceHandlers {
   }
 
   @IpcHandle(IPC.SOURCE.ADD_SOURCES)
-  async addSources(input: SourceInput[], model: string, conversationId: string | undefined, systemMessage: string | undefined) {
-    return addSources(input, model, conversationId, systemMessage)
+  async addSources(input: SourceInput[], model: string, pendingAttachment: boolean | undefined, conversationId: string | undefined, systemMessage: string | undefined) {
+    return addSources(input, model, pendingAttachment, conversationId, systemMessage)
   }
 
   @IpcHandle(IPC.SOURCE.QUERY)

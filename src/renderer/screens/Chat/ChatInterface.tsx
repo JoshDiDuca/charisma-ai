@@ -10,8 +10,13 @@ import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
 import { useChatMessages } from './useChatMessages';
 import { usePasteHandler } from './usePasteHandler';
+import { IPC } from 'shared/constants';
+import { SourceInput } from 'shared/types/Sources/Source';
+import { Conversation } from 'shared/types/Conversation';
 
 export interface ChatInterfaceProps {}
+
+const { App } = window;
 
 export const ChatInterface = ({}: ChatInterfaceProps) => {
   const {
@@ -50,20 +55,26 @@ export const ChatInterface = ({}: ChatInterfaceProps) => {
 
   // Handle file attachments
   const handleAttach = async (file: File) => {
-    // Implement your file attachment logic here
-    console.log(`Handling file attachment: ${file.name}`);
-    // await App.invoke(IPC.ATTACHMENTS.ATTACH_FILE, file);
+      App.invoke(IPC.SOURCE.ADD_SOURCES,
+        [{
+          type: "File",
+          file: await file.arrayBuffer(),
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type
+        } as SourceInput], model, true, conversation?.id, undefined)
+        .then((newConversation: Conversation) =>
+          setConversation(newConversation));
   };
 
   const {
-    attachments,
-    removeAttachment,
     inputRef,
     handlePaste,
     handleDragEnter,
     handleDragOver,
     handleDragLeave,
     handleDrop,
+    removeAttachment,
     isDragging
   } = usePasteHandler({
     inputValue,
@@ -135,7 +146,7 @@ export const ChatInterface = ({}: ChatInterfaceProps) => {
           isVoiceLoading={isVoiceLoading}
           handleMicClick={handleMicClick}
           inputRef={inputRef}
-          attachments={attachments}
+          attachments={conversation?.pendingAttachments ?? []}
           onAttachmentRemove={removeAttachment}
           handleAttachmentClick={handleAttachmentClick}
         />

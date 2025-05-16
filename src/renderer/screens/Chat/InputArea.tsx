@@ -4,6 +4,7 @@ import { Button, Input } from '@heroui/react';
 import { FaMicrophone, FaPaperclip, FaSpinner, FaStop } from 'react-icons/fa';
 import { FileAttachment } from './usePasteHandler';
 import { AttachmentList } from './Attachment';
+import { Source } from 'shared/types/Sources/Source';
 
 interface InputAreaProps {
   inputValue: string;
@@ -15,7 +16,7 @@ interface InputAreaProps {
   handleMicClick: () => void;
   inputRef: React.RefObject<HTMLInputElement | null>;
   handlePaste?: (e: React.ClipboardEvent<HTMLDivElement>) => void;
-  attachments: FileAttachment[];
+  attachments: Source[];
   onAttachmentRemove: (index: number) => void;
   handleAttachmentClick?: () => void;
 }

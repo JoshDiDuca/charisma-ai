@@ -1,32 +1,41 @@
-import { DirectorySourceInput,  FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/Source";
-import { addSourcesToConversation } from "../ollama/ollamaService.conversation";
+import { DirectorySourceInput,  FilePathSourceInput, FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/Source";
+import { addSourcesToConversation, conversationsDir, getOrCreateConversation } from "../ollama/ollamaService.conversation";
 import { getDirectoryInfo, getFileInfo, getFileTree } from "../files/fileService";
+import { v4 as uuidv4 } from 'uuid';
 import { Conversation } from "shared/types/Conversation";
+import fs from "fs";
+import path from "path";
 
 export const addSources = async (
   input: SourceInput[],
   model: string,
-  conversationId: string | undefined,
-  systemMessage: string | undefined
+  pendingAttachment?: boolean,
+  conversationId?: string,
+  systemMessage?: string
 ): Promise<Conversation> => {
+  const conversation = await getOrCreateConversation(model, conversationId, systemMessage);
+
   const sources: Source[] = [];
   for (const sourceInput of input) {
     switch (sourceInput.type) {
       case "Directory":
-        sources.push(await getDirectorySource(sourceInput));
+        sources.push(await getDirectorySource(sourceInput, conversation));
+        break;
+      case "FilePath":
+        sources.push(await getFilePathSource(sourceInput, conversation));
         break;
       case "File":
-        sources.push(await getFileSource(sourceInput));
+        sources.push(await getFileSource(sourceInput, conversation));
         break;
       case "Web":
-        sources.push(await getWebSource(sourceInput));
+        sources.push(await getWebSource(sourceInput, conversation));
+        break;
     }
   }
-  const conversation = await addSourcesToConversation(model, conversationId, systemMessage, sources);
-  return conversation;
+  return await addSourcesToConversation(model, conversation.id, systemMessage, sources, pendingAttachment);
 }
 
-export const getDirectorySource = async (sourceInput: DirectorySourceInput): Promise<Source> => {
+export const getDirectorySource = async (sourceInput: DirectorySourceInput, conversation: Conversation): Promise<Source> => {
   const stats = await getDirectoryInfo(sourceInput.directoryPath);
   const fileTree = await getFileTree(sourceInput.directoryPath)
 
@@ -37,7 +46,22 @@ export const getDirectorySource = async (sourceInput: DirectorySourceInput): Pro
   } as Source;
 }
 
-export const getFileSource = async (sourceInput: FileSourceInput): Promise<Source> => {
+export const getFileSource = async (sourceInput: FileSourceInput, conversation: Conversation): Promise<Source> => {
+  const arrayBuffer = sourceInput.file;
+  const buffer = Buffer.from(arrayBuffer);
+
+  const filePath = path.join(conversationsDir, `${conversation.id}`, sourceInput.fileName || `att_${uuidv4()}.${sourceInput.fileType?.replace("/", "") ?? ""}`);
+  // Write to disk
+  await fs.promises.writeFile(filePath, buffer);
+
+  return {
+    ...sourceInput,
+    savedFilePath: filePath,
+    file: undefined
+  } as Source;
+}
+
+export const getFilePathSource = async (sourceInput: FilePathSourceInput, conversation: Conversation): Promise<Source> => {
   const stats = await getFileInfo(sourceInput.filePath);
 
   return {
@@ -46,7 +70,7 @@ export const getFileSource = async (sourceInput: FileSourceInput): Promise<Sourc
   } as Source;
 }
 
-export const getWebSource = async (sourceInput: WebSourceInput): Promise<Source> => {
+export const getWebSource = async (sourceInput: WebSourceInput, conversation: Conversation): Promise<Source> => {
   return {
     ...sourceInput
   } as Source;

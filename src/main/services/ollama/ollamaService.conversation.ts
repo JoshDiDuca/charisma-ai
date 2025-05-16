@@ -14,7 +14,7 @@ import { Source } from 'shared/types/Sources/Source';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 import { getVectorStorePath } from './ollamaService.embedding';
 
-const conversationsDir = path.join(app.getPath('userData'), 'conversations');
+export const conversationsDir = path.join(app.getPath('userData'), 'conversations');
 
 // Ensure conversations directory exists
 if (!fs.existsSync(conversationsDir)) {
@@ -74,8 +74,12 @@ export const getAllConversations = async (): Promise<Conversation[]> => {
 export const deleteConversation = async (conversationId: string): Promise<boolean> => {
   try {
     const filePath = path.join(conversationsDir, `${conversationId}.json`);
+    const fileAttachmentsPath = path.join(conversationsDir, `${conversationId}`);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
+    }
+    if (fs.existsSync(fileAttachmentsPath)) {
+      fs.unlinkSync(fileAttachmentsPath);
     }
     const databaseFolder = getVectorStorePath(conversationId);
     if (fs.existsSync(databaseFolder) && fs.lstatSync(databaseFolder).isDirectory()) {
@@ -146,14 +150,19 @@ export const addSourcesToConversation = async (
   model: string,
   conversationId: string | undefined,
   systemMessage: string | undefined,
-  sources: Source[]
+  sources: Source[],
+  pendingAttachment?: boolean
 ): Promise<Conversation> => {
   const conversation = await getOrCreateConversation(model, conversationId, systemMessage);
 
-  return saveConversation({
+  const newConversation = {
     ...conversation,
-    sources: [...conversation.sources ?? [], ...sources]
-  });
+    ...(pendingAttachment ?
+      { pendingAttachments: [...conversation.pendingAttachments ?? [], ...sources] } :
+      { sources: [...conversation.sources ?? [], ...sources] })
+  } as Conversation;
+
+  return saveConversation(newConversation);
 };
 
 export const generateConversationTitle = async (

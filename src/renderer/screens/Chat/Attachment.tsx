@@ -1,9 +1,10 @@
 import { FileAttachment } from './usePasteHandler';
 import { Button, Chip } from '@heroui/react';
 import { FaTimes } from 'react-icons/fa';
+import { Source } from 'shared/types/Sources/Source';
 
 interface AttachmentProps {
-  attachment: FileAttachment;
+  attachment: Source;
   onRemove: () => void;
 }
 
@@ -24,13 +25,24 @@ export const Attachment: React.FC<AttachmentProps> = ({ attachment, onRemove }) 
         </Button>
       }
     >
-      {attachment.name} ({Math.round(attachment.size / 1024)} KB)
+      {(() => {
+        switch(attachment.type){
+          case "Web":
+          return `${attachment.title}`
+          case "File":
+          case "FilePath":
+          return `${attachment.fileType} (${Math.round(attachment.fileSize / 1024)} KB)`
+          case "Directory":
+          return `${attachment.directoryName} ${attachment.directorySize ? `(${Math.round(attachment.directorySize / 1024)} KB)`: ""}`
+        }
+      })()}
+
     </Chip>
   );
 };
 
 interface AttachmentListProps {
-  attachments: FileAttachment[];
+  attachments: Source[];
   onRemove: (index: number) => void;
 }
 
@@ -41,7 +53,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({ attachments, onR
     <div className="flex flex-wrap mt-2">
       {attachments.map((attachment, index) => (
         <Attachment
-          key={`${attachment.name}-${index}`}
+          key={`${attachment.type}-${index}`}
           attachment={attachment}
           onRemove={() => onRemove(index)}
         />

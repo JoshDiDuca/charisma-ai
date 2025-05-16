@@ -9,7 +9,7 @@ import {
   Select,
   SelectItem
 } from '@heroui/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Tree, TreeNode } from './FileTree';
 import { OllamaModel } from 'shared/types/OllamaModel';
 import {
@@ -24,14 +24,12 @@ import {
   FaTimes,
   FaPaperclip
 } from 'react-icons/fa';
-import { AppStatus } from 'shared/types/AppStatus';
 import { Conversation } from 'shared/types/Conversation';
 import { IPC } from 'shared/constants';
-import { isNil, set } from 'lodash';
 import { CustomSelect } from '../Common/Select';
 import { MultiButton } from '../MultiButton';
 import SearchModal from 'renderer/screens/Sources/Web/Search';
-import { DirectorySourceInput, SourceInput } from 'shared/types/Sources/Source';
+import { SourceInput } from 'shared/types/Sources/Source';
 import { FileItem } from './FileItem';
 import { useChatBot } from 'renderer/store/conversationProvider';
 import { WebSearch } from 'shared/types/Sources/WebSearch';
@@ -72,7 +70,7 @@ export const Sidebar = ({ }: SidebarProps) => {
     App.invoke(IPC.SOURCE.ADD_SOURCES,
       [
         { type: "Directory", directoryPath: folder } as SourceInput
-      ], model, conversation?.id, undefined)
+      ], model, false, conversation?.id, undefined)
       .then((newConversation: Conversation) =>
         setConversation(newConversation));
   };
@@ -84,7 +82,7 @@ export const Sidebar = ({ }: SidebarProps) => {
         url: item.url,
         description: item.description,
         title: item.title
-      }) as SourceInput), model, conversation?.id, undefined)
+      }) as SourceInput), model, false, conversation?.id, undefined)
       .then((newConversation: Conversation) =>
         setConversation(newConversation));
   };
@@ -294,9 +292,8 @@ export const Sidebar = ({ }: SidebarProps) => {
                         return source.fileTree && <Tree node={source.fileTree} />;
                       case 'Web':
                         return (<div><FileItem icon={'🌍'} id={source.url} name={source.title} depth={0} isExpandable={false} isExpanded={false} /></div>)
-                      case 'File':
-                      default:
-                        return <div className="text-sm text-gray-500">{source.type} not yet implemented</div>;
+                      case 'FilePath':
+                        return (<div><FileItem icon={'🗃️'} id={source.filePath} name={source.fileName} depth={0} isExpandable={false} isExpanded={false} /></div>)
                     }
                   })
                 }

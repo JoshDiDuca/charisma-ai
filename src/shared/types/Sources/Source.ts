@@ -10,6 +10,14 @@ export type WebSource = {
 };
 
 export type FileSource = {
+  file?: ArrayBuffer;
+  savedFilePath: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+}
+
+export type FilePathSource = {
   filePath: string;
   fileName: string;
   fileNameWithoutExtension: string;
@@ -28,16 +36,19 @@ export type DirectorySource = {
 
 export type Source =
   | ({ type: "Directory" } & DirectorySource)
+  | ({ type: "FilePath" } & FilePathSource)
   | ({ type: "File" } & FileSource)
   | ({ type: "Web" } & WebSource);
 
 export type SourceInput =
   | ({ type: "Directory" } & DirectorySourceInput)
+  | ({ type: "FilePath" } & FilePathSourceInput)
   | ({ type: "File" } & FileSourceInput)
   | ({ type: "Web" } & WebSourceInput);
 
 export type DirectorySourceInput = RequireKey<DirectorySource, "directoryPath">;
-export type FileSourceInput = RequireKey<FileSource, "filePath">;
+export type FilePathSourceInput = RequireKey<FilePathSource, "filePath">;
+export type FileSourceInput = RequireKey<FileSource, "file">;
 export type WebSourceInput = RequireKey<WebSource, "url">;
 
 export type SourceType = Source["type"];

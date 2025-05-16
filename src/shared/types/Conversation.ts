@@ -16,6 +16,7 @@ export interface Conversation {
   model: string;
   messages: Message[];
   sources: Source[];
+  pendingAttachments?: Source[];
   createdAt: number;
   updatedAt: number;
 }

@@ -42,12 +42,7 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 ## ⚙️ Development
 
 ### Prerequisites Checklist
-
 - [ ] Node.js 18+ ([download](https://nodejs.org/))
-
-Binaries placed them into their respective folder in: resources/win/bin/
-- [ ] Piper ([Link](https://github.com/rhasspy/piper/releases)) 
-- [ ] Ollama ([Link](https://github.com/ollama/ollama/releases)) 
 
 ```bash
 # 1. Clone repository
@@ -57,10 +52,7 @@ cd charisma-ai
 # 2. Install dependencies
 pnpm install
 
-# 3. Download the piper and ollama binaries and place them into their respective folder in: resources/win/bin/ 
-
-
-# 4. Start dev application
+# 3. Start dev application
 pnpm dev
 ```
 

@@ -31,7 +31,7 @@ export const Attachment: React.FC<AttachmentProps> = ({ attachment, onRemove }) 
           return `${attachment.title}`
           case "File":
           case "FilePath":
-          return `${attachment.fileType} (${Math.round(attachment.fileSize / 1024)} KB)`
+          return `${attachment.fileName} (${Math.round(attachment.fileSize / 1024)} KB)`
           case "Directory":
           return `${attachment.directoryName} ${attachment.directorySize ? `(${Math.round(attachment.directorySize / 1024)} KB)`: ""}`
         }

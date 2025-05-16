@@ -50,7 +50,11 @@ export const getFileSource = async (sourceInput: FileSourceInput, conversation: 
   const arrayBuffer = sourceInput.file;
   const buffer = Buffer.from(arrayBuffer);
 
-  const filePath = path.join(conversationsDir, `${conversation.id}`, sourceInput.fileName || `att_${uuidv4()}.${sourceInput.fileType?.replace("/", "") ?? ""}`);
+  const conversationDataPath = path.join(conversationsDir, `${conversation.id}`);
+  const filePath = path.join(conversationDataPath, sourceInput.fileName || `att_${uuidv4()}.${sourceInput.fileType?.replace("/", "") ?? ""}`);
+  if (!fs.existsSync(conversationDataPath)) {
+    fs.mkdirSync(conversationDataPath, { recursive: true });
+  }
   // Write to disk
   await fs.promises.writeFile(filePath, buffer);
 

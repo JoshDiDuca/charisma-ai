@@ -54,11 +54,11 @@ export const ChatInterface = ({}: ChatInterfaceProps) => {
   } = useVoiceRecorder((transcribedText) => setInputValue(transcribedText));
 
   // Handle file attachments
-  const handleAttach = async (file: File) => {
+  const handleAttach = async (file: File, data: ArrayBuffer) => {
       App.invoke(IPC.SOURCE.ADD_SOURCES,
         [{
           type: "File",
-          file: await file.arrayBuffer(),
+          file: data,
           fileName: file.name,
           fileSize: file.size,
           fileType: file.type
@@ -90,24 +90,33 @@ export const ChatInterface = ({}: ChatInterfaceProps) => {
     }
   };
 
-  // Optional file picker handler
-  const handleAttachmentClick = () => {
-    // Implement file picker logic here if needed
-    // For example:
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.onchange = (e) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (files && files.length > 0) {
-        Array.from(files).forEach(file => {
-          handleAttach(file);
-        });
-      }
-    };
-    input.click();
-  };
+const handleAttachmentClick = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.onchange = async (e) => {
+    const files = (e.target as HTMLInputElement).files;
+    if (files && files.length > 0) {
+      for (const file of Array.from(files)) {
+        try {
+          // Read file data using FileReader
+          const data = await new Promise<ArrayBuffer>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as ArrayBuffer);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+          });
 
+          // Pass both file and data to handleAttach
+          await handleAttach(file, data);
+        } catch (error) {
+          console.error(`Error processing file ${file.name}:`, error);
+        }
+      }
+    }
+  };
+  input.click();
+};
   return (
     <div
       className={`h-full w-full ${isDragging ? 'drag-active' : ''}`}

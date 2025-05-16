@@ -171,7 +171,8 @@ export const isDocFile = async (filePath: string): Promise<boolean> => {
   }
 };
 
-export async function shouldSkipFile(filePath: string, stats: Stats): Promise<boolean> {
+export async function shouldSkipFile(filePath: string, stats?: Stats): Promise<boolean> {
+  stats = (stats ?? await fs.stat(filePath));
   if (stats.isDirectory()) {
     return true;
   }

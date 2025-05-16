@@ -31,9 +31,35 @@ if (!fs.existsSync(STORAGE_PATH)) {
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 
-function generatePrompt(prompt: string, data: ResponseSourceDocument[]): string {
-  const context = data.map(d => d.content).filter(Boolean).join('\n');
-  return `Context: ${context}\n\nQuestion: ${prompt}`;
+async function generatePrompt(prompt: string, data: ResponseSourceDocument[], attachments?: Source[]): Promise<string> {
+  const messageParts : string[] = [];
+  if(data.length > 0) {
+    const context = data.map(d => d.content).filter(Boolean).join('\n');
+    messageParts.push(`Context: ${context}`)
+  }
+
+  messageParts.push(`Question: ${prompt}`)
+
+  if(attachments && attachments.length > 0) {
+    const attachmentText: string[] = [];
+    for (const attachment of attachments) {
+      switch (attachment.type) {
+        case "File":
+            if(!await shouldSkipFile(attachment.savedFilePath)){
+              const text = await readFileByExtension(attachment.savedFilePath);
+              if(text){
+                attachmentText.push(text);
+              }
+            }
+          break;
+      }
+    }
+    if(attachmentText.length){
+      messageParts.push(`ATTACHED: ${attachmentText.join(`\n`)}`)
+    }
+  }
+
+  return messageParts.join(`\n`);
 }
 
 export const getInstalledEmbeddingModels = async (): Promise<string[]> => {
@@ -260,6 +286,26 @@ export async function getOllamaEmbeddingRetrieve(prompt: string, vectorStore: HN
   }));
 }
 
+interface EmbeddingSource {
+  content: string;
+  metadata: Record<string, any>;
+  score: number;
+}
+
+export async function getEmbeddingSources(
+  message: string,
+  embeddingModel: string,
+  conversationId: string,
+  conversationSources: any[]
+): Promise<EmbeddingSource[]> {
+  const vectorStore = await initializeVectorStore(embeddingModel, conversationId);
+
+  await loadOllamaEmbedding(conversationSources, vectorStore);
+  logInfo('Retrieving relevant documents for prompt.');
+
+  return await getOllamaEmbeddingRetrieve(message, vectorStore);
+}
+
 export async function sendMessageWithEmbedding(
   message: string,
   model: string,
@@ -268,40 +314,31 @@ export async function sendMessageWithEmbedding(
 ) {
   try {
     const conversation = await getOrCreateConversation(model, conversationId);
+    const sources: EmbeddingSource[] = [];
 
-    if (conversation.sources.length > 0 && (!embeddingModel || isNil(embeddingModel))) {
-      throw new Error("No embedding model selected");
-    }
-
-    let finalPrompt = message;
-    const sources: {
-      content: string;
-      metadata: Record<string, any>;
-      score: number;
-    }[] = [];
-
-    if (conversation.sources.length > 0) {
-      if (!embeddingModel || isNil(embeddingModel)) {
+    // Check if we need to use embeddings
+    if (conversation.sources.length > 0 || (conversation.pendingAttachments?.length || 0) > 0) {
+      if (isNil(embeddingModel)) {
         throw new Error("No embedding model selected");
       }
 
-      const vectorStore = await initializeVectorStore(embeddingModel, conversation.id);
+      // Get relevant sources using embeddings
+      const retrievedSources = await getEmbeddingSources(
+        message,
+        embeddingModel,
+        conversation.id,
+        conversation.sources
+      );
+      sources.push(...retrievedSources);
 
-
-      await loadOllamaEmbedding(conversation.sources, vectorStore);
-
-      logInfo('Retrieving relevant documents for prompt.');
-
-      const sourcesToAdd = await getOllamaEmbeddingRetrieve(message, vectorStore);
-
-      sources.push(...sourcesToAdd);
-
-      finalPrompt = generatePrompt(message, sources);
       logInfo(`Generated prompt with context from ${sources.length} documents.`);
     } else {
-      logInfo('No relevant documents found, sending original message.');
+      logInfo('No sources available for embedding, sending original message.');
     }
 
+    const finalPrompt = await generatePrompt(message, sources, conversation.pendingAttachments);
+
+    // Send the message
     logInfo(`Sending message to model ${model}.`);
     const response = await sendMessage({
       conversationId: conversation.id,

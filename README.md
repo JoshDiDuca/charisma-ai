@@ -6,7 +6,7 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 
 ---
 
-## 🖼️ Screenshots
+## 🖼️ Screenshots - (Outdated) 
 ![Screenshot](screenshots/Screenshot.png)
 - Charisma explaining it's own code.
 --

@@ -97,13 +97,15 @@ The built apps will be available on the `release` folder.
 - [x] Web RAG queries
 - [x] Switch to hnswlib from ChromaDB (licensing and more flexible)
 - [x] Automatically download Ollama and dependencies
-- [ ] Web RAG query pdf/file download support
+- [x] Full download for models instead of Ollama pulling 
+- [x] Message attachments
+- [ ] Web RAG query directly reading file urls like .pdf etc
 - [ ] Next prompt suggestions
 - [ ] Reasoning model "thinking" support
-- [ ] Full download for models instead of Ollama pulling 
 - [ ] Hugging face
 - [ ] Ability to add custom models
 - [ ] Relational database queries
+- [ ] Revisit TTS and fix that
 - [ ] Translate results
 - [ ] LlamaIndex full integration
 - [ ] JSON "Tools/Agents"

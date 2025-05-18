@@ -177,6 +177,14 @@ export const Sidebar = ({ }: SidebarProps) => {
             </div>
 
             <div
+              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'sources' ? 'bg-blue-100' : ''}`}
+              onClick={() => setActiveView(activeView === 'sources' ? null : 'sources')}
+            >
+              <FaPaperclip className="text-xl" />
+              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Sources</span>}
+            </div>
+
+            <div
               className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'conversations' ? 'bg-blue-100' : ''}`}
               onClick={() => setActiveView(activeView === 'conversations' ? null : 'conversations')}
             >
@@ -184,13 +192,6 @@ export const Sidebar = ({ }: SidebarProps) => {
               {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Conversations</span>}
             </div>
 
-            <div
-              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'sources' ? 'bg-blue-100' : ''}`}
-              onClick={() => setActiveView(activeView === 'sources' ? null : 'sources')}
-            >
-              <FaPaperclip className="text-xl" />
-              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Sources</span>}
-            </div>
           </div>
 
           {/* Bottom Settings */}

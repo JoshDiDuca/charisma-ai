@@ -17,10 +17,21 @@ const { App } = window;
 
 type SidebarOptionKeys = 'conversations' | 'sources' | 'settings' | 'ai-model';
 
+type SidebarOption = {
+  [page: string]: {
+    label: string;
+    icon: React.ReactNode;
+    element: React.ReactNode;
+    sortOrder: number;
+    hideOthers?: boolean;
+    bottom?: boolean;
+  }
+};
+
 export interface SidebarProps { }
 
 export const Sidebar = ({ }: SidebarProps) => {
-  const [activeView, setActiveView] = useState<SidebarOptionKeys | null>(null);
+  const [activeViews, setActiveViews] = useState<SidebarOptionKeys[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
@@ -109,8 +120,9 @@ export const Sidebar = ({ }: SidebarProps) => {
   }, [isDragging]);
 
 
-  const SidebarOptions: { [page: string]: { label: string; icon: React.ReactNode; element: React.ReactNode; bottom?: boolean } } = {
-    ['ai-model']: {
+  const SidebarOptions: SidebarOption = {
+    AiModel: {
+      sortOrder: 0,
       label: "AI Settings",
       icon: <FaSlidersH className="text-xl" />,
       element: <AIModelView
@@ -121,7 +133,8 @@ export const Sidebar = ({ }: SidebarProps) => {
         downloadModel={downloadModel}
       />
     },
-    ['sources']: {
+    Sources: {
+      sortOrder: 1,
       label: "Sources",
       icon: <FaPaperclip className="text-xl" />,
       element: <>
@@ -137,9 +150,12 @@ export const Sidebar = ({ }: SidebarProps) => {
         />
       </>
     },
-    ['conversations']: {
+    Conversations: {
+      sortOrder: 2,
       label: "Sources",
       icon: <FaComments className="text-xl" />,
+      bottom: true,
+      hideOthers: true,
       element: <ConversationsView
         conversations={conversations}
         conversation={conversation}
@@ -149,14 +165,28 @@ export const Sidebar = ({ }: SidebarProps) => {
         handleDeleteConversation={handleDeleteConversation}
       />
     },
-    ['settings']: {
+    Settings: {
+      sortOrder: 3,
       label: "Settings",
       icon: <FaCog className="text-xl" />,
       bottom: true,
+      hideOthers: true,
       element: <SettingsView
         status={status}
       />
     },
+  }
+
+  const openOrCloseTab = (key: SidebarOptionKeys) => {
+    if(activeViews.includes(key)){
+      setActiveViews((views) => views.filter(v => v !== key))
+    } else {
+      if(SidebarOptions[key].hideOthers){
+        setActiveViews([key]);
+      } else {
+        setActiveViews((views) => [...views.filter(v => !SidebarOptions[v].hideOthers), key]);
+      }
+    }
   }
 
   return (
@@ -189,8 +219,9 @@ export const Sidebar = ({ }: SidebarProps) => {
             {(Object.keys(SidebarOptions) as SidebarOptionKeys[]).map(sidebarOption => SidebarOptions[sidebarOption].bottom ? null : (
 
               <div
-                className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'ai-model' ? 'bg-blue-100' : ''}`}
-                onClick={() => setActiveView(activeView === sidebarOption ? null : sidebarOption)}
+                className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer`}
+                style={{ color: (activeViews.includes(sidebarOption)) ? "#4292c6" : "black" }}
+                onClick={() => openOrCloseTab(sidebarOption)}
               >
                 {SidebarOptions[sidebarOption].icon}
                 {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>{SidebarOptions[sidebarOption].label}</span>}
@@ -203,8 +234,9 @@ export const Sidebar = ({ }: SidebarProps) => {
             {(Object.keys(SidebarOptions) as SidebarOptionKeys[]).map(sidebarOption => !SidebarOptions[sidebarOption].bottom ? null : (
 
               <div
-                className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'ai-model' ? 'bg-blue-100' : ''}`}
-                onClick={() => setActiveView(activeView === sidebarOption ? null : sidebarOption)}
+                className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer`}
+                style={{ color: (activeViews.includes(sidebarOption)) ? "#4292c6" : "black" }}
+                onClick={() => openOrCloseTab(sidebarOption)}
               >
                 {SidebarOptions[sidebarOption].icon}
                 {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>{SidebarOptions[sidebarOption].label}</span>}
@@ -216,12 +248,14 @@ export const Sidebar = ({ }: SidebarProps) => {
       </Card>
 
       {/* Main Content Area with Drag Resizing */}
-      {activeView && (
+      {activeViews.length > 0  && (
         <div
           style={{
             position: 'relative',
             width: `${panelWidth}px`,
-            transition: isDragging ? 'none' : 'width 0.2s ease'
+            transition: isDragging ? 'none' : 'width 0.2s ease',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           {/* Drag Handle */}
@@ -239,8 +273,13 @@ export const Sidebar = ({ }: SidebarProps) => {
             onMouseDown={startDrag}
           />
 
-          {SidebarOptions[activeView].element}
-
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {activeViews.toSorted((a,b) => SidebarOptions[a].sortOrder - SidebarOptions[b].sortOrder).map(a => (
+              <div key={a}>
+                {SidebarOptions[a].element}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

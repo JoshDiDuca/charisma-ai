@@ -28,7 +28,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const { text: statusText, color: statusColor } = getStatusDisplay();
 
   return (
-    <Card className="p-4 rounded-none" style={{ height: "100%", minWidth: "400px" }}>
+    <div className="p-4 rounded-none" style={{ height: "100%", minWidth: "400px" }}>
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-bold">Settings</h2>
         <div className="inline-flex items-center mb-4">
@@ -37,6 +37,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </span>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };

@@ -1,49 +1,31 @@
-import {
-  Navbar,
-  NavbarMenu,
-  NavbarMenuItem,
-  NavbarMenuToggle,
-  Button,
-  Card,
-  Badge,
-  Select,
-  SelectItem
-} from '@heroui/react';
-import { useState } from 'react';
-import { Tree, TreeNode } from './FileTree';
-import { OllamaModel } from 'shared/types/OllamaModel';
-import {
-  FaComments,
-  FaSearch,
-  FaCog,
-  FaFolder,
-  FaSpinner,
-  FaPlus,
-  FaTrash,
-  FaBars,
-  FaTimes,
-  FaPaperclip
-} from 'react-icons/fa';
+import { Card } from '@heroui/react';
+import { useState, useRef, useEffect } from 'react';
+import { FaComments, FaCog, FaPaperclip, FaRobot, FaSlidersH } from 'react-icons/fa';
 import { Conversation } from 'shared/types/Conversation';
 import { IPC } from 'shared/constants';
-import { CustomSelect } from '../Common/Select';
-import { MultiButton } from '../MultiButton';
-import SearchModal from 'renderer/screens/Sources/Web/Search';
 import { SourceInput } from 'shared/types/Sources/Source';
-import { FileItem } from './FileItem';
 import { useChatBot } from 'renderer/store/conversationProvider';
 import { WebSearch } from 'shared/types/Sources/WebSearch';
-import logo from "./../../public/logo.png"
+import logo from "./../../public/logo.png";
+import { ConversationsView } from './ConversationsView';
+import { SourcesView } from './SourceView';
+import { SettingsView } from './Settings';
+import { AIModelView } from './AIModelView';
+import SearchModal from 'renderer/screens/Sources/Web/Search';
 
 const { App } = window;
 
 export interface SidebarProps { }
 
 export const Sidebar = ({ }: SidebarProps) => {
-  const [activeView, setActiveView] = useState<'conversations' | 'sources' | 'settings' | 'search'>('conversations');
+  const [activeView, setActiveView] = useState<'conversations' | 'sources' | 'settings' | 'ai-model' | 'search' | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  const [panelWidth, setPanelWidth] = useState(400);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartXRef = useRef(0);
+  const dragStartWidthRef = useRef(0);
 
   const {
     model,
@@ -56,12 +38,10 @@ export const Sidebar = ({ }: SidebarProps) => {
     conversations,
     loadModels,
     loadEmbeddingModels,
-    loadConversations,
     status,
     availableModels,
     availableEmbeddingModels
   } = useChatBot();
-
 
   const handleSelectFolder = async () => {
     const folder = await App.invoke(IPC.SOURCE.SELECT_FOLDER);
@@ -110,7 +90,6 @@ export const Sidebar = ({ }: SidebarProps) => {
         }
         const newConversations = conversations?.filter(conv => conv.id !== id) ?? []
         setConversations(newConversations);
-        //If no conversations, new conversation
         if (!newConversations.length) {
           setIsCreatingConversation(true);
           setConversation(undefined);
@@ -133,35 +112,40 @@ export const Sidebar = ({ }: SidebarProps) => {
     }
   };
 
-  const getStatusDisplay = () => {
-    if (typeof status === 'string') {
-      return {
-        text: status,
-        color: status === 'Error' ? 'red' : 'green',
-      };
-    } else {
-      const noDB = status.Database === 'Stopped';
-      const runningText = `Running (${status.GPU ? 'GPU' : 'CPU'})`;
-      const embeddingText = noDB ? ' - No Embedding' : '';
-      return {
-        text: runningText + embeddingText,
-        color: noDB ? 'orange' : 'green',
-      };
+  const startDrag = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    dragStartXRef.current = e.clientX;
+    dragStartWidthRef.current = panelWidth;
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        const deltaX = e.clientX - dragStartXRef.current;
+        const newWidth = Math.max(400, dragStartWidthRef.current + deltaX);
+        setPanelWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
     }
-  };
 
-  const { text: statusText, color: statusColor } = getStatusDisplay();
-
-  const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString();
-  };
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   return (
     <div className="flex h-screen">
       {/* Collapsible Sidebar */}
-      <Card
-        className={`rounded-none`}
-      >
+      <Card className="rounded-none">
         <div className="flex flex-col h-full p-2">
           {/* Top Section */}
           <div className="flex items-left justify-left h-12">
@@ -169,12 +153,14 @@ export const Sidebar = ({ }: SidebarProps) => {
               <img src={logo}
                 title="Logo"
                 className="w-8 h-8 cursor-pointer"
+                onClick={() => setIsCollapsed(!isCollapsed)}
               />
             ) : (
               <>
                 <img src={logo}
                   title="Logo"
-                  className="w-8 h-8 cursor-pointer" />
+                  className="w-8 h-8 cursor-pointer"
+                  onClick={() => setIsCollapsed(!isCollapsed)} />
                 <div style={{ marginLeft: "0.2rem" }} className="ml-4 text-lg font-semibold">Charisma</div>
               </>
             )}
@@ -183,28 +169,35 @@ export const Sidebar = ({ }: SidebarProps) => {
           {/* Navigation Items */}
           <div className="flex-1 space-y-2" style={{ marginTop: "0.5rem", width: (!isCollapsed ? "300px" : "") }}>
             <div
-              className="w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer"
-              onClick={() => setActiveView('conversations')}
+              className={`w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer ${activeView === 'ai-model' ? 'bg-blue-100' : ''}`}
+              onClick={() => setActiveView(activeView === 'ai-model' ? null : 'ai-model')}
+            >
+              <FaSlidersH className="text-xl" />
+              {!isCollapsed && <span className="ml-3">AI Config</span>}
+            </div>
+
+            <div
+              className={`w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer ${activeView === 'conversations' ? 'bg-blue-100' : ''}`}
+              onClick={() => setActiveView(activeView === 'conversations' ? null : 'conversations')}
             >
               <FaComments className="text-xl" />
               {!isCollapsed && <span className="ml-3">Conversations</span>}
             </div>
 
             <div
-              className="w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer"
-              onClick={() => setActiveView('sources')}
+              className={`w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer ${activeView === 'sources' ? 'bg-blue-100' : ''}`}
+              onClick={() => setActiveView(activeView === 'sources' ? null : 'sources')}
             >
               <FaPaperclip className="text-xl" />
               {!isCollapsed && <span className="ml-3">Sources</span>}
             </div>
-
-            {/* Add other navigation items */}
           </div>
+
           {/* Bottom Settings */}
           <div className="border-t pt-2">
             <div
-              className="w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer"
-              onClick={() => setActiveView('settings')}
+              className={`w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer ${activeView === 'settings' ? 'bg-blue-100' : ''}`}
+              onClick={() => setActiveView(activeView === 'settings' ? null : 'settings')}
             >
               <FaCog className="text-xl" />
               {!isCollapsed && <span className="ml-3">Settings</span>}
@@ -213,158 +206,81 @@ export const Sidebar = ({ }: SidebarProps) => {
         </div>
       </Card>
 
-      {/* Main Content Area */}
-      <div
-      >
-        {activeView === 'conversations' && (
-          <Card className="p-4 inset-shadow-3xs rounded-none" style={{ height: "100%", minWidth: "400px" }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Conversations</h2>
-              <Button
-                variant="light"
-                size="sm"
-                onClick={handleCreateConversation}
-                disabled={isCreatingConversation}
-              >
-                {isCreatingConversation ? (
-                  <FaSpinner className="animate-spin" />
-                ) : (
-                  <><FaPlus className="mr-1" /> New</>
-                )}
-              </Button>
-            </div>
-            {conversations?.length === 0 ? (
-              <div className="p-3 text-sm text-gray-500 text-center">
-                No conversations yet
-              </div>
-            ) : (
-              <div className="divide-y">
-                {conversations?.map((conv) => (
-                  <div
-                    key={conv.id}
-                    className={`p-2 cursor-pointer hover:bg-gray-50 flex justify-between items-start ${conversation?.id === conv.id ? 'bg-gray-100' : ''}`}
-                    onClick={() => setConversation(conv)}
-                  >
-                    <div className="overflow-hidden">
-                      <div className="text-sm font-medium truncate">{conv.title}</div>
-                      <div className="text-xs text-gray-500">{formatTimestamp(conv.updatedAt)}</div>
-                    </div>
-                    <FaTrash onClick={(e) => handleDeleteConversation(conv.id, e)} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        )}
+      {/* Main Content Area with Drag Resizing */}
+      {activeView && (
+        <div
+          style={{
+            position: 'relative',
+            width: `${panelWidth}px`,
+            transition: isDragging ? 'none' : 'width 0.2s ease'
+          }}
+        >
+          {/* Drag Handle */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              height: '100%',
+              width: '4px',
+              cursor: 'col-resize',
+              backgroundColor: isDragging ? '#aaa' : 'transparent',
+              zIndex: 10
+            }}
+            onMouseDown={startDrag}
+          />
 
-        {activeView === 'sources' && (
-          <Card className="p-4 rounded-none" style={{ height: "100%", minWidth: "400px" }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Sources</h2>
-              <MultiButton options={{
-                folder: {
-                  label: "Add Folder",
-                  description: "Add sources from a folder on your PC.",
-                  onClick: () => handleSelectFolder(),
-                  disabled: false
-                },
-                web: {
-                  label: "Add Web",
-                  description: "Search, find and add sources from the internet.",
-                  onClick: () => setSearchOpen(true),
-                  disabled: false
-                },
-                database: {
-                  label: "Add Database",
-                  description: "Connect to a relational database and search data.",
-                  onClick: () => { },
-                  disabled: true
-                }
-              }} />
-            </div>
-            <Card className="p-2 flex-grow overflow-y-auto rounded-none" style={{ minHeight: '200px' }}>
-              <div className="text-sm">
-                {
-                  conversation?.sources &&
-                  conversation.sources.map((source) => {
-                    switch (source.type) {
-                      case 'Directory':
-                        return source.fileTree && <Tree node={source.fileTree} />;
-                      case 'Web':
-                        return (<div><FileItem icon={'🌍'} id={source.url} name={source.title} depth={0} isExpandable={false} isExpanded={false} /></div>)
-                      case 'FilePath':
-                        return (<div><FileItem icon={'🗃️'} id={source.filePath} name={source.fileName} depth={0} isExpandable={false} isExpanded={false} /></div>)
-                    }
-                  })
-                }
-              </div>
-            </Card>
-          </Card>
-        )}
-
-        {activeView === 'settings' && (
-          <Card className="p-4  rounded-none" style={{ height: "100%", minWidth: "400px" }}>
-            <div className="flex flex-col gap-4">
-              <div className="inline-flex items-center mb-4">
-                <span className="text-sm font-medium">
-                  Status: <b style={{ color: statusColor }}>{statusText}</b>
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Model</label>
-                <CustomSelect
-                  value={model}
-                  onChange={(value) => downloadModel(value, 'LLM')}
-                  options={availableModels.map((m) => ({
-                    key: m.name,
-                    value: m.name,
-                    label: (
-                      <div className="flex items-center justify-between w-full">
-                        <span>{m.name}{m.progress && m.progress < 100 && ` - ${m.progress.toFixed(1)}%`}</span>
-                        <span>
-                          {m.installed ? "✔️" : m.installing || (!!m.progress && m.progress < 100) ?
-                            <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
-                        </span>
-                      </div>
-                    )
-                  }))} />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Embedding Model</label>
-                <CustomSelect
-                  value={embeddingModel}
-                  onChange={(value) => downloadModel(value, 'Embedding')}
-                  options={availableEmbeddingModels.map((m) => ({
-                    key: m.name,
-                    value: m.name,
-                    label: (
-                      <div className="flex items-center justify-between w-full">
-                        <span>{m.name}{m.progress && m.progress < 100 && ` - ${m.progress.toFixed(1)}%`}</span>
-                        <span>
-                          {m.installed ? "✔️" : m.installing || (!!m.progress && m.progress < 100) ?
-                            <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : "❌"}
-                        </span>
-                      </div>
-                    )
-                  }))} />
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {activeView === 'search' && (
-          <Card className="p-4 rounded-none">
-            <SearchModal
-              isOpen={searchOpen}
-              onAdd={addSearchSources}
-              onClose={() => setSearchOpen(false)}
-              searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
+          {/* View Components */}
+          {activeView === 'conversations' && (
+            <ConversationsView
+              conversations={conversations}
+              conversation={conversation}
+              setConversation={setConversation}
+              isCreatingConversation={isCreatingConversation}
+              handleCreateConversation={handleCreateConversation}
+              handleDeleteConversation={handleDeleteConversation}
             />
-          </Card>
-        )}
-      </div>
+          )}
+
+          {activeView === 'sources' && (
+            <>
+              <SearchModal
+                isOpen={searchOpen}
+                onAdd={addSearchSources}
+                onClose={() => setSearchOpen(false)}
+                searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
+              /><SourcesView
+              conversation={conversation}
+              handleSelectFolder={handleSelectFolder}
+              setSearchOpen={setSearchOpen}
+            />
+            </>
+
+
+          )}
+
+          {activeView === 'settings' && (
+            <SettingsView
+              status={status}
+            />
+          )}
+
+          {activeView === 'ai-model' && (
+            <AIModelView
+              model={model}
+              embeddingModel={embeddingModel}
+              availableModels={availableModels}
+              availableEmbeddingModels={availableEmbeddingModels}
+              downloadModel={downloadModel}
+            />
+          )}
+
+          {activeView === 'search' && (
+            <Card className="p-4 rounded-none">
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 };

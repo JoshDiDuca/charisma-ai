@@ -1,6 +1,6 @@
 import { DirectorySourceInput,  FilePathSourceInput, FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/Source";
 import { addSourcesToConversation, conversationsDir, getOrCreateConversation } from "../ollama/ollamaService.conversation";
-import { getDirectoryInfo, getFileInfo, getFileTree } from "../files/fileService";
+import { getDirectoryInfo, getFileInfo, getFileTree } from "../files/fileService.read";
 import { v4 as uuidv4 } from 'uuid';
 import { Conversation } from "shared/types/Conversation";
 import fs from "fs";

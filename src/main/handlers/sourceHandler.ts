@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { getFileTree, selectEmbedFolder } from 'main/services/files/fileService'
+import { getFileTree, selectEmbedFolder } from 'main/services/files/fileService.read'
 import { IpcHandle } from '../decorators/IpcHandle'
 import { IPC } from 'shared/constants'
 import { searchGoogle } from 'main/services/web/googleSevice'

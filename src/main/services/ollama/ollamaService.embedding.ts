@@ -8,7 +8,7 @@ import {
   TreeNode,
   readFileByExtension,
   getFileInfo,
-} from '../files/fileService';
+} from '../files/fileService.read';
 import * as cheerio from 'cheerio';
 import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';

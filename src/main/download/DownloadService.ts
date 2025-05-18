@@ -7,6 +7,7 @@ import { app } from 'electron'
 import extract from 'extract-zip';
 import { get, head } from 'lodash'
 import { GitHubService } from './GithubService'
+import { deleteFileOrFolder } from 'main/services/files/fileService.delete'
 
 export interface DownloadProgress {
   percentage: number
@@ -170,7 +171,7 @@ export class DownloadService extends EventEmitter {
 
       return finalFile
     } finally {
-      this.cleanupTemp(tempFile)
+      await this.cleanupTemp(tempFile)
     }
 
   }
@@ -237,7 +238,7 @@ export class DownloadService extends EventEmitter {
         throw new Error('Size mismatch - possible corrupted download');
       }
     } catch (error) {
-      this.cleanupTemp(tempPath);
+      await this.cleanupTemp(tempPath);
       throw error;
     } finally {
       this.currentDownload = null;
@@ -260,10 +261,8 @@ export class DownloadService extends EventEmitter {
     return semverToNum(newVersion.replace("v", "").trim()) > semverToNum(currentVersion.replace("v", "").trim())
   }
 
-  private cleanupTemp(tempPath: string, finalFile?: string): void {
-    if (fs.existsSync(tempPath)) {
-      fs.unlinkSync(tempPath)
-    }
+  private async cleanupTemp(tempPath: string, finalFile?: string): Promise<void> {
+    await deleteFileOrFolder(tempPath);
   }
   private async moveContents(source: string, target: string) {
     // Add existence check

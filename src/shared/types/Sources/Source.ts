@@ -1,4 +1,4 @@
-import { TreeNode } from "main/services/files/fileService";
+import { TreeNode } from "main/services/files/fileService.read";
 
 type RequireKey<T, K extends keyof T> = Required<Pick<T, K>> & Partial<Omit<T, K>>;
 

@@ -167,42 +167,43 @@ export const Sidebar = ({ }: SidebarProps) => {
           </div>
 
           {/* Navigation Items */}
-          <div className="flex-1 space-y-2" style={{ marginTop: "0.5rem", width: (!isCollapsed ? "300px" : "") }}>
+          <div className="flex-1 space-y-2" style={{ marginTop: "0.5rem", width: (!isCollapsed ? "150px" : "") }}>
             <div
-              className={`w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer ${activeView === 'ai-model' ? 'bg-blue-100' : ''}`}
+              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'ai-model' ? 'bg-blue-100' : ''}`}
               onClick={() => setActiveView(activeView === 'ai-model' ? null : 'ai-model')}
             >
               <FaSlidersH className="text-xl" />
-              {!isCollapsed && <span className="ml-3">AI Config</span>}
+              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>AI Config</span>}
             </div>
 
             <div
-              className={`w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer ${activeView === 'conversations' ? 'bg-blue-100' : ''}`}
+              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'conversations' ? 'bg-blue-100' : ''}`}
               onClick={() => setActiveView(activeView === 'conversations' ? null : 'conversations')}
             >
               <FaComments className="text-xl" />
-              {!isCollapsed && <span className="ml-3">Conversations</span>}
+              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Conversations</span>}
             </div>
 
             <div
-              className={`w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer ${activeView === 'sources' ? 'bg-blue-100' : ''}`}
+              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'sources' ? 'bg-blue-100' : ''}`}
               onClick={() => setActiveView(activeView === 'sources' ? null : 'sources')}
             >
               <FaPaperclip className="text-xl" />
-              {!isCollapsed && <span className="ml-3">Sources</span>}
+              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Sources</span>}
             </div>
           </div>
 
           {/* Bottom Settings */}
           <div className="border-t pt-2">
             <div
-              className={`w-full justify-start h-10 w-10 px-2 rounded-lg cursor-pointer ${activeView === 'settings' ? 'bg-blue-100' : ''}`}
+              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'settings' ? 'bg-blue-100' : ''}`}
               onClick={() => setActiveView(activeView === 'settings' ? null : 'settings')}
             >
               <FaCog className="text-xl" />
-              {!isCollapsed && <span className="ml-3">Settings</span>}
+              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Settings</span>}
             </div>
           </div>
+
         </div>
       </Card>
 
@@ -250,10 +251,10 @@ export const Sidebar = ({ }: SidebarProps) => {
                 onClose={() => setSearchOpen(false)}
                 searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
               /><SourcesView
-              conversation={conversation}
-              handleSelectFolder={handleSelectFolder}
-              setSearchOpen={setSearchOpen}
-            />
+                conversation={conversation}
+                handleSelectFolder={handleSelectFolder}
+                setSearchOpen={setSearchOpen}
+              />
             </>
 
 

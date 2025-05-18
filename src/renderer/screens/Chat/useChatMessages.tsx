@@ -21,6 +21,17 @@ export const useChatMessages = (
   const [isLoading, setIsLoading] = useState(false);
   const [hasFirstResponse, setHasFirstResponse] = useState(true);
 
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (conversation?.id) {
+      // Update messages from the current conversation
+      setMessages(conversation.messages || []);
+    } else {
+      // Clear messages when no conversation is selected
+      setMessages([]);
+    }
+  }, [conversation]);
+
   const handleSendMessage = async () => {
     const inputValueTrimmed = inputValue.trim();
     if (isNil(inputValueTrimmed) || inputValueTrimmed === "" || isLoading) return;
@@ -107,6 +118,7 @@ export const useChatMessages = (
   return {
     messages,
     setMessages,
+    loadConversations,
     inputValue,
     setInputValue,
     isLoading,

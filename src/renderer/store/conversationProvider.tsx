@@ -4,6 +4,8 @@ import { IPC } from 'shared/constants';
 import { AppStatus } from 'shared/types/AppStatus';
 import { Conversation, Message } from 'shared/types/Conversation';
 import { OllamaModel, OllamaModelDownloadProgress } from 'shared/types/OllamaModel';
+import { SourceInput } from 'shared/types/Sources/Source';
+import { WebSearch } from 'shared/types/Sources/WebSearch';
 
 const { App } = window;
 
@@ -24,6 +26,7 @@ interface ChatBotContextType {
   voiceModel?: string;
   setVoiceModel: React.Dispatch<React.SetStateAction<string | undefined>>;
 
+
   // Data
   conversations?: Conversation[];
   setConversations: React.Dispatch<React.SetStateAction<Conversation[] | undefined>>;
@@ -35,8 +38,16 @@ interface ChatBotContextType {
   setAvailableVoiceModels: React.Dispatch<React.SetStateAction<OllamaModel[] | undefined>>;
   availableEmbeddingModels: OllamaModel[];
   setAvailableEmbeddingModels: React.Dispatch<React.SetStateAction<OllamaModel[] | undefined>>;
+
   status: AppStatus | string;
   setStatus: React.Dispatch<React.SetStateAction<AppStatus | string>>;
+
+  //Download
+  downloadModel: (modelName: string, type: "LLM" | "Embedding") => Promise<void>;
+
+  //Sources
+  handleSelectSourcesFolder: () => Promise<void>;
+  addSearchSources: (selectedItems: WebSearch[]) => Promise<void>;
 
 
   // Functions
@@ -156,6 +167,41 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const downloadModel = async (modelName: string, type: 'LLM' | 'Embedding') => {
+    await App.invoke(IPC.LLM.DOWNLOAD_MODEL, modelName);
+    if (type === 'LLM') {
+      setModel(modelName);
+      loadModels();
+    } else {
+      setEmbeddingModel(modelName);
+      loadEmbeddingModels();
+    }
+  };
+
+  const addSearchSources = async (selectedItems: WebSearch[]) => {
+    App.invoke(IPC.SOURCE.ADD_SOURCES,
+      selectedItems.map((item) => ({
+        type: "Web",
+        url: item.url,
+        description: item.description,
+        title: item.title
+      }) as SourceInput), model, false, conversation?.id, undefined)
+      .then((newConversation: Conversation) =>
+        setConversation(newConversation));
+  };
+
+  const handleSelectSourcesFolder = async () => {
+    const folder = await App.invoke(IPC.SOURCE.SELECT_FOLDER);
+    if (!folder) return;
+
+    App.invoke(IPC.SOURCE.ADD_SOURCES,
+      [
+        { type: "Directory", directoryPath: folder } as SourceInput
+      ], model, false, conversation?.id, undefined)
+      .then((newConversation: Conversation) =>
+        setConversation(newConversation));
+  };
+
   const value = {
     conversation,
     setConversation,
@@ -167,6 +213,11 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
     setEmbeddingModel,
     voiceModel,
     setVoiceModel,
+
+    downloadModel,
+
+    handleSelectSourcesFolder,
+    addSearchSources,
 
     // Data
     conversations,
@@ -183,7 +234,7 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Functions
     loadModels,
     loadEmbeddingModels,
-    loadConversations,
+    loadConversations
   };
 
   return (

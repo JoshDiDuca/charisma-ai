@@ -25,7 +25,7 @@ export const ConversationsView: React.FC<ConversationsViewProps> = ({
   };
 
   return (
-    <Card className="p-4 inset-shadow-3xs rounded-none" style={{ height: "100%", minWidth: "400px" }}>
+    <Card className="p-4 inset-shadow-3xs rounded-none" style={{ height: "100%", minWidth: "400px", overflowY: "auto" }}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold">Conversations</h2>
         <Button

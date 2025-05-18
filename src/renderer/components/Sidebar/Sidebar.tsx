@@ -15,10 +15,12 @@ import SearchModal from 'renderer/screens/Sources/Web/Search';
 
 const { App } = window;
 
+type SidebarOptionKeys = 'conversations' | 'sources' | 'settings' | 'ai-model';
+
 export interface SidebarProps { }
 
 export const Sidebar = ({ }: SidebarProps) => {
-  const [activeView, setActiveView] = useState<'conversations' | 'sources' | 'settings' | 'ai-model' | 'search' | null>(null);
+  const [activeView, setActiveView] = useState<SidebarOptionKeys | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
@@ -30,42 +32,17 @@ export const Sidebar = ({ }: SidebarProps) => {
   const {
     model,
     embeddingModel,
-    setModel,
-    setEmbeddingModel,
     conversation,
     setConversation,
     setConversations,
     conversations,
-    loadModels,
-    loadEmbeddingModels,
+    handleSelectSourcesFolder,
+    downloadModel,
+    addSearchSources,
     status,
     availableModels,
     availableEmbeddingModels
   } = useChatBot();
-
-  const handleSelectFolder = async () => {
-    const folder = await App.invoke(IPC.SOURCE.SELECT_FOLDER);
-    if (!folder) return;
-
-    App.invoke(IPC.SOURCE.ADD_SOURCES,
-      [
-        { type: "Directory", directoryPath: folder } as SourceInput
-      ], model, false, conversation?.id, undefined)
-      .then((newConversation: Conversation) =>
-        setConversation(newConversation));
-  };
-
-  const addSearchSources = async (selectedItems: WebSearch[]) => {
-    App.invoke(IPC.SOURCE.ADD_SOURCES,
-      selectedItems.map((item) => ({
-        type: "Web",
-        url: item.url,
-        description: item.description,
-        title: item.title
-      }) as SourceInput), model, false, conversation?.id, undefined)
-      .then((newConversation: Conversation) =>
-        setConversation(newConversation));
-  };
 
   const handleCreateConversation = async () => {
     setIsCreatingConversation(true);
@@ -101,17 +78,6 @@ export const Sidebar = ({ }: SidebarProps) => {
     }
   };
 
-  const downloadModel = async (modelName: string, type: 'LLM' | 'Embedding') => {
-    await App.invoke(IPC.LLM.DOWNLOAD_MODEL, modelName);
-    if (type === 'LLM') {
-      setModel(modelName);
-      loadModels();
-    } else {
-      setEmbeddingModel(modelName);
-      loadEmbeddingModels();
-    }
-  };
-
   const startDrag = (e: React.MouseEvent) => {
     setIsDragging(true);
     dragStartXRef.current = e.clientX;
@@ -142,6 +108,57 @@ export const Sidebar = ({ }: SidebarProps) => {
     };
   }, [isDragging]);
 
+
+  const SidebarOptions: { [page: string]: { label: string; icon: React.ReactNode; element: React.ReactNode; bottom?: boolean } } = {
+    ['ai-model']: {
+      label: "AI Settings",
+      icon: <FaSlidersH className="text-xl" />,
+      element: <AIModelView
+        model={model}
+        embeddingModel={embeddingModel}
+        availableModels={availableModels}
+        availableEmbeddingModels={availableEmbeddingModels}
+        downloadModel={downloadModel}
+      />
+    },
+    ['sources']: {
+      label: "Sources",
+      icon: <FaPaperclip className="text-xl" />,
+      element: <>
+        <SearchModal
+          isOpen={searchOpen}
+          onAdd={addSearchSources}
+          onClose={() => setSearchOpen(false)}
+          searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
+        /><SourcesView
+          conversation={conversation}
+          handleSelectFolder={handleSelectSourcesFolder}
+          setSearchOpen={setSearchOpen}
+        />
+      </>
+    },
+    ['conversations']: {
+      label: "Sources",
+      icon: <FaComments className="text-xl" />,
+      element: <ConversationsView
+        conversations={conversations}
+        conversation={conversation}
+        setConversation={setConversation}
+        isCreatingConversation={isCreatingConversation}
+        handleCreateConversation={handleCreateConversation}
+        handleDeleteConversation={handleDeleteConversation}
+      />
+    },
+    ['settings']: {
+      label: "Settings",
+      icon: <FaCog className="text-xl" />,
+      bottom: true,
+      element: <SettingsView
+        status={status}
+      />
+    },
+  }
+
   return (
     <div className="flex h-screen">
       {/* Collapsible Sidebar */}
@@ -168,41 +185,31 @@ export const Sidebar = ({ }: SidebarProps) => {
 
           {/* Navigation Items */}
           <div className="flex-1 space-y-2" style={{ marginTop: "0.5rem", width: (!isCollapsed ? "150px" : "") }}>
-            <div
-              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'ai-model' ? 'bg-blue-100' : ''}`}
-              onClick={() => setActiveView(activeView === 'ai-model' ? null : 'ai-model')}
-            >
-              <FaSlidersH className="text-xl" />
-              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>AI Settings</span>}
-            </div>
 
-            <div
-              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'sources' ? 'bg-blue-100' : ''}`}
-              onClick={() => setActiveView(activeView === 'sources' ? null : 'sources')}
-            >
-              <FaPaperclip className="text-xl" />
-              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Sources</span>}
-            </div>
+            {(Object.keys(SidebarOptions) as SidebarOptionKeys[]).map(sidebarOption => SidebarOptions[sidebarOption].bottom ? null : (
 
-            <div
-              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'conversations' ? 'bg-blue-100' : ''}`}
-              onClick={() => setActiveView(activeView === 'conversations' ? null : 'conversations')}
-            >
-              <FaComments className="text-xl" />
-              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Conversations</span>}
-            </div>
-
+              <div
+                className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'ai-model' ? 'bg-blue-100' : ''}`}
+                onClick={() => setActiveView(activeView === sidebarOption ? null : sidebarOption)}
+              >
+                {SidebarOptions[sidebarOption].icon}
+                {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>{SidebarOptions[sidebarOption].label}</span>}
+              </div>
+            ))}
           </div>
 
           {/* Bottom Settings */}
           <div className="border-t pt-2">
-            <div
-              className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'settings' ? 'bg-blue-100' : ''}`}
-              onClick={() => setActiveView(activeView === 'settings' ? null : 'settings')}
-            >
-              <FaCog className="text-xl" />
-              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>Settings</span>}
-            </div>
+            {(Object.keys(SidebarOptions) as SidebarOptionKeys[]).map(sidebarOption => !SidebarOptions[sidebarOption].bottom ? null : (
+
+              <div
+                className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer ${activeView === 'ai-model' ? 'bg-blue-100' : ''}`}
+                onClick={() => setActiveView(activeView === sidebarOption ? null : sidebarOption)}
+              >
+                {SidebarOptions[sidebarOption].icon}
+                {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>{SidebarOptions[sidebarOption].label}</span>}
+              </div>
+            ))}
           </div>
 
         </div>
@@ -232,55 +239,8 @@ export const Sidebar = ({ }: SidebarProps) => {
             onMouseDown={startDrag}
           />
 
-          {/* View Components */}
-          {activeView === 'conversations' && (
-            <ConversationsView
-              conversations={conversations}
-              conversation={conversation}
-              setConversation={setConversation}
-              isCreatingConversation={isCreatingConversation}
-              handleCreateConversation={handleCreateConversation}
-              handleDeleteConversation={handleDeleteConversation}
-            />
-          )}
+          {SidebarOptions[activeView].element}
 
-          {activeView === 'sources' && (
-            <>
-              <SearchModal
-                isOpen={searchOpen}
-                onAdd={addSearchSources}
-                onClose={() => setSearchOpen(false)}
-                searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
-              /><SourcesView
-                conversation={conversation}
-                handleSelectFolder={handleSelectFolder}
-                setSearchOpen={setSearchOpen}
-              />
-            </>
-
-
-          )}
-
-          {activeView === 'settings' && (
-            <SettingsView
-              status={status}
-            />
-          )}
-
-          {activeView === 'ai-model' && (
-            <AIModelView
-              model={model}
-              embeddingModel={embeddingModel}
-              availableModels={availableModels}
-              availableEmbeddingModels={availableEmbeddingModels}
-              downloadModel={downloadModel}
-            />
-          )}
-
-          {activeView === 'search' && (
-            <Card className="p-4 rounded-none">
-            </Card>
-          )}
         </div>
       )}
     </div>

@@ -17,7 +17,7 @@ export const SourcesView: React.FC<SourcesViewProps> = ({
   setSearchOpen
 }) => {
   return (
-    <Card className="p-4 rounded-none" style={{ height: "100%", minWidth: "400px" }}>
+    <div className="p-4 rounded-none" style={{ height: "100%", minWidth: "400px" }}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold">Sources</h2>
         <MultiButton options={{
@@ -58,6 +58,6 @@ export const SourcesView: React.FC<SourcesViewProps> = ({
           }
         </div>
       </Card>
-    </Card>
+    </div>
   );
 };

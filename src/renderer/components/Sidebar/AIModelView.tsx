@@ -22,7 +22,7 @@ export const AIModelView: React.FC<AIModelViewProps> = ({
   return (
     <Card className="p-4 rounded-none" style={{ height: "100%", minWidth: "400px" }}>
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold">AI Config</h2>
+        <h2 className="text-lg font-bold">AI Settings</h2>
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Model</label>

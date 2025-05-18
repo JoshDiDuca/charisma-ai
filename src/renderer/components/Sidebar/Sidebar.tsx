@@ -173,7 +173,7 @@ export const Sidebar = ({ }: SidebarProps) => {
               onClick={() => setActiveView(activeView === 'ai-model' ? null : 'ai-model')}
             >
               <FaSlidersH className="text-xl" />
-              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>AI Config</span>}
+              {!isCollapsed && <span className='font-semibold' style={{ marginLeft: "0.25rem" }}>AI Settings</span>}
             </div>
 
             <div

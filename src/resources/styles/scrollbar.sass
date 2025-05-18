@@ -1,11 +1,9 @@
-// Premium Sass scrollbar with refined aesthetics
+// Custom Scrollbar
 $scrollbar-width: 8px
-$scrollbar-track-color: #f0f0f0
-$scrollbar-thumb-color: #a0a0a0
-$scrollbar-thumb-hover-color: #707070
-$scrollbar-border-radius: 8px
-$scrollbar-thumb-shadow: rgba(0, 0, 0, 0.12)
-$transition-time: 0.4s
+$scrollbar-track-color: #f1f1f1
+$scrollbar-thumb-color: #c1c1c1
+$scrollbar-thumb-hover-color: #a8a8a8
+$scrollbar-border-radius: 4px
 
 // Firefox
 *
@@ -20,19 +18,13 @@ $transition-time: 0.4s
 ::-webkit-scrollbar-track
   background: $scrollbar-track-color
   border-radius: $scrollbar-border-radius
-  border: 1px solid rgba(0, 0, 0, 0.05)
 
 ::-webkit-scrollbar-thumb
   background: $scrollbar-thumb-color
   border-radius: $scrollbar-border-radius
-  box-shadow: inset 0 0 6px $scrollbar-thumb-shadow
-  border: 2px solid transparent
-  background-clip: padding-box
-  transition: background-color $transition-time ease, box-shadow $transition-time ease
 
   &:hover
     background: $scrollbar-thumb-hover-color
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3)
 
 ::-webkit-scrollbar-corner
   background: $scrollbar-track-color

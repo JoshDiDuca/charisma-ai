@@ -14,6 +14,7 @@
       {
         "button-name": "off"
       }
-    ]
+    ],
+    "axe/forms": "off"
   }
 }

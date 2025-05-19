@@ -8,6 +8,41 @@ import { isNil, last } from 'lodash';
 
 const { App } = window;
 
+function extractThoughtsAndMessage(input: string): { thoughts: string[], text: string } {
+  const thoughts: string[] = [];
+  let message = input;
+
+  // Extract complete thoughts (anything between <think> and </think> tags)
+  const completeThoughtRegex = /<think>([\s\S]*?)<\/think>/g;
+  let match;
+
+  while ((match = completeThoughtRegex.exec(input)) !== null) {
+    thoughts.push(match[1].trim());  // Add the thought content (without tags)
+    message = message.replace(match[0], '');  // Remove the entire thought block from message
+  }
+
+  // Check for an incomplete thought (a <think> tag without a matching </think>)
+  const incompleteThoughtIndex = message.lastIndexOf('<think>');
+  if (incompleteThoughtIndex !== -1) {
+    // Extract content after the <think> tag
+    const incompleteThoughtContent = message.substring(incompleteThoughtIndex + '<think>'.length);
+    thoughts.push(incompleteThoughtContent.trim());
+    message = message.substring(0, incompleteThoughtIndex);
+  }
+
+  return { thoughts, text: message.trim() };
+}
+
+
+const processMessagesThoughts = (messages: Message[]) => messages.map(e => {
+  if (e.role === "assistant") {
+    const {text, thoughts} = extractThoughtsAndMessage(e.text);
+    return { ...e, text, thoughts };
+  } else {
+    return e;
+  }
+}) || [];
+
 export const useChatMessages = (
   model: string | undefined,
   availableModels: any[],
@@ -25,7 +60,7 @@ export const useChatMessages = (
   useEffect(() => {
     if (conversation?.id) {
       // Update messages from the current conversation
-      setMessages(conversation.messages || []);
+      setMessages(processMessagesThoughts(conversation.messages));
     } else {
       // Clear messages when no conversation is selected
       setMessages([]);
@@ -86,30 +121,44 @@ export const useChatMessages = (
     });
   };
 
+  // Helper to update messages with a new assistant partial
+  const updateMessagesWithPartial = (prev: Message[], partial: string): Message[] => {
+    const lastMsg = prev[prev.length - 1];
+    if (!lastMsg || !lastMsg.incomplete) {
+      // Start a new assistant message if last is complete
+      const {text, thoughts} = extractThoughtsAndMessage(partial);
+      return [
+        ...prev,
+        {
+          timestamp: Date.now(),
+          text: text ?? "",
+          thoughts: thoughts,
+          role: 'assistant',
+          incomplete: true,
+        },
+      ];
+    }
+
+
+    // Append to the last assistant message
+    return prev.map((msg, idx) => {
+      const {text, thoughts} = extractThoughtsAndMessage((msg.text ?? "") + (partial ?? ""));
+      return idx === prev.length - 1
+        ? { ...msg, text, thoughts }
+        : msg
+    }
+    );
+  };
+
+  // Handles incoming stream updates and updates messages accordingly
+  const handleStreamUpdate = (partial: string) => {
+    setHasFirstResponse(true);
+    setMessages((prev) => updateMessagesWithPartial(prev, partial));
+  };
+
+  // Sets up and cleans up the stream update listener
   useEffect(() => {
-    const streamHandler = (partial: string) => {
-      setHasFirstResponse(true);
-
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (!last?.incomplete) {
-          return [
-            ...prev,
-            {
-              timestamp: Date.now(),
-              text: partial ?? "",
-              role: 'assistant',
-              incomplete: true
-            },
-          ];
-        }
-        return prev.map((msg, i) =>
-          i === prev.length - 1 ? { ...msg, text: (msg.text ?? "") + (partial ?? "") } : msg
-        );
-      });
-    };
-
-    App.on(IPC.LLM.STREAM_UPDATE, streamHandler);
+    App.on(IPC.LLM.STREAM_UPDATE, handleStreamUpdate);
     return () => {
       App.removeAllListeners(IPC.LLM.STREAM_UPDATE);
     };

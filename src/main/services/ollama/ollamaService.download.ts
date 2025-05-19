@@ -153,7 +153,7 @@ export const downloadModel = async (modelName: string) => {
     const installedList = await getInstalledModels();
 
     // Check if model is already installed
-    if (installedList.some(installedName => installedName.startsWith(modelName))) {
+    if (installedList.some(installedName => installedName.name.startsWith(modelName))) {
       currentlyInstallingModels.delete(modelName);
       stopPolling(modelName);
       await getAllModels(); // Update model list in UI

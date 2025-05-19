@@ -7,10 +7,10 @@ interface DropdownProps {
   className?: string;
 }
 
-export const CustomDropdown: React.FC<DropdownProps> = ({ 
-  trigger, 
-  children, 
-  className = '' 
+export const CustomDropdown: React.FC<DropdownProps> = ({
+  trigger,
+  children,
+  className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -35,7 +35,7 @@ export const CustomDropdown: React.FC<DropdownProps> = ({
       <div onClick={toggleDropdown} className="cursor-pointer">
         {trigger}
       </div>
-      
+
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-white border rounded-md shadow-lg z-50">
           {children}

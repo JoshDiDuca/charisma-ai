@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-      - 'v*'  # Only run on version tags
+      - '*'
 
 jobs:
   release:

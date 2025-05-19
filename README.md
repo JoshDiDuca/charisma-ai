@@ -92,6 +92,7 @@ The built apps will be available on the `release` folder.
 - [x] Full download for models instead of Ollama pulling 
 - [x] Message attachments
 - [x] Flexible UI
+- [x] Improved handling of Ollama being installed and exe files not present in release.
 - [ ] Web RAG query directly reading file urls like .pdf etc
 - [ ] Next prompt suggestions
 - [ ] Reasoning model "thinking" support
@@ -109,7 +110,6 @@ The built apps will be available on the `release` folder.
 - [ ] TTS voice model selection
 - [ ] Source viewing/editing along with the ability to read using TTS
 - [ ] CSV file support
-- [ ] Improved handling of Ollama being installed and exe files not present in release.
 - [ ] Agents/Pipelines/Custom Reasoning
 - [ ] Agent tasks such as creating, editing, writing files
 

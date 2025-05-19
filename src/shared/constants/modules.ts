@@ -3,5 +3,6 @@ export enum Module {
   Ollama = "Ollama",
   GPU = "GPU",
   FileProcessing = "FileProcessing",
-  Conversations = "Conversations"
+  Conversations = "Conversations",
+  Settings = "Settings"
 };

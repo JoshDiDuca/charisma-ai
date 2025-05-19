@@ -8,7 +8,8 @@ enum DirectoryPaths {
   DB = "DB",
   OllamaBin = "ollama-bin",
   PiperBin = "piper-bin",
-  Conversations = "conversations"
+  Conversations = "conversations",
+  Settings = "settings"
 }
 
 type DirectoryPathKeys = keyof typeof DirectoryPaths;

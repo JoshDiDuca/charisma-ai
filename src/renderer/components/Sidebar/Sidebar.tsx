@@ -1,16 +1,12 @@
 import { Card } from '@heroui/react';
 import { useState, useRef, useEffect } from 'react';
-import { FaComments, FaCog, FaPaperclip, FaRobot, FaSlidersH } from 'react-icons/fa';
-import { Conversation } from 'shared/types/Conversation';
+import { FaComments, FaCog, FaSlidersH } from 'react-icons/fa';
 import { IPC } from 'shared/constants';
-import { SourceInput } from 'shared/types/Sources/Source';
 import { useChatBot } from 'renderer/store/conversationProvider';
-import { WebSearch } from 'shared/types/Sources/WebSearch';
 import logo from "./../../public/logo.png";
 import { ConversationsView } from './ConversationsView';
-import { SourcesView } from './SourceView';
+import { Config } from './Config';
 import { SettingsView } from './Settings';
-import { AIModelView } from './AIModelView';
 import SearchModal from 'renderer/screens/Sources/Web/Search';
 
 const { App } = window;
@@ -121,40 +117,10 @@ export const Sidebar = ({ }: SidebarProps) => {
 
 
   const SidebarOptions: SidebarOption = {
-    AiModel: {
-      sortOrder: 0,
-      label: "AI Settings",
-      icon: <FaSlidersH className="text-xl" />,
-      element: <AIModelView
-        model={model}
-        embeddingModel={embeddingModel}
-        availableModels={availableModels}
-        availableEmbeddingModels={availableEmbeddingModels}
-        downloadModel={downloadModel}
-      />
-    },
-    Sources: {
-      sortOrder: 1,
-      label: "Sources",
-      icon: <FaPaperclip className="text-xl" />,
-      element: <>
-        <SearchModal
-          isOpen={searchOpen}
-          onAdd={addSearchSources}
-          onClose={() => setSearchOpen(false)}
-          searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
-        /><SourcesView
-          conversation={conversation}
-          handleSelectFolder={handleSelectSourcesFolder}
-          setSearchOpen={setSearchOpen}
-        />
-      </>
-    },
     Conversations: {
       sortOrder: 2,
       label: "Sources",
       icon: <FaComments className="text-xl" />,
-      bottom: true,
       hideOthers: true,
       element: <ConversationsView
         conversations={conversations}
@@ -164,6 +130,29 @@ export const Sidebar = ({ }: SidebarProps) => {
         handleCreateConversation={handleCreateConversation}
         handleDeleteConversation={handleDeleteConversation}
       />
+    },
+    AiModel: {
+      sortOrder: 0,
+      label: "AI Settings",
+      icon: <FaSlidersH className="text-xl" />,
+      element: <>
+        <SearchModal
+          isOpen={searchOpen}
+          onAdd={addSearchSources}
+          onClose={() => setSearchOpen(false)}
+          searchFunction={(query) => App.invoke(IPC.SOURCE.QUERY, query)}
+        />
+        <Config
+          conversation={conversation}
+          handleSelectFolder={handleSelectSourcesFolder}
+          setSearchOpen={setSearchOpen}
+          model={model}
+          embeddingModel={embeddingModel}
+          availableModels={availableModels}
+          availableEmbeddingModels={availableEmbeddingModels}
+          downloadModel={downloadModel}
+        />
+      </>
     },
     Settings: {
       sortOrder: 3,
@@ -178,10 +167,10 @@ export const Sidebar = ({ }: SidebarProps) => {
   }
 
   const openOrCloseTab = (key: SidebarOptionKeys) => {
-    if(activeViews.includes(key)){
+    if (activeViews.includes(key)) {
       setActiveViews((views) => views.filter(v => v !== key))
     } else {
-      if(SidebarOptions[key].hideOthers){
+      if (SidebarOptions[key].hideOthers) {
         setActiveViews([key]);
       } else {
         setActiveViews((views) => [...views.filter(v => !SidebarOptions[v].hideOthers), key]);
@@ -248,7 +237,7 @@ export const Sidebar = ({ }: SidebarProps) => {
       </Card>
 
       {/* Main Content Area with Drag Resizing */}
-      {activeViews.length > 0  && (
+      {activeViews.length > 0 && (
         <div
           style={{
             position: 'relative',
@@ -274,7 +263,7 @@ export const Sidebar = ({ }: SidebarProps) => {
           />
 
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            {activeViews.toSorted((a,b) => SidebarOptions[a].sortOrder - SidebarOptions[b].sortOrder).map(a => (
+            {activeViews.toSorted((a, b) => SidebarOptions[a].sortOrder - SidebarOptions[b].sortOrder).map(a => (
               <div key={a}>
                 {SidebarOptions[a].element}
               </div>

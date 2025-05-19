@@ -10,6 +10,7 @@ import { isNil } from 'lodash'
 import { Readable } from 'stream'
 import { splashWindow } from 'main/windows/splash'
 import { IPC } from 'shared/constants'
+import { getPath } from '../files/fileService.directory'
 
 export class OllamaInstanceService {
   private process: ChildProcessByStdio<null, Readable, Readable> | null = null;
@@ -18,7 +19,7 @@ export class OllamaInstanceService {
   public downloadService = new DownloadService()
 
   get binaryDir() {
-    return path.join(app.getPath('userData'), 'ollama-bin')
+    return getPath("OllamaBin");
   }
 
   get execPath() {

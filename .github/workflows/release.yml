@@ -1,12 +1,12 @@
 on:
   push:
-    tags: ["*"]
+    tags:
+      - 'v*'  # Only run on version tags
 
 jobs:
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60  # Add overall job timeout
+    timeout-minutes: 60
 
     strategy:
       matrix:
@@ -19,30 +19,28 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v3
         with:
-          node-version: 16  # Changed from 18 to 16 to avoid npm hanging issues
-          cache: 'npm'      # Enable npm caching
+          node-version: 16
+          cache: 'npm'
 
       - name: apt-update
-        if: startsWith(matrix.os, 'ubuntu-latest')
+        if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update
 
       - name: autoremove
-        if: startsWith(matrix.os, 'ubuntu-latest')
+        if: matrix.os == 'ubuntu-latest'
         run: sudo apt autoremove
 
       - name: Install libarchive rpm on Linux
-        if: startsWith(matrix.os, 'ubuntu-latest')
+        if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install libarchive-tools rpm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+        timeout-minutes: 15
 
       - name: Release Electron app
         uses: samuelmeuli/action-electron-builder@v1
-        timeout-minutes: 30  # Add timeout specifically for this step
+        timeout-minutes: 30
         with:
-          # GitHub token, automatically provided to the action
           github_token: ${{ secrets.github_token }}
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
           release: true
-          # Add build arguments to handle dependency issues
-          build_script_name: "build"
-          args: "--legacy-peer-deps"

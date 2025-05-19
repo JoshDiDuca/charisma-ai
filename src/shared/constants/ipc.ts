@@ -10,6 +10,10 @@ export const IPC = {
     SHOW_UI_INFO: 'ui:info',
     SHOW_UI_WARN: 'ui:warn'
   },
+  SETTINGS: {
+    GET_SETTINGS: "settings:get-settings",
+    SAVE_SETTINGS: "settings:save-settings"
+  },
   SOURCE: {
     SELECT_FOLDER: "source:select-folder",
     ADD_SOURCES: "source:add-sources",

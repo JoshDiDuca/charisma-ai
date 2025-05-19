@@ -47,7 +47,8 @@ export const ConversationsView: React.FC<ConversationsViewProps> = ({
         </div>
       ) : (
         <div className="divide-y">
-          {conversations?.map((conv) => (
+          {conversations?.map((conv) => {
+            return (
             <div
               key={conv.id}
               className={`p-2 cursor-pointer hover:bg-gray-50 flex justify-between items-start ${conversation?.id === conv.id ? 'bg-gray-100' : ''}`}
@@ -59,7 +60,7 @@ export const ConversationsView: React.FC<ConversationsViewProps> = ({
               </div>
               <FaTrash onClick={(e) => handleDeleteConversation(conv.id, e)} />
             </div>
-          ))}
+          ); })}
         </div>
       )}
     </div>

@@ -1,10 +1,11 @@
 import { DirectorySourceInput,  FilePathSourceInput, FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/Source";
-import { addSourcesToConversation, conversationsDir, getOrCreateConversation } from "../ollama/ollamaService.conversation";
+import { addSourcesToConversation, getOrCreateConversation } from "../ollama/ollamaService.conversation";
 import { getDirectoryInfo, getFileInfo, getFileTree } from "../files/fileService.read";
 import { v4 as uuidv4 } from 'uuid';
 import { Conversation } from "shared/types/Conversation";
 import fs from "fs";
 import path from "path";
+import { getPath } from "../files/fileService.directory";
 
 export const addSources = async (
   input: SourceInput[],
@@ -50,7 +51,7 @@ export const getFileSource = async (sourceInput: FileSourceInput, conversation: 
   const arrayBuffer = sourceInput.file;
   const buffer = Buffer.from(arrayBuffer);
 
-  const conversationDataPath = path.join(conversationsDir, `${conversation.id}`);
+  const conversationDataPath = getPath("Conversations", `${conversation.id}`);
   const filePath = path.join(conversationDataPath, sourceInput.fileName || `att_${uuidv4()}.${sourceInput.fileType?.replace("/", "") ?? ""}`);
   if (!fs.existsSync(conversationDataPath)) {
     fs.mkdirSync(conversationDataPath, { recursive: true });

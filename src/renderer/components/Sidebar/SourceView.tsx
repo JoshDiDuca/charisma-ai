@@ -41,7 +41,7 @@ export const SourcesView: React.FC<SourcesViewProps> = ({
           }
         }} />
       </div>
-      <Card className="p-2 flex-grow overflow-y-auto rounded-none" style={{ minHeight: '200px' }}>
+      <Card className="p-2 flex-grow overflow-y-auto rounded-none">
         <div className="text-sm">
           {
             conversation?.sources &&

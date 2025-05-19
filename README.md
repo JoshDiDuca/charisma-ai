@@ -124,7 +124,7 @@ The built apps will be available on the `release` folder.
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow our [contribution guidelines](CONTRIBUTING.md) and:
+We welcome contributions! Please follow our contribution guidelines:
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feat/amazing-feature`)

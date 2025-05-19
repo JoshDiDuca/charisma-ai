@@ -6,6 +6,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60  # Add overall job timeout
 
     strategy:
       matrix:
@@ -13,12 +14,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 16  # Changed from 18 to 16 to avoid npm hanging issues
+          cache: 'npm'      # Enable npm caching
 
       - name: apt-update
         if: startsWith(matrix.os, 'ubuntu-latest')
@@ -33,12 +35,14 @@ jobs:
         run: sudo apt-get install libarchive-tools rpm
 
       - name: Release Electron app
-        uses: coparse-inc/action-electron-builder@v1.0.0
+        uses: samuelmeuli/action-electron-builder@v1
+        timeout-minutes: 30  # Add timeout specifically for this step
         with:
           # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
           github_token: ${{ secrets.github_token }}
-
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
           release: true
+          # Add build arguments to handle dependency issues
+          build_script_name: "build"
+          args: "--legacy-peer-deps"

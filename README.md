@@ -91,7 +91,7 @@ The built apps will be available on the `release` folder.
 - [x] Automatically download Ollama and dependencies
 - [x] Full download for models instead of Ollama pulling 
 - [x] Message attachments
-- [ ] Flexible UI
+- [x] Flexible UI
 - [ ] Web RAG query directly reading file urls like .pdf etc
 - [ ] Next prompt suggestions
 - [ ] Reasoning model "thinking" support

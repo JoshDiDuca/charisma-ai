@@ -15,16 +15,10 @@ import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocum
 import { deleteFileOrFolder } from '../files/fileService.delete';
 import { getPath } from '../files/fileService.directory';
 
-export const conversationsDir = getPath("Conversations");
-
-// Ensure conversations directory exists
-if (!fs.existsSync(conversationsDir)) {
-  fs.mkdirSync(conversationsDir, { recursive: true });
-}
 
 export const saveConversation = async (conversation: Conversation): Promise<Conversation> => {
   try {
-    const filePath = path.join(conversationsDir, `${conversation.id}.json`);
+    const filePath = getPath("Conversations", `${conversation.id}.json`);
     fs.writeFileSync(filePath, JSON.stringify(conversation, null, 2));
     return conversation;
   } catch (error) {
@@ -35,12 +29,9 @@ export const saveConversation = async (conversation: Conversation): Promise<Conv
 
 export const getConversation = async (conversationId: string): Promise<Conversation | null> => {
   try {
-    const filePath = path.join(conversationsDir, `${conversationId}.json`);
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, 'utf8');
-      return JSON.parse(data) as Conversation;
-    }
-    return null;
+    const filePath = getPath("Conversations", `${conversationId}.json`);
+    const data = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(data) as Conversation;
   } catch (error) {
     logError(`Failed to get conversation`, { error, category: "Conversations", showUI: true });
     return null;
@@ -49,16 +40,13 @@ export const getConversation = async (conversationId: string): Promise<Conversat
 
 export const getAllConversations = async (): Promise<Conversation[]> => {
   try {
-    if (!fs.existsSync(conversationsDir)) {
-      return [];
-    }
-
-    const files = fs.readdirSync(conversationsDir);
+    const dir = getPath("Conversations")
+    const files = fs.readdirSync(dir);
     const conversations: Conversation[] = [];
 
     for (const file of files) {
       if (file.endsWith('.json')) {
-        const filePath = path.join(conversationsDir, file);
+        const filePath = path.join(dir, file);
         const data = fs.readFileSync(filePath, 'utf8');
         conversations.push(JSON.parse(data) as Conversation);
       }
@@ -74,8 +62,8 @@ export const getAllConversations = async (): Promise<Conversation[]> => {
 
 export const deleteConversation = async (conversationId: string): Promise<boolean> => {
   try {
-    const filePath = path.join(conversationsDir, `${conversationId}.json`);
-    const fileAttachmentsPath = path.join(conversationsDir, `${conversationId}`);
+    const filePath =getPath("Conversations", `${conversationId}.json`);
+    const fileAttachmentsPath = getPath("Conversations", conversationId);
     const databaseFolder = getPath("DB", conversationId);
 
     await deleteFileOrFolder(filePath)

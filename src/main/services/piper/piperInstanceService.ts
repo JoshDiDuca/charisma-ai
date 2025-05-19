@@ -9,6 +9,7 @@ import getPlatform from '../platformService'
 import { app } from 'electron'
 import { IPC } from 'shared/constants'
 import { splashWindow } from 'main/windows/splash'
+import { getPath } from '../files/fileService.directory'
 
 export class PiperInstanceService {
   public downloadService = new DownloadService()
@@ -20,7 +21,7 @@ export class PiperInstanceService {
 
   }
   get binaryDir() {
-    return path.join(app.getPath('userData'), 'piper-bin')
+    return getPath("PiperBin");
   }
 
   get execPath() {

@@ -12,10 +12,10 @@ import { ollama } from './ollamaService.core';
 import { Conversation, Message } from 'shared/types/Conversation';
 import { Source } from 'shared/types/Sources/Source';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
-import { getVectorStorePath } from './ollamaService.embedding';
 import { deleteFileOrFolder } from '../files/fileService.delete';
+import { getPath } from '../files/fileService.directory';
 
-export const conversationsDir = path.join(app.getPath('userData'), 'conversations');
+export const conversationsDir = getPath("Conversations");
 
 // Ensure conversations directory exists
 if (!fs.existsSync(conversationsDir)) {
@@ -76,7 +76,7 @@ export const deleteConversation = async (conversationId: string): Promise<boolea
   try {
     const filePath = path.join(conversationsDir, `${conversationId}.json`);
     const fileAttachmentsPath = path.join(conversationsDir, `${conversationId}`);
-    const databaseFolder = getVectorStorePath(conversationId);
+    const databaseFolder = getPath("DB", conversationId);
 
     await deleteFileOrFolder(filePath)
     await deleteFileOrFolder(fileAttachmentsPath)

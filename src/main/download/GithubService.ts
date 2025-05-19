@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { app } from 'electron';
+import { getPath } from 'main/services/files/fileService.directory';
 
 interface GitHubAsset {
   browser_download_url: string;
@@ -22,18 +23,14 @@ interface GitHubCache {
 }
 
 export class GitHubService {
-  private readonly cacheDir: string;
   private readonly cacheExpiry = 4 * 60 * 60 * 1000; // 4 hours
 
   constructor() {
-    this.cacheDir = path.join(app.getPath('userData'), 'github_cache');
-    // Ensure the cache directory exists
-    this.ensureDirExists(this.cacheDir);
   }
 
   async getReleaseInfo(repo: string): Promise<GitHubRelease[]> {
     const cacheKey = `${repo}`;
-    const cachePath = path.join(this.cacheDir, `${cacheKey}.json`);
+    const cachePath = getPath("GithubCache", `${cacheKey}.json`);
 
     const cache = await this.readCache(cachePath);
     const headers: Record<string, string> = {
@@ -69,14 +66,6 @@ export class GitHubService {
     }
   }
 
-  private ensureDirExists(dirPath: string): void {
-    try {
-      fs.mkdirSync(dirPath, { recursive: true });
-    } catch (error) {
-      console.error(`Failed to create directory: ${dirPath}`, error);
-    }
-  }
-
   private async readCache(cachePath: string): Promise<GitHubCache | null> {
     try {
       const fileContent = await fs.promises.readFile(cachePath, 'utf-8');
@@ -94,9 +83,6 @@ export class GitHubService {
       data: releases,
       expires: Date.now() + this.cacheExpiry
     };
-
-    // Ensure the directory exists before writing
-    this.ensureDirExists(path.dirname(cachePath));
 
     try {
       await fs.promises.writeFile(cachePath, JSON.stringify(newCache));

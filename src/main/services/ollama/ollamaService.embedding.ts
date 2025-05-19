@@ -21,12 +21,8 @@ import { currentlyInstallingModels, ollama, stopPolling } from './ollamaService.
 import { sendMessage } from './ollamaService';
 import { isNil } from 'lodash';
 import { fetchOllamaLibraryModels, SupportedOllamaEmbedddingModels } from './ollamaService.library';
+import { getPath } from '../files/fileService.directory';
 
-const STORAGE_PATH = path.join(app.getPath('userData'), 'DB');
-
-if (!fs.existsSync(STORAGE_PATH)) {
-  fs.mkdirSync(STORAGE_PATH, { recursive: true });
-}
 
 const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
@@ -85,13 +81,8 @@ export const getAllEmbeddingModels = async () => {
   });
 };
 
-
-export const getVectorStorePath = (conversationId?: string) => {
-  const conversationVectoreStore = conversationId ? path.join(STORAGE_PATH, conversationId) : STORAGE_PATH;
-  return conversationVectoreStore;
-}
 async function initializeVectorStore(embeddingModel: string, conversationId?: string) {
-  const conversationVectoreStore = getVectorStorePath(conversationId);
+  const conversationVectoreStore = getPath("DB", conversationId);
 
   const embeddings = new OllamaEmbeddings({
     model: embeddingModel,
@@ -191,15 +182,11 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[], vectorStore
   const workerCount = Math.min(CONCURRENT_LIMIT, filesToProcess.length);
   await Promise.all(Array.from({ length: workerCount }, () => worker()));
 
-  logInfo(`Processed files, found ${resultsToBatch.length} valid documents for embedding.`);
-
   if (resultsToBatch.length === 0) {
-    logInfo(`No new documents to add to collection ${STORAGE_PATH}.`);
+    logInfo(`No new documents to add to collection .`);
     logInfo('loadOllamaEmbedding Done');
     return;
   }
-
-  logInfo(`Upserting ${resultsToBatch.length} documents into ${STORAGE_PATH} in batches of ${BATCH_SIZE}...`);
 
   for (let i = 0; i < resultsToBatch.length; i += BATCH_SIZE) {
     const batch = resultsToBatch.slice(i, i + BATCH_SIZE);
@@ -217,7 +204,7 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[], vectorStore
     }
   }
 
-  await vectorStore.save(STORAGE_PATH);
+  await vectorStore.save(getPath("DB"));
 }
 
 export async function loadOllamaWebEmbedding(source: WebSourceInput, vectorStore: HNSWLib): Promise<void> {
@@ -261,7 +248,7 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput, vectorStore
       metadata: toProcess.metadata
     }]);
 
-    await vectorStore.save(STORAGE_PATH);
+    await vectorStore.save(getPath("DB"));
 
     logInfo(`Processed web page: ${source.url}`);
     // console.log(cleanedHtml);

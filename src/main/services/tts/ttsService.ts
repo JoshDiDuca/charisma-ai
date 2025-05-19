@@ -4,6 +4,7 @@ import path from 'path'
 import { app, ipcMain } from 'electron'
 import { mainWindow } from 'main/windows/main'
 import { IPC } from 'shared/constants'
+import { getPath } from '../files/fileService.directory'
 
 export class TTSWorkerService {
   private worker: Worker | null = null
@@ -21,7 +22,7 @@ export class TTSWorkerService {
     const workerPath = path.join(__dirname, './tts_worker.js')
     this.worker = new Worker(workerPath, {
       workerData: {
-        userData: path.join(app.getPath('userData'), 'piper-bin')
+        userData: getPath("PiperBin")
       }
     })
 

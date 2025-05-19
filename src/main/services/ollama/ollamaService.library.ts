@@ -3,6 +3,7 @@ import { app } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { OllamaLibraryModel } from 'shared/types/OllamaModel';
+import { getPath } from '../files/fileService.directory';
 
 interface CacheData {
   timestamp: number;
@@ -22,15 +23,8 @@ export const SupportedOllamaEmbedddingModels = [
 ]
 
 
-// File paths
-export const cacheDir = path.join(app.getPath('userData'), 'models');
 
-// Ensure conversations directory exists
-if (!fs.existsSync(cacheDir)) {
-  fs.mkdirSync(cacheDir, { recursive: true });
-}
-
-const cacheFilePath = path.join(cacheDir, 'ollama_models_cache.json');
+const cacheFilePath = getPath("ModelsCache", 'ollama_models_cache.json');
 const CACHE_EXPIRATION = 60 * 60 * 1000; // 30 minutes in milliseconds
 
 /**

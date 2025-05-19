@@ -1,19 +1,17 @@
 import React from 'react';
 import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkBreaks from 'remark-breaks';
 import { Tabs, Tab, Card, CardBody, Accordion, AccordionItem } from '@heroui/react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { Message } from 'shared/types/Conversation';
 import { get } from 'lodash';
-import { preprocessMarkdownText } from 'renderer/components/Chat/Markdown/utils';
-import CopyCodeButton from 'renderer/components/Chat/Markdown/CopyCodeButton';
+import { ChatMarkdown } from './ChatMarkdown';
 
 interface MessageItemProps {
   message: Message;
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
+
+  const text = message.userInput || message.text;
   return (
     <div
       style={{ userSelect: "text" }}
@@ -23,43 +21,31 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
         }`}
     >
       {message.role === 'user' ? (
-        <Markdown>{message.userInput || message.text}</Markdown>
+        <Markdown>{text}</Markdown>
       ) : (
         <Tabs aria-label="Options">
           <Tab key="answer" title="Answer">
             <Card>
               <CardBody>
-                <Markdown
-                  remarkPlugins={[remarkGfm, remarkBreaks]}
-                  components={{
-                    code(props) {
-                      const { children, className, node, ...rest } = props;
-                      const match = /language-(\w+)/.exec(className || '');
-                      return match ? (
-                        <div style={{ position: 'relative' }}>
-                          <CopyCodeButton code={String(children)}>{children}</CopyCodeButton>
-                          <SyntaxHighlighter language={match[1]} {...props}>
-                            {String(children)}
-                          </SyntaxHighlighter>
-                        </div>
-                      ) : (
-                        <code {...rest} className={className}>
-                          {children}
-                        </code>
-                      );
-                    },
-                    p: ({ node, children, ...props }) => (
-                      <p style={{ marginBottom: "1em" }} {...props}>{children}</p>
-                    ),
-                    br: () => <br style={{ marginBottom: "0.5em" }} />
-                  }}
-                >
-                  {preprocessMarkdownText(message.userInput || message.text)}
-                </Markdown>
+                <ChatMarkdown message={text} />
               </CardBody>
             </Card>
           </Tab>
-          <Tab key="sources" title="Sources">
+          {(message.thoughts && message.thoughts.length > 0) && <Tab key="thoughts" title="Thoughts">
+            <Card>
+              <CardBody>
+                  {message.thoughts?.map((source, index) => {
+                    return (
+                      <div
+                      >
+                        <ChatMarkdown message={source} />
+                      </div>
+                    );
+                  }) ?? []}
+              </CardBody>
+            </Card>
+          </Tab>}
+          {(message.messageSources && message.messageSources.length > 0) && <Tab key="sources" title="Sources">
             <Card>
               <CardBody>
                 <Accordion>
@@ -86,7 +72,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
                 </Accordion>
               </CardBody>
             </Card>
-          </Tab>
+          </Tab>}
         </Tabs>
       )}
     </div>

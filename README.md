@@ -115,7 +115,7 @@ The built apps will be available on the `release` folder.
 
 ### Future Vision
 
-- **Easy access to run any AI locally** 
+- **Easy access to run any AI locally**
 - **AI Pair Programmer** - Refactor code via chat
 - **Multi Source Data Analysis** - Images/PDFs/Web Sources/Database support
 - **AI Collaboration** - Shared session histories

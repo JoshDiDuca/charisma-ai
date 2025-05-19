@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 
 interface SelectOption {
   key: string;
@@ -22,7 +22,20 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [filter, setFilter] = useState('');
   const selectRef = useRef<HTMLDivElement>(null);
+
+  const filteredOptions = useMemo(() => {
+    const lowerFilter = filter.toLowerCase();
+    return options.filter(option => {
+      // Search in value and label (assuming label is string or can be converted to string)
+      const labelText = typeof option.label === 'string' ? option.label : String(option.label);
+      return (
+        option.value.toLowerCase().includes(lowerFilter) ||
+        labelText.toLowerCase().includes(lowerFilter)
+      );
+    });
+  }, [filter, options]);
 
   const selectedOption = options.find(option => option.value === value);
 
@@ -31,12 +44,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   const handleOptionClick = (optionValue: string) => {
     onChange(optionValue);
     setIsOpen(false);
+    setFilter('');
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setFilter('');
       }
     };
 
@@ -71,18 +86,28 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-y-auto">
-          {options.map((option) => (
-            <div
-              key={option.key}
-              className={`p-2 cursor-pointer hover:bg-gray-100 ${
-                option.value === value ? 'bg-gray-100' : ''
-              }`}
-              onClick={() => handleOptionClick(option.value)}
-            >
-              {option.label}
-            </div>
-          ))}
+        <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg overflow-y-auto max-w-screen" style={{ maxHeight: '400px' }}>
+          <input
+            type="text"
+            className="w-full p-2 border-b outline-none"
+            placeholder="Search..."
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            onClick={e => e.stopPropagation()}
+          />
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map(option => (
+              <div
+                key={option.key}
+                className={`p-2 cursor-pointer hover:bg-gray-100 ${option.value === value ? 'bg-gray-100' : ''}`}
+                onClick={() => handleOptionClick(option.value)}
+              >
+                {option.label}
+              </div>
+            ))
+          ) : (
+            <div className="p-2 text-gray-500">No options found</div>
+          )}
         </div>
       )}
     </div>

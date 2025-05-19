@@ -32,3 +32,13 @@ export interface OllamaModelDownloadProgress {
   currentFile?: string;
   error?: string;
 }
+
+export interface OllamaLibraryModel {
+  name: string;
+  url: string;
+  description: string;
+  size: string;
+  pullCount: string;
+  tagCount: string;
+  lastUpdated: string;
+}

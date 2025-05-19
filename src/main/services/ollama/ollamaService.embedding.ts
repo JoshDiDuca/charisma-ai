@@ -10,7 +10,6 @@ import {
   getFileInfo,
 } from '../files/fileService.read';
 import * as cheerio from 'cheerio';
-import { OllamaModels } from './ollamaCatalog';
 import { logError, logInfo } from '../log/logService';
 import { getOrCreateConversation } from './ollamaService.conversation';
 import { Source, WebSourceInput } from 'shared/types/Sources/Source';
@@ -21,6 +20,7 @@ import path from 'path';
 import { currentlyInstallingModels, ollama, stopPolling } from './ollamaService.core';
 import { sendMessage } from './ollamaService';
 import { isNil } from 'lodash';
+import { fetchOllamaLibraryModels, SupportedOllamaEmbedddingModels } from './ollamaService.library';
 
 const STORAGE_PATH = path.join(app.getPath('userData'), 'DB');
 
@@ -32,29 +32,29 @@ const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 
 async function generatePrompt(prompt: string, data: ResponseSourceDocument[], attachments?: Source[]): Promise<string> {
-  const messageParts : string[] = [];
-  if(data.length > 0) {
+  const messageParts: string[] = [];
+  if (data.length > 0) {
     const context = data.map(d => d.content).filter(Boolean).join('\n');
     messageParts.push(`Context: ${context}`)
   }
 
   messageParts.push(`Question: ${prompt}`)
 
-  if(attachments && attachments.length > 0) {
+  if (attachments && attachments.length > 0) {
     const attachmentText: string[] = [];
     for (const attachment of attachments) {
       switch (attachment.type) {
         case "File":
-            if(!await shouldSkipFile(attachment.savedFilePath)){
-              const text = await readFileByExtension(attachment.savedFilePath);
-              if(text){
-                attachmentText.push(text);
-              }
+          if (!await shouldSkipFile(attachment.savedFilePath)) {
+            const text = await readFileByExtension(attachment.savedFilePath);
+            if (text) {
+              attachmentText.push(text);
             }
+          }
           break;
       }
     }
-    if(attachmentText.length){
+    if (attachmentText.length) {
       messageParts.push(`ATTACHED: ${attachmentText.join(`\n`)}`)
     }
   }
@@ -62,20 +62,19 @@ async function generatePrompt(prompt: string, data: ResponseSourceDocument[], at
   return messageParts.join(`\n`);
 }
 
-export const getInstalledEmbeddingModels = async (): Promise<string[]> => {
+export const getInstalledEmbeddingModels = async () => {
   const response = await ollama.list();
-  const installedModels = response.models.map(m => m.name);
-  return installedModels.filter(modelName =>
-    OllamaModels.some(
-      baseModel => modelName.startsWith(baseModel.name) && baseModel.type === 'Embedding'
-    )
-  );
+  const installedModels = response.models;
+  return installedModels.filter(m => m.name.toLowerCase().includes("embed"))
 };
 
 export const getAllEmbeddingModels = async () => {
   const installedList = await getInstalledEmbeddingModels();
-  return OllamaModels.filter(m => m.type === 'Embedding').map(m => {
-    const installed = installedList.some(installedName => installedName.startsWith(m.name));
+
+  // No point calling ollama library here as only two I've found are supported by most models
+
+  return SupportedOllamaEmbedddingModels.map(m => {
+    const installed = installedList.some(installedName => installedName.name.startsWith(m.name));
     const installing = currentlyInstallingModels.has(m.name);
 
     if (installed && installing) {

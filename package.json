@@ -2,7 +2,7 @@
   "displayName": "Charisma",
   "name": "charisma-ai-studio",
   "description": "Charisma Studio",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "./node_modules/.dev/main/index.js",
   "resources": "src/resources",
   "author": {

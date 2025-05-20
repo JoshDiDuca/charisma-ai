@@ -1,11 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
-import fs, { existsSync, mkdirSync } from 'fs';
+import fs from 'fs';
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OllamaEmbeddings } from "@langchain/ollama";
 import {
   flattenTree,
   shouldSkipFile,
-  TreeNode,
   readFileByExtension,
   getFileInfo,
 } from '../files/fileService.read';
@@ -15,12 +14,10 @@ import { getOrCreateConversation } from './ollamaService.conversation';
 import { Source, WebSourceInput } from 'shared/types/Sources/Source';
 import axios from 'axios';
 import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
-import { app } from 'electron';
-import path from 'path';
 import { currentlyInstallingModels, ollama, stopPolling } from './ollamaService.core';
 import { sendMessage } from './ollamaService';
 import { isNil } from 'lodash';
-import { fetchOllamaLibraryModels, SupportedOllamaEmbedddingModels } from './ollamaService.library';
+import { SupportedOllamaEmbedddingModels } from './ollamaService.library';
 import { getPath } from '../files/fileService.directory';
 import { Conversation } from 'shared/types/Conversation';
 import { getVectorStore } from '../hnswService';

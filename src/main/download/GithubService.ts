@@ -1,6 +1,4 @@
 import fs from 'fs';
-import path from 'path';
-import { app } from 'electron';
 import { getPath } from 'main/services/files/fileService.directory';
 
 interface GitHubAsset {

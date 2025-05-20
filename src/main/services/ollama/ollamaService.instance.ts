@@ -107,16 +107,16 @@ export class OllamaInstanceService {
     })
 
     this.process.stdout.on('data', (data: Buffer) => {
-      logInfo(`Ollama: ${data.toString()}`, { category: "Ollama" })
+      logInfo(`Ollama: ${data.toString()}`, { category: "Ollama", logToConsole: false })
     })
 
     this.process.stderr.on('data', (data: Buffer) => {
-      logError(`Ollama Error: ${data.toString()}`, { category: "Ollama" })
+      logError(`Ollama Error: ${data.toString()}`, { category: "Ollama", logToConsole: false })
     })
 
     this.process.on('exit', (code: number) => {
       this.isRunning = false
-      logInfo(`Ollama process exited with code ${code}`, { category: "Ollama" })
+      logInfo(`Ollama process exited with code ${code}`, { category: "Ollama", logToConsole: false })
     })
 
     this.isRunning = true

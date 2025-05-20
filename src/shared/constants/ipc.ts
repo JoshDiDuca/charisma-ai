@@ -16,6 +16,7 @@ export const IPC = {
   },
   SOURCE: {
     SELECT_FOLDER: "source:select-folder",
+    SELECT_FILE: "source:select-file",
     ADD_SOURCES: "source:add-sources",
     QUERY: "source::query",
   },

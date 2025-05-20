@@ -77,6 +77,7 @@ const extractOllamaDownloadUrls = async (modelInput: string): Promise<OllamaExtr
 const sendDownloadProgress = (progress: OllamaModelDownloadProgress) => {
   logInfo(`[Download Progress] Model: ${progress.model}, Status: ${progress.status}, Progress: ${progress.progress.toFixed(2)}%`, {
 
+    logToConsole: false,
     category: "Ollama"
   });
 
@@ -87,7 +88,7 @@ export const stopPolling = (modelName: string) => {
   if (modelPollIntervals.has(modelName)) {
     clearInterval(modelPollIntervals.get(modelName)!);
     modelPollIntervals.delete(modelName);
-    logInfo(`[Polling] Stopped polling for ${modelName}`, { category: "Ollama" });
+    logInfo(`[Polling] Stopped polling for ${modelName}`, { category: "Ollama", logToConsole: false });
   }
   currentlyInstallingModels.delete(modelName);
 };

@@ -119,7 +119,7 @@ export const Sidebar = ({ }: SidebarProps) => {
   const SidebarOptions: SidebarOption = {
     Conversations: {
       sortOrder: 2,
-      label: "Sources",
+      label: "Conversations",
       icon: <FaComments className="text-xl" />,
       hideOthers: true,
       element: <ConversationsView

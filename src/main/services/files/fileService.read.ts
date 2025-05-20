@@ -11,14 +11,14 @@ import { ENVIRONMENT } from 'shared/constants';
 
 export const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
-export let embedFolder: string | null = null;
+export let embedFolders: string[] | null = null;
 
-export const selectEmbedFolder = async (): Promise<string | null> => {
+export const selectEmbedFolder = async (openFolder?: boolean): Promise<string[] | null> => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
-    properties: ['openDirectory'],
+    properties: [openFolder ? 'openDirectory' : 'createDirectory', 'multiSelections'],
   });
-  embedFolder = canceled ? null : filePaths[0];
-  return embedFolder;
+  embedFolders = canceled ? null : filePaths;
+  return embedFolders;
 };
 
 export type TreeNode = {
@@ -127,7 +127,7 @@ export const isBinaryFileByExtension = (filePath: string): boolean => {
     '.dll', '.exe', '.so', '.dylib', '.bin', '.obj', '.o', '.a', '.lib',
     '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp', '.ico',
     '.mp3', '.wav', '.ogg', '.flac', '.aac',
-    '.mp4', '.pdf', '.avi', '.mov', '.mkv', '.webm',
+    '.mp4', '.avi', '.mov', '.mkv', '.webm',
     '.zip', '.rar', '.gz', '.tar', '.7z',
     '.sqlite', '.db', '.mdb',
     '.woff', '.woff2', '.ttf', '.otf', '.eot', '.bin'
@@ -198,12 +198,9 @@ export async function shouldSkipFile(filePath: string, stats?: Stats): Promise<b
 
 
 
-const readFileAsync = promisify(fsOrginal.readFile);
-
-
 export async function readPdfFile(filePath: string): Promise<string> {
   try {
-    const dataBuffer = await readFileAsync(filePath);
+    const dataBuffer = await fs.readFile(filePath);
     const data = await pdfParse(dataBuffer);
     return data.text;
   } catch (error) {
@@ -225,7 +222,7 @@ async function readWordFile(filePath: string): Promise<string> {
 
 export async function readBinaryFileAsBase64(filePath: string): Promise<string> {
   try {
-    const data = await readFileAsync(filePath);
+    const data = await fs.readFile(filePath);
     return data.toString('base64');
   } catch (error) {
     logError(`Failed to read binary file as Base64: ${filePath}`, { error, category: "FileProcessing", showUI: false });

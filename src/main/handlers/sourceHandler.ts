@@ -8,13 +8,13 @@ import { SourceInput } from 'shared/types/Sources/Source'
 
 export class SourceHandlers {
   @IpcHandle(IPC.SOURCE.SELECT_FOLDER)
-  async selectFolder() {
+  async selectFolder(openFolder?: boolean) {
     return await selectEmbedFolder()
   }
 
   @IpcHandle(IPC.SOURCE.ADD_SOURCES)
-  async addSources(input: SourceInput[], model: string, pendingAttachment: boolean | undefined, conversationId: string | undefined, systemMessage: string | undefined) {
-    return addSources(input, model, pendingAttachment, conversationId, systemMessage)
+  async addSources(input: SourceInput[], model: string, embeddingModel: string, pendingAttachment: boolean | undefined, conversationId: string | undefined, systemMessage: string | undefined) {
+    return addSources(input, model, embeddingModel, pendingAttachment, conversationId, systemMessage)
   }
 
   @IpcHandle(IPC.SOURCE.QUERY)

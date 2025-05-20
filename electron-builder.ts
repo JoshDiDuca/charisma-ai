@@ -61,6 +61,7 @@ export default {
     target: [
       'nsis',
       'dir'
-    ]
+    ],
+    requestedExecutionLevel: "requireAdministrator"
   },
 } satisfies Configuration

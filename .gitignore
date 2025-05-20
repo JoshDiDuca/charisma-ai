@@ -13,6 +13,8 @@
 /chroma
 /release
 
+scripts/personal
+
 resources/win/bin/ollama
 resources/win/bin/piper
 resources/DB

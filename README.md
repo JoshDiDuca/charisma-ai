@@ -93,6 +93,7 @@ The built apps will be available on the `release` folder.
 - [x] Message attachments
 - [x] Flexible UI
 - [x] Improved handling of Ollama being installed and exe files not present in release.
+- [ ] Fix large pdf files/text files not embedding
 - [ ] Web RAG query directly reading file urls like .pdf etc
 - [ ] Next prompt suggestions
 - [ ] Reasoning model "thinking" support

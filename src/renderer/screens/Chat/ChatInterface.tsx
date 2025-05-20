@@ -62,7 +62,7 @@ export const ChatInterface = ({}: ChatInterfaceProps) => {
           fileName: file.name,
           fileSize: file.size,
           fileType: file.type
-        } as SourceInput], model, true, conversation?.id, undefined)
+        } as SourceInput], model, embeddingModel, true, conversation?.id, undefined)
         .then((newConversation: Conversation) =>
           setConversation(newConversation));
   };

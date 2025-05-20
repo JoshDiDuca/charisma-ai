@@ -9,14 +9,15 @@ enum DirectoryPaths {
   OllamaBin = "ollama-bin",
   PiperBin = "piper-bin",
   Conversations = "conversations",
-  Settings = "settings"
+  Settings = "settings",
+  Logs = "log"
 }
 
 type DirectoryPathKeys = keyof typeof DirectoryPaths;
 
 export const getBaseDataDirectory = () => app.getPath('userData');
 
-function hasFileExtension(p: string) {
+export function hasFileExtension(p: string) {
   return path.extname(p) !== '';
 }
 
@@ -30,6 +31,10 @@ export const getPath = (type: DirectoryPathKeys, ...paths: (string | undefined)[
 
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
+    }
+  } else {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
   }
   return path.join(getBaseDataDirectory(), DirectoryPaths[type], ...pathsToUse);

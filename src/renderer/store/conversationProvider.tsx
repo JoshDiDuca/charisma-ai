@@ -1,4 +1,5 @@
 import { isNil } from 'lodash';
+import path from 'node:path';
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { IPC } from 'shared/constants';
 import { AppStatus } from 'shared/types/AppStatus';
@@ -185,21 +186,34 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
         url: item.url,
         description: item.description,
         title: item.title
-      }) as SourceInput), model, false, conversation?.id, undefined)
+      }) as SourceInput), model, embeddingModel, false, conversation?.id, undefined)
       .then((newConversation: Conversation) =>
         setConversation(newConversation));
   };
 
   const handleSelectSourcesFolder = async () => {
-    const folder = await App.invoke(IPC.SOURCE.SELECT_FOLDER);
-    if (!folder) return;
+    const paths: string[] | null = await App.invoke(IPC.SOURCE.SELECT_FOLDER);
+    console.log(paths)
+    if (!paths) return;
 
-    App.invoke(IPC.SOURCE.ADD_SOURCES,
-      [
-        { type: "Directory", directoryPath: folder } as SourceInput
-      ], model, false, conversation?.id, undefined)
-      .then((newConversation: Conversation) =>
-        setConversation(newConversation));
+    const hasFileExtension = (p: string) => {
+      const lastDotIndex = p.lastIndexOf('.');
+      const lastSeparatorIndex = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'));
+      return lastDotIndex > lastSeparatorIndex && lastDotIndex > 0;
+    }
+
+    paths.forEach(p => {
+      const isFile = hasFileExtension(p);
+
+      const params = isFile ? { type: "FilePath", filePath: p } : {type: "Directory", directoryPath: p}  as SourceInput
+
+      App.invoke(IPC.SOURCE.ADD_SOURCES,
+        [
+          params
+        ], model, embeddingModel, false, conversation?.id, undefined)
+        .then((newConversation: Conversation) =>
+          setConversation(newConversation));
+      })
   };
 
   const value = {

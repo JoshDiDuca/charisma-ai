@@ -1,4 +1,4 @@
-import { DirectorySourceInput,  FilePathSourceInput, FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/Source";
+import { DirectorySourceInput, FilePathSourceInput, FileSourceInput, Source, SourceInput, WebSourceInput } from "shared/types/Sources/Source";
 import { addSourcesToConversation, getOrCreateConversation } from "../ollama/ollamaService.conversation";
 import { getDirectoryInfo, getFileInfo, getFileTree } from "../files/fileService.read";
 import { v4 as uuidv4 } from 'uuid';
@@ -6,15 +6,18 @@ import { Conversation } from "shared/types/Conversation";
 import fs from "fs";
 import path from "path";
 import { getPath } from "../files/fileService.directory";
+import { omit } from "lodash";
+import {  loadOllamaEmbedding } from "../ollama/ollamaService.embedding";
 
 export const addSources = async (
   input: SourceInput[],
   model: string,
+  embeddingModel: string,
   pendingAttachment?: boolean,
   conversationId?: string,
   systemMessage?: string
 ): Promise<Conversation> => {
-  const conversation = await getOrCreateConversation(model, conversationId, systemMessage);
+  let conversation = await getOrCreateConversation(model, conversationId, systemMessage);
 
   const sources: Source[] = [];
   for (const sourceInput of input) {
@@ -33,7 +36,12 @@ export const addSources = async (
         break;
     }
   }
-  return await addSourcesToConversation(model, conversation.id, systemMessage, sources, pendingAttachment);
+
+  conversation = await addSourcesToConversation(model, conversation.id, systemMessage, sources, pendingAttachment);
+
+  await loadOllamaEmbedding(conversation.sources, embeddingModel, conversation);
+
+  return conversation;
 }
 
 export const getDirectorySource = async (sourceInput: DirectorySourceInput, conversation: Conversation): Promise<Source> => {
@@ -71,7 +79,8 @@ export const getFilePathSource = async (sourceInput: FilePathSourceInput, conver
 
   return {
     ...sourceInput,
-    ...stats
+    ...omit(stats, ["type"]),
+    fileType: stats.type
   } as Source;
 }
 

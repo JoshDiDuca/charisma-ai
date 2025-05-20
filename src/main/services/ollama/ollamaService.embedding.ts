@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs, { existsSync, mkdirSync } from 'fs';
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
+import { OllamaEmbeddings } from "@langchain/ollama";
 import {
   flattenTree,
   shouldSkipFile,
@@ -22,6 +22,8 @@ import { sendMessage } from './ollamaService';
 import { isNil } from 'lodash';
 import { fetchOllamaLibraryModels, SupportedOllamaEmbedddingModels } from './ollamaService.library';
 import { getPath } from '../files/fileService.directory';
+import { Conversation } from 'shared/types/Conversation';
+import { getVectorStore } from '../hnswService';
 
 
 const BATCH_SIZE = 50;
@@ -81,54 +83,40 @@ export const getAllEmbeddingModels = async () => {
   });
 };
 
-async function initializeVectorStore(embeddingModel: string, conversationId?: string) {
-  const conversationVectoreStore = getPath("DB", conversationId);
+export async function getOrCreateVectorStore(embeddingModel: string, conversation: Conversation) {
+  const conversationVectoreStore = getPath("DB", conversation.id);
 
   const embeddings = new OllamaEmbeddings({
     model: embeddingModel,
     baseUrl: "http://localhost:11434"
   });
 
-  try {
-    if (!existsSync(conversationVectoreStore)) {
-      mkdirSync(conversationVectoreStore, { recursive: true });
-    }
-  } catch (error) {
-    logError(`There was an error creating vector DB storage directory: ${conversationVectoreStore}`)
-  }
-
-  try {
-    let vectorStore: HNSWLib = await HNSWLib.load(conversationVectoreStore, embeddings);
-    logInfo("Loaded existing vector store");
-    return vectorStore;
-  } catch (e) {
-    logInfo("Creating new vector store");
-    let vectorStore: HNSWLib = await HNSWLib.fromDocuments([
-      {
-        pageContent: "Initialization document",
-        metadata: { initialization: true }
-      }
-    ], embeddings);
-    await vectorStore.save(conversationVectoreStore);
-    return vectorStore;
-  }
+  return getVectorStore(embeddings, conversationVectoreStore);
 }
 
-export async function loadOllamaEmbedding(sources: Source[], vectorStore: HNSWLib): Promise<void> {
+export async function loadOllamaEmbedding(sources: Source[], embeddingModel: string, conversation: Conversation): Promise<void> {
+  const vectorStore = await getOrCreateVectorStore(embeddingModel, conversation);
+
   for (const source of sources) {
     if (source.type === 'Directory') {
       const filePaths = flattenTree(source.fileTree?.children ?? []);
-      await loadOllamaFileEmbedding(filePaths, vectorStore);
+      await loadOllamaPathEmbedding(filePaths.filter(node => !node.isFolder).map(node => node.path), conversation, vectorStore);
+    }
+    if (source.type === 'File') {
+      await loadOllamaPathEmbedding([source.savedFilePath], conversation, vectorStore);
+    }
+    if (source.type === 'FilePath') {
+      await loadOllamaPathEmbedding([source.filePath], conversation, vectorStore);
     }
     if (source.type === 'Web') {
-      await loadOllamaWebEmbedding(source as WebSourceInput, vectorStore);
+      await loadOllamaWebEmbedding(source as WebSourceInput, conversation, vectorStore);
     }
   }
 }
 
-export async function loadOllamaFileEmbedding(filePaths: TreeNode[], vectorStore: HNSWLib): Promise<void> {
+export async function loadOllamaPathEmbedding(filePaths: string[], conversation: Conversation, vectorStore: HNSWLib): Promise<void> {
   const resultsToBatch: Array<{ content: string; metadata: any }> = [];
-  const filesToProcess = filePaths.filter(node => !node.isFolder).map(node => node.path);
+  const filesToProcess = filePaths;
 
   logInfo(`Found ${filesToProcess.length} potential files to process.`);
 
@@ -188,26 +176,20 @@ export async function loadOllamaFileEmbedding(filePaths: TreeNode[], vectorStore
     return;
   }
 
-  for (let i = 0; i < resultsToBatch.length; i += BATCH_SIZE) {
-    const batch = resultsToBatch.slice(i, i + BATCH_SIZE);
-    if (batch.length > 0) {
-      try {
-        await vectorStore.addDocuments(batch.map(b => ({ id: uuidv4(), pageContent: b.content, metadata: b.metadata })));
-        logInfo(`Upserted batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} documents)`);
-      } catch (error) {
-        logError(`Failed to upsert batch ${Math.floor(i / BATCH_SIZE) + 1}`, {
-          error,
-          category: 'Ollama',
-          showUI: true,
-        });
-      }
-    }
+  try {
+    await vectorStore.addDocuments(resultsToBatch.map(b => ({ id: uuidv4(), pageContent: b.content, metadata: b.metadata })));
+  } catch (error) {
+    logError(`Failed to upsert batch`, {
+      error,
+      category: 'Ollama',
+      showUI: true,
+    });
   }
 
-  await vectorStore.save(getPath("DB"));
+  await vectorStore.save(getPath("DB", conversation.id));
 }
 
-export async function loadOllamaWebEmbedding(source: WebSourceInput, vectorStore: HNSWLib): Promise<void> {
+export async function loadOllamaWebEmbedding(source: WebSourceInput, conversation: Conversation, vectorStore: HNSWLib): Promise<void> {
   try {
 
     const response = await axios.get(source.url);
@@ -248,7 +230,7 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput, vectorStore
       metadata: toProcess.metadata
     }]);
 
-    await vectorStore.save(getPath("DB"));
+    await vectorStore.save(getPath("DB", conversation.id));
 
     logInfo(`Processed web page: ${source.url}`);
     // console.log(cleanedHtml);
@@ -281,14 +263,9 @@ interface EmbeddingSource {
 export async function getEmbeddingSources(
   message: string,
   embeddingModel: string,
-  conversationId: string,
-  conversationSources: any[]
+  conversation: Conversation,
 ): Promise<EmbeddingSource[]> {
-  const vectorStore = await initializeVectorStore(embeddingModel, conversationId);
-
-  await loadOllamaEmbedding(conversationSources, vectorStore);
-  logInfo('Retrieving relevant documents for prompt.');
-
+  const vectorStore = await getOrCreateVectorStore(embeddingModel, conversation);
   return await getOllamaEmbeddingRetrieve(message, vectorStore);
 }
 
@@ -312,12 +289,12 @@ export async function sendMessageWithEmbedding(
       const retrievedSources = await getEmbeddingSources(
         message,
         embeddingModel,
-        conversation.id,
-        conversation.sources
+        conversation
       );
+
       sources.push(...retrievedSources);
 
-      logInfo(`Generated prompt with context from ${sources.length} documents.`);
+      logInfo(`Generated prompt with context from ${sources.length} documents.`, { error: JSON.stringify(sources) });
     } else {
       logInfo('No sources available for embedding, sending original message.');
     }

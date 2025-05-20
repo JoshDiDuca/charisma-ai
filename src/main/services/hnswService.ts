@@ -1,0 +1,83 @@
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { OllamaEmbeddings } from "@langchain/ollama";
+import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
+
+// Types
+export type Document = {
+  content: string;
+  metadata?: Record<string, any>;
+};
+
+export type SearchResult = {
+  content: string;
+  metadata: Record<string, any>;
+  score?: number;
+};
+
+
+// Get or create vector store
+export const getVectorStore = async (embeddings: OllamaEmbeddings, dir: string): Promise<HNSWLib> => {
+  try {
+    return await HNSWLib.load(dir, embeddings);
+  } catch (error) {
+    const vectorStore = await HNSWLib.fromDocuments(
+      [{ pageContent: "", metadata: { initialization: true } }],
+      embeddings
+    );
+    await vectorStore.save(dir);
+    return vectorStore;
+  }
+};
+
+// Add documents to vector store
+export const addDocuments = async (
+  vectorStore: HNSWLib,
+  documents: Document[],
+  batchSize = 50
+): Promise<void> => {
+  if (!documents.length) return;
+
+  for (let i = 0; i < documents.length; i += batchSize) {
+    const batch = documents.slice(i, i + batchSize);
+
+    const docs = batch.map(doc => ({
+      pageContent: doc.content,
+      metadata: doc.metadata || {},
+      id: uuidv4()
+    }));
+
+    await vectorStore.addDocuments(docs);
+  }
+};
+
+// Search for similar documents
+export const searchDocuments = async (
+  vectorStore: HNSWLib,
+  query: string,
+  maxResults = 5
+): Promise<SearchResult[]> => {
+  const results = await vectorStore.similaritySearch(query, maxResults);
+
+  return results.map(doc => ({
+    content: doc.pageContent,
+    metadata: doc.metadata
+  }));
+};
+
+// Save vector store
+export const saveVectorStore = async (
+  vectorStore: HNSWLib,
+  dir: string
+): Promise<void> => {
+  await vectorStore.save(dir);
+};
+
+export const createDocument = (content: string, metadata = {}): Document => ({
+  content,
+  metadata: { ...metadata, timestamp: Date.now() }
+});
+
+export const createDocuments = (texts: string[], metadatas = []): Document[] => {
+  return texts.map((text, i) => createDocument(text, metadatas[i] || {}));
+};

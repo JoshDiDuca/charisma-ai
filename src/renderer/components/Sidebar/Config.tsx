@@ -95,8 +95,8 @@ export const Config: React.FC<ConfigProps> = ({
           <h2 className="text-lg font-bold">Sources</h2>
           <MultiButton options={{
             folder: {
-              label: "Add Folder",
-              description: "Add sources from a folder on your PC.",
+              label: "Add Files",
+              description: "Add sources from your PC.",
               onClick: () => handleSelectFolder(),
               disabled: false
             },

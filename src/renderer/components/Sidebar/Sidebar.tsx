@@ -1,4 +1,4 @@
-import { Card } from '@heroui/react';
+import { Card, useSelect } from '@heroui/react';
 import { useState, useRef, useEffect } from 'react';
 import { FaComments, FaCog, FaSlidersH } from 'react-icons/fa';
 import { IPC } from 'shared/constants';
@@ -8,6 +8,7 @@ import { ConversationsView } from './ConversationsView';
 import { Config } from './Config';
 import { SettingsView } from './Settings';
 import SearchModal from 'renderer/screens/Sources/Web/Search';
+import { useSettings } from 'renderer/store/settingsProvider';
 
 const { App } = window;
 
@@ -35,6 +36,7 @@ export const Sidebar = ({ }: SidebarProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartXRef = useRef(0);
   const dragStartWidthRef = useRef(0);
+  const { settings } = useSettings()
 
   const {
     model,
@@ -209,7 +211,7 @@ export const Sidebar = ({ }: SidebarProps) => {
 
               <div
                 className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer`}
-                style={{ color: (activeViews.includes(sidebarOption)) ? "#4292c6" : "black" }}
+                style={{ color: (activeViews.includes(sidebarOption)) ? "#4292c6" : settings?.darkMode ? "white" : "black" }}
                 onClick={() => openOrCloseTab(sidebarOption)}
               >
                 {SidebarOptions[sidebarOption].icon}
@@ -224,7 +226,7 @@ export const Sidebar = ({ }: SidebarProps) => {
 
               <div
                 className={`flex items-center w-full justify-start h-10 px-2 rounded-lg cursor-pointer`}
-                style={{ color: (activeViews.includes(sidebarOption)) ? "#4292c6" : "black" }}
+                style={{ color: (activeViews.includes(sidebarOption)) ? "#4292c6" : settings?.darkMode ? "white" : "black" }}
                 onClick={() => openOrCloseTab(sidebarOption)}
               >
                 {SidebarOptions[sidebarOption].icon}

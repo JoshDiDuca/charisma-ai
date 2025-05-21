@@ -1,5 +1,6 @@
 // CustomDropdown.tsx
 import React, { useState, useRef, useEffect } from 'react';
+import { useSettings } from 'renderer/store/settingsProvider';
 
 interface DropdownProps {
   trigger: React.ReactNode;
@@ -12,6 +13,7 @@ export const CustomDropdown: React.FC<DropdownProps> = ({
   children,
   className = ''
 }) => {
+  const { settings } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +39,7 @@ export const CustomDropdown: React.FC<DropdownProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border rounded-md shadow-lg z-50">
+        <div className={`${settings?.darkMode ? "bg-black" : "bg-white"} text-foreground bg-background absolute right-0 mt-2 w-64 border rounded-md shadow-lg z-50`}>
           {children}
         </div>
       )}

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card } from '@heroui/react';
+import { Card, Checkbox } from '@heroui/react';
+import { useSettings } from 'renderer/store/settingsProvider';
 
 interface SettingsViewProps {
   status: any;
@@ -8,6 +9,8 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   status
 }) => {
+  const { settings, saveSettings } = useSettings();
+
   const getStatusDisplay = () => {
     if (typeof status === 'string') {
       return {
@@ -34,6 +37,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="inline-flex items-center mb-4">
           <span className="text-sm font-medium">
             Status: <b style={{ color: statusColor }}>{statusText}</b>
+          </span>
+        </div>
+        <div className="inline-flex items-center mt-2 mb-4">
+          <span className="text-sm font-medium">
+            <Checkbox defaultSelected={settings?.darkMode} onChange={(e) => saveSettings({...settings, darkMode: e.target.checked })}>Dark Mode</Checkbox>
           </span>
         </div>
       </div>

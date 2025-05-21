@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useSettings } from 'renderer/store/settingsProvider';
 
 interface SelectOption {
   key: string;
@@ -21,6 +22,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   placeholder = 'Select an option',
   className = '',
 }) => {
+  const { settings } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const selectRef = useRef<HTMLDivElement>(null);
@@ -64,7 +66,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   return (
     <div ref={selectRef} className={`relative ${className}`}>
       <div
-        className="flex items-center justify-between p-2 border rounded cursor-pointer bg-white hover:bg-gray-50"
+        className={`flex items-center justify-between p-2 border rounded cursor-pointer ${settings?.darkMode ? "bg-black" : "bg-white"} hover:bg-gray-50`}
         onClick={toggleDropdown}
       >
         <div className="flex-grow truncate">
@@ -86,7 +88,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg overflow-y-auto max-w-screen" style={{ maxHeight: '400px' }}>
+        <div className={`absolute text-foreground bg-background z-10 w-full mt-1 ${settings?.darkMode ? "bg-black" : "bg-white"} border rounded shadow-lg overflow-y-auto max-w-screen`} style={{ maxHeight: '400px' }}>
           <input
             type="text"
             className="w-full p-2 border-b outline-none"

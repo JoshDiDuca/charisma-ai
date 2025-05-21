@@ -11,16 +11,19 @@ import 'resources/styles/globals.sass'
 import './output.css'
 
 import "./store/audioPlayerProvider"
+import { SettingsProvider } from './store/settingsProvider'
 
 ReactDom.createRoot(document.querySelector('app') as HTMLElement).render(
   <React.StrictMode>
     <WindowStoreProvider>
       <HeroUIProvider>
         <ChatBotProvider>
-          <AudioPlayerProvider>
-            <ToastProvider />
-            <AppRoutes />
-          </AudioPlayerProvider>
+          <SettingsProvider>
+            <AudioPlayerProvider>
+              <ToastProvider />
+              <AppRoutes />
+            </AudioPlayerProvider>
+          </SettingsProvider>
         </ChatBotProvider>
       </HeroUIProvider>
     </WindowStoreProvider>

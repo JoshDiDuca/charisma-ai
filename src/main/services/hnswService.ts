@@ -41,7 +41,7 @@ export const addDocuments = async (
   for (let i = 0; i < documents.length; i += batchSize) {
     const batch = documents.slice(i, i + batchSize);
 
-    const docs = batch.map(doc => ({
+  const docs = batch.map(doc => ({
       pageContent: doc.content,
       metadata: doc.metadata || {},
       id: uuidv4()

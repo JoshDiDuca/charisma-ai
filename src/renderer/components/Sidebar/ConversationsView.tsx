@@ -46,7 +46,7 @@ export const ConversationsView: React.FC<ConversationsViewProps> = ({
           No conversations yet
         </div>
       ) : (
-        <div className="divide-y">
+        <div className="divide-y" style={{ height: "90vh", overflowY:"auto" }}>
           {conversations?.map((conv) => {
             return (
             <div

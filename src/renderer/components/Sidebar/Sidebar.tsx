@@ -3,12 +3,12 @@ import { useState, useRef, useEffect } from 'react';
 import { FaComments, FaCog, FaSlidersH } from 'react-icons/fa';
 import { IPC } from 'shared/constants';
 import { useChatBot } from 'renderer/store/conversationProvider';
-import logo from "./../../public/logo.png";
 import { ConversationsView } from './ConversationsView';
 import { Config } from './Config';
 import { SettingsView } from './Settings';
 import SearchModal from 'renderer/screens/Sources/Web/Search';
 import { useSettings } from 'renderer/store/settingsProvider';
+import { Logo } from '../Common/Logo';
 
 const { App } = window;
 
@@ -188,14 +188,14 @@ export const Sidebar = ({ }: SidebarProps) => {
           {/* Top Section */}
           <div className="flex items-left justify-left h-12">
             {isCollapsed ? (
-              <img src={logo}
+              <Logo
                 title="Logo"
                 className="w-8 h-8 cursor-pointer"
                 onClick={() => setIsCollapsed(!isCollapsed)}
               />
             ) : (
               <>
-                <img src={logo}
+                <Logo
                   title="Logo"
                   className="w-8 h-8 cursor-pointer"
                   onClick={() => setIsCollapsed(!isCollapsed)} />

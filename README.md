@@ -89,7 +89,7 @@ The built apps will be available on the `release` folder.
 - [x] Web RAG queries
 - [x] Switch to hnswlib from ChromaDB (licensing and more flexible)
 - [x] Automatically download Ollama and dependencies
-- [x] Full download for models instead of Ollama pulling 
+- [x] Full download for models instead of Ollama pulling
 - [x] Message attachments
 - [x] Flexible UI
 - [x] Improved handling of Ollama being installed and exe files not present in release.
@@ -104,8 +104,8 @@ The built apps will be available on the `release` folder.
 - [ ] Translate results
 - [ ] LlamaIndex full integration
 - [ ] JSON "Tools/Agents"
-- [ ] Settings
-- [ ] Dark theme
+- [x] Settings
+- [x] Dark theme
 - [ ] Ignore Paths, Files, Source Settings
 - [ ] Coding mode setting
 - [ ] TTS voice model selection

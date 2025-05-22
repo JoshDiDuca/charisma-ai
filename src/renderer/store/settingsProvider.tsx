@@ -1,7 +1,6 @@
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { IPC } from 'shared/constants';
 import { Settings } from 'shared/types/Settings';
-import {useTheme} from "next-themes";
 
 const { App } = window;
 
@@ -17,21 +16,10 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = React.useState<Settings | undefined>();
-  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     loadSettings();
   }, []);
-
-  useEffect(() => {
-    if(settings?.darkMode){
-      console.log("dark")
-      setTheme("dark")
-    } else {
-      console.log("light")
-      setTheme("light")
-    }
-  }, [settings])
 
   const loadSettings = async () => {
     try {

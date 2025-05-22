@@ -18,7 +18,7 @@ interface UsePasteHandlerProps {
 export function usePasteHandler({ inputValue, setInputValue, onAttach }: UsePasteHandlerProps) {
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
  const processFiles = async (files: FileList | File[]) => {
     const fileArray = Array.from(files);

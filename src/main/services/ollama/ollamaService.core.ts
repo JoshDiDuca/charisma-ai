@@ -43,7 +43,6 @@ export const getAllModels = async () => {
   const installedList = await getInstalledModels();
   const ollamaLibrary = await fetchOllamaLibraryModels();
   return ollamaLibrary.filter(m => !m.name.toLowerCase().includes("embed")).map(m => {
-    console.log(installedList, m.name)
     const installed = installedList.some(installedName => installedName.model.startsWith(m.name));
     const installing = currentlyInstallingModels.has(m.name);
 

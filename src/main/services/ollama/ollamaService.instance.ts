@@ -9,8 +9,9 @@ import { DownloadProgress, DownloadService } from 'main/download/DownloadService
 import { isNil } from 'lodash'
 import { Readable } from 'stream'
 import { splashWindow } from 'main/windows/splash'
-import { IPC } from 'shared/constants'
+import { ENVIRONMENT, IPC } from 'shared/constants'
 import { getPath } from '../files/fileService.directory'
+import { killPreExistingProcesses } from '../system/processService'
 
 export class OllamaInstanceService {
   private process: ChildProcessByStdio<null, Readable, Readable> | null = null;
@@ -95,6 +96,11 @@ export class OllamaInstanceService {
   }
 
   private async spawnOllamaProcess() {
+
+    if (ENVIRONMENT.IS_DEV) {
+      await killPreExistingProcesses("ollama");
+    }
+
     const eligibleGpu = await getEligibleGpu()
 
     this.process = spawn(this.execPath, ['serve'], {

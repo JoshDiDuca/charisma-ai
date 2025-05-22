@@ -1,13 +1,10 @@
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OllamaEmbeddings } from "@langchain/ollama";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { Document, BaseDocumentTransformer } from "@langchain/core/documents";
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
-// Types
-export type Document = {
-  content: string;
-  metadata?: Record<string, any>;
-};
 
 export type SearchResult = {
   content: string;
@@ -41,13 +38,17 @@ export const addDocuments = async (
   for (let i = 0; i < documents.length; i += batchSize) {
     const batch = documents.slice(i, i + batchSize);
 
-  const docs = batch.map(doc => ({
-      pageContent: doc.content,
-      metadata: doc.metadata || {},
-      id: uuidv4()
-    }));
+    const docsToAdd: Document<Record<string, any>>[] = [];
 
-    await vectorStore.addDocuments(docs);
+    for (const docToProcess of batch) {
+      const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 500 });
+      const docs = await textSplitter.createDocuments([docToProcess.pageContent], [{ ...docToProcess.metadata }]);
+      console.log(`Split ${docs.length}`)
+      docsToAdd.push(...docs);
+    }
+
+    await vectorStore.addDocuments(docsToAdd);
+
   }
 };
 
@@ -63,21 +64,4 @@ export const searchDocuments = async (
     content: doc.pageContent,
     metadata: doc.metadata
   }));
-};
-
-// Save vector store
-export const saveVectorStore = async (
-  vectorStore: HNSWLib,
-  dir: string
-): Promise<void> => {
-  await vectorStore.save(dir);
-};
-
-export const createDocument = (content: string, metadata = {}): Document => ({
-  content,
-  metadata: { ...metadata, timestamp: Date.now() }
-});
-
-export const createDocuments = (texts: string[], metadatas = []): Document[] => {
-  return texts.map((text, i) => createDocument(text, metadatas[i] || {}));
 };

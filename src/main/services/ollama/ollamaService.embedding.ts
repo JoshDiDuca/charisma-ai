@@ -20,10 +20,8 @@ import { isNil } from 'lodash';
 import { SupportedOllamaEmbedddingModels } from './ollamaService.library';
 import { getPath } from '../files/fileService.directory';
 import { Conversation } from 'shared/types/Conversation';
-import { getVectorStore } from '../hnswService';
+import { addDocuments, getVectorStore } from '../hnswService';
 
-
-const BATCH_SIZE = 50;
 const CONCURRENT_LIMIT = 50;
 
 async function generatePrompt(prompt: string, data: ResponseSourceDocument[], attachments?: Source[]): Promise<string> {
@@ -174,7 +172,7 @@ export async function loadOllamaPathEmbedding(filePaths: string[], conversation:
   }
 
   try {
-    await vectorStore.addDocuments(resultsToBatch.map(b => ({ id: uuidv4(), pageContent: b.content, metadata: b.metadata })));
+    await addDocuments(vectorStore, resultsToBatch.map(b => ({ id: uuidv4(), pageContent: b.content, metadata: b.metadata })));
   } catch (error) {
     logError(`Failed to upsert batch`, {
       error,
@@ -218,7 +216,7 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput, conversatio
       },
     };
 
-    await vectorStore.addDocuments([{
+    await addDocuments(vectorStore, [{
       id: uuidv4(),
       pageContent: `
         ${JSON.stringify(source)}

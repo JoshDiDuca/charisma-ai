@@ -4,9 +4,9 @@ import { MultiButton } from '../MultiButton';
 import { FileItem } from './FileItem';
 import { Tree } from './FileTree';
 import { Conversation } from 'shared/types/Conversation';
-import { OllamaModel } from 'shared/types/OllamaModel';
+import { OllamaLibraryModel } from 'shared/types/OllamaModel';
 import { CustomSelect } from '../Common/Select';
-import { FaSpinner } from 'react-icons/fa';
+import { FaDownload, FaSpinner } from 'react-icons/fa';
 
 interface ConfigProps {
   conversation: Conversation | undefined;
@@ -14,8 +14,8 @@ interface ConfigProps {
   setSearchOpen: (isOpen: boolean) => void;
   model?: string;
   embeddingModel?: string;
-  availableModels: OllamaModel[];
-  availableEmbeddingModels: OllamaModel[];
+  availableModels: OllamaLibraryModel[];
+  availableEmbeddingModels: OllamaLibraryModel[];
   downloadModel: (modelName: string, type: 'LLM' | 'Embedding') => void;
 }
 
@@ -51,6 +51,28 @@ export const Config: React.FC<ConfigProps> = ({
                   key: m.name,
                   value: m.name,
                   label: (
+                    <div key={m.name} onClickCapture={() => downloadModel(m.name, 'LLM')}>
+                      <div className="flex gap-2 items-center">
+                        <div className="flex flex-col" style={{ width: "100%" }}>
+                          <div className="text-small">
+                            {m.name}
+                            <div style={{ marginLeft: "5px", float: "right" }}>
+                              {m.installed ? ("") : m.installing || (!!m.progress && m.progress < 100) ?
+                                <FaSpinner style={{ animation: "spin 1s infinite linear", display: "inline" }} /> : (<FaDownload />)}
+                            </div>
+                          </div>
+
+                          <span className="text-tiny text-default-400 mt-1">{m.description}</span>
+                          <div className="grid grid-cols-2 mt-2">
+                            <p className="text-tiny text-default-400">Last Updated: {m.lastUpdated}</p>
+                            <p className="text-tiny text-default-400">Size: {m.size}</p>
+                            <p className="text-tiny text-default-400">Pull Count: {m.pullCount} Tag Count: {m.tagCount}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                  selectedLabel: (
                     <div className="flex items-center justify-between w-full">
                       <span>{m.name}{m.progress && m.progress < 100 && ` - ${m.progress.toFixed(1)}%`}</span>
                       <span>
@@ -71,7 +93,7 @@ export const Config: React.FC<ConfigProps> = ({
               options={[...availableEmbeddingModels]
                 .sort((a, b) => {
                   // Sort: installed first, then installing, then others
-                  const aStatus = (a.installed ? 0 : a.installing ? 1 : 2);
+                  const aStatus = a.name === embeddingModel ? 0 : (a.installed ? 0 : a.installing ? 1 : 2);
                   const bStatus = (b.installed ? 0 : b.installing ? 1 : 2);
                   return aStatus - bStatus;
                 })

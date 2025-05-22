@@ -5,6 +5,7 @@ interface SelectOption {
   key: string;
   value: string;
   label: React.ReactNode;
+  selectedLabel?: React.ReactNode;
 }
 
 interface CustomSelectProps {
@@ -70,7 +71,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={toggleDropdown}
       >
         <div className="flex-grow truncate">
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption ? selectedOption.selectedLabel || selectedOption.label : placeholder}
         </div>
         <div className="ml-2">
           <svg
@@ -88,7 +89,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       </div>
 
       {isOpen && (
-        <div className={`absolute text-foreground bg-background z-10 w-full mt-1 ${settings?.darkMode ? "bg-black" : "bg-white"} border rounded shadow-lg overflow-y-auto max-w-screen`} style={{ maxHeight: '400px' }}>
+        <div className={`absolute text-foreground bg-background z-50 w-full mt-1 ${settings?.darkMode ? "bg-black" : "bg-white"} border rounded shadow-lg overflow-y-auto max-w-screen`} style={{ maxHeight: '400px' }}>
           <input
             type="text"
             className="w-full p-2 border-b outline-none"

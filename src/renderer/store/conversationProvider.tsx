@@ -4,7 +4,7 @@ import React, { createContext, useContext, ReactNode, useState, useEffect } from
 import { IPC } from 'shared/constants';
 import { AppStatus } from 'shared/types/AppStatus';
 import { Conversation, Message } from 'shared/types/Conversation';
-import { OllamaModel, OllamaModelDownloadProgress } from 'shared/types/OllamaModel';
+import { OllamaLibraryModel, OllamaModelDownloadProgress } from 'shared/types/OllamaModel';
 import { SourceInput } from 'shared/types/Sources/Source';
 import { WebSearch } from 'shared/types/Sources/WebSearch';
 
@@ -32,13 +32,13 @@ interface ChatBotContextType {
   conversations?: Conversation[];
   setConversations: React.Dispatch<React.SetStateAction<Conversation[] | undefined>>;
 
-  availableModels: OllamaModel[];
-  setAvailableModels: React.Dispatch<React.SetStateAction<OllamaModel[] | undefined>>;
+  availableModels: OllamaLibraryModel[];
+  setAvailableModels: React.Dispatch<React.SetStateAction<OllamaLibraryModel[] | undefined>>;
 
-  availableVoiceModels: OllamaModel[];
-  setAvailableVoiceModels: React.Dispatch<React.SetStateAction<OllamaModel[] | undefined>>;
-  availableEmbeddingModels: OllamaModel[];
-  setAvailableEmbeddingModels: React.Dispatch<React.SetStateAction<OllamaModel[] | undefined>>;
+  availableVoiceModels: OllamaLibraryModel[];
+  setAvailableVoiceModels: React.Dispatch<React.SetStateAction<OllamaLibraryModel[] | undefined>>;
+  availableEmbeddingModels: OllamaLibraryModel[];
+  setAvailableEmbeddingModels: React.Dispatch<React.SetStateAction<OllamaLibraryModel[] | undefined>>;
 
   status: AppStatus | string;
   setStatus: React.Dispatch<React.SetStateAction<AppStatus | string>>;
@@ -69,9 +69,9 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [conversations, setConversations] = React.useState<Conversation[] | undefined>();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  const [availableModels, setAvailableModels] = React.useState<OllamaModel[] | undefined>();
-  const [availableVoiceModels, setAvailableVoiceModels] = React.useState<OllamaModel[] | undefined>();
-  const [availableEmbeddingModels, setAvailableEmbeddingModels] = React.useState<OllamaModel[] | undefined>();
+  const [availableModels, setAvailableModels] = React.useState<OllamaLibraryModel[] | undefined>();
+  const [availableVoiceModels, setAvailableVoiceModels] = React.useState<OllamaLibraryModel[] | undefined>();
+  const [availableEmbeddingModels, setAvailableEmbeddingModels] = React.useState<OllamaLibraryModel[] | undefined>();
   const [status, setStatus] = useState<AppStatus | string>('Loading...');
 
 
@@ -108,11 +108,11 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
 
 
   useEffect(() => {
-    App.on(IPC.LLM.UPDATE_ALL_MODELS, (response: OllamaModel[]) => {
+    App.on(IPC.LLM.UPDATE_ALL_MODELS, (response: OllamaLibraryModel[]) => {
       setAvailableModels(response);
     });
 
-    App.on(IPC.LLM.UPDATE_ALL_EMBEDDING_MODELS, (response: OllamaModel[]) => {
+    App.on(IPC.LLM.UPDATE_ALL_EMBEDDING_MODELS, (response: OllamaLibraryModel[]) => {
       setAvailableEmbeddingModels(response);
     });
 
@@ -145,7 +145,7 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const loadEmbeddingModels = async () => {
-    const response: OllamaModel[] = await App.invoke(IPC.LLM.GET_ALL_EMBEDDING_MODELS);
+    const response: OllamaLibraryModel[] = await App.invoke(IPC.LLM.GET_ALL_EMBEDDING_MODELS);
     console.log(response);
     if (response) {
       setAvailableEmbeddingModels(response);
@@ -153,7 +153,7 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const loadModels = async () => {
-    const response: OllamaModel[] = await App.invoke(IPC.LLM.GET_ALL_MODELS);
+    const response: OllamaLibraryModel[] = await App.invoke(IPC.LLM.GET_ALL_MODELS);
     if (response) {
       setAvailableModels(response);
     }

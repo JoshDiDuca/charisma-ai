@@ -1,7 +1,5 @@
 export type OllamaModelType = "LLM" | "Embedding" | "Reasoning";
 
-export type OllamaModel = { name: string, type: OllamaModelType, installed?: boolean, installing?: boolean; progress?: number; }
-
 export interface Layer {
   url: string;
   size: number;
@@ -41,4 +39,9 @@ export interface OllamaLibraryModel {
   pullCount: string;
   tagCount: string;
   lastUpdated: string;
+
+  //Application
+  installed?: boolean;
+  installing?:boolean;
+  progress?:number;
 }

@@ -22,7 +22,8 @@
     "install:deps": "electron-builder install-app-deps",
     "make:release": "tsx ./src/lib/electron-app/release/modules/release.ts",
     "release": "electron-builder --publish always",
-    "clean:dev": "rimraf ./node_modules/.dev"
+    "clean:dev": "rimraf ./node_modules/.dev",
+    "build:css": "npx tailwindcss -i ./src/renderer/input.css -o ./src/renderer/output.css --minify"
   },
   "packageManager": "pnpm@10.0.0",
   "pnpm": {

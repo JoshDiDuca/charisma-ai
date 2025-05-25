@@ -1,5 +1,5 @@
 // Add contextMenu boolean switch at the top
-let contextMenu = false; // Boolean switch to enable/disable context tray menu
+let contextMenu = false;
 
 import { app, BrowserWindow, session, Tray, Menu, nativeImage } from 'electron'
 import path, { join } from 'node:path'

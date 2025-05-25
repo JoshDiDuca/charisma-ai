@@ -1,14 +1,9 @@
-import { app, BrowserWindow, session, Tray, Menu, nativeImage, ipcMain } from 'electron'
-import path, { join } from 'node:path'
-
+import { join } from 'node:path'
 import { createWindow } from 'lib/electron-app/factories/windows/create'
-import { ENVIRONMENT, IPC } from 'shared/constants'
+import { ENVIRONMENT } from 'shared/constants'
 import { displayName } from '~/package.json'
-import { logError, logInfo } from 'main/services/log/logService';
 import { mainWindow } from './main'
-import { MainScreen } from 'renderer/screens'
 import { ollamaService, piperService, ttsService } from 'lib/electron-app/factories/app/setup'
-
 
 export let splashWindow: Electron.BrowserWindow | null = null
 let isQuittingApp = false;

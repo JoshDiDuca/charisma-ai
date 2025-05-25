@@ -15,9 +15,7 @@ export {
 
 // Download services
 export {
-  downloadModel,
-  extractOllamaDownloadUrls,
-  getUrls
+  downloadModel
 } from './ollamaService.download';
 
 // Chat services

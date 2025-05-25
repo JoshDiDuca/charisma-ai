@@ -1,4 +1,3 @@
-// CustomDropdown.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useSettings } from 'renderer/store/settingsProvider';
 

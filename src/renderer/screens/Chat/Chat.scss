@@ -22,9 +22,12 @@
   white-space: pre-wrap;
 }
 
-/* Add to your Chat.scss file */
 .drag-active {
   outline: none;
+}
+
+[data-slot="tabList"] {
+  overflow-x: auto;
 }
 
 @keyframes spin {

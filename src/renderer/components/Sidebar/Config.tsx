@@ -10,7 +10,7 @@ import { FaDownload, FaSpinner } from 'react-icons/fa';
 
 interface ConfigProps {
   conversation: Conversation | undefined;
-  handleSelectFolder: () => void;
+  handleSelectSources: (type: "Folder" | "File") => void;
   setSearchOpen: (isOpen: boolean) => void;
   model?: string;
   embeddingModel?: string;
@@ -21,7 +21,7 @@ interface ConfigProps {
 
 export const Config: React.FC<ConfigProps> = ({
   conversation,
-  handleSelectFolder,
+  handleSelectSources,
   setSearchOpen,
   model,
   embeddingModel,
@@ -117,10 +117,16 @@ export const Config: React.FC<ConfigProps> = ({
         <div className="flex items-center justify-between mb-4 mt-2">
           <h2 className="text-lg font-bold">Sources</h2>
           <MultiButton options={{
-            folder: {
+            file: {
               label: "Add Files",
               description: "Add sources from your PC.",
-              onClick: () => handleSelectFolder(),
+              onClick: () => handleSelectSources("File"),
+              disabled: false
+            },
+            folder: {
+              label: "Add Folder",
+              description: "Add sources from your PC.",
+              onClick: () => handleSelectSources("Folder"),
               disabled: false
             },
             web: {

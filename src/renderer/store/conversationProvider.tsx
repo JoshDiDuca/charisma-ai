@@ -47,7 +47,7 @@ interface ChatBotContextType {
   downloadModel: (modelName: string, type: "LLM" | "Embedding") => Promise<void>;
 
   //Sources
-  handleSelectSourcesFolder: () => Promise<void>;
+  handleSelectSourcesFolder: (type: "Folder" | "File") => Promise<void>;
   addSearchSources: (selectedItems: WebSearch[]) => Promise<void>;
 
 
@@ -191,8 +191,8 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
         setConversation(newConversation));
   };
 
-  const handleSelectSourcesFolder = async () => {
-    const paths: string[] | null = await App.invoke(IPC.SOURCE.SELECT_FOLDER);
+  const handleSelectSourcesFolder = async (type: "Folder" | "File") => {
+    const paths: string[] | null = await App.invoke(type === "Folder" ? IPC.SOURCE.SELECT_FOLDER : IPC.SOURCE.SELECT_FILES);
     console.log(paths)
     if (!paths) return;
 

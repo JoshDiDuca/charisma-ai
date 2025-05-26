@@ -146,7 +146,7 @@ export const Sidebar = ({ }: SidebarProps) => {
         />
         <Config
           conversation={conversation}
-          handleSelectFolder={handleSelectSourcesFolder}
+          handleSelectSources={handleSelectSourcesFolder}
           setSearchOpen={setSearchOpen}
           model={model}
           embeddingModel={embeddingModel}

@@ -16,11 +16,24 @@ export let embedFolders: string[] | null = null;
 
 export const selectEmbedFolder = async (openFolder?: boolean): Promise<string[] | null> => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
-    properties: [openFolder ? 'openDirectory' : 'createDirectory', 'multiSelections'],
+    properties: ['openDirectory']
   });
   embedFolders = canceled ? null : filePaths;
   return embedFolders;
 };
+
+export const selectEmbedFile = async (): Promise<string[] | null> => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'All Files', extensions: ['*'] },
+      { name: 'Text Files', extensions: ['txt', 'md', 'csv'] },
+      { name: 'PDF Files', extensions: ['pdf'] },
+      { name: 'Word Documents', extensions: ['doc', 'docx'] },
+    ],
+  });
+  return canceled ? null : filePaths;
+}
 
 export type TreeNode = {
   id: string;

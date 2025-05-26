@@ -72,6 +72,7 @@ export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> 
   const nodePromises = entries.map(async (entry): Promise<TreeNode | undefined> => {
     const isFolder = entry.isDirectory();
     if (isFolder && await shouldSkipFolderName(entry.name)) {
+      logInfo(`Skipping folder: ${entry.name}`);
       return undefined;
     }
     const fullPath = path.join(dirPath, entry.name);

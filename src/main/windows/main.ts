@@ -34,7 +34,6 @@ export async function MainWindow() {
     resizable: true,
     alwaysOnTop: false,
     autoHideMenuBar: true,
-
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -57,6 +56,7 @@ export async function MainWindow() {
     }
 
     window.show()
+    window.focus();
     setupTray()
   })
 

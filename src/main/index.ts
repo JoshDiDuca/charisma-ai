@@ -17,6 +17,7 @@ makeAppWithSingleInstanceLock(async () => {
   initializeHandlers();
 
   if (!await checkIfBothNeedUpdate()) {
+    await performServicesStart();
     makeAppSetup(MainWindow)
   } else {
     const splashWindow = await SplashWindow(() =>

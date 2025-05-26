@@ -88,7 +88,7 @@ export class PiperInstanceService {
     })
   }
 
-  private async needsUpdate(): Promise<boolean> {
+  public async needsUpdate(): Promise<boolean> {
     if (!await fs.pathExists(this.execPath)) return true
     const process = spawn(this.execPath, ['--version'])
     const installedVersion = await this.readStream(process.stdout)

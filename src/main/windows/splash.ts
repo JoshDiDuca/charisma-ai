@@ -48,6 +48,8 @@ const window = createWindow({
 }
 
 export async function performSplashLoading() {
+  await performServicesStart();
+
   let ollamaDone = ollamaService.ready;
   let piperDone = piperService.ready;
 
@@ -74,6 +76,15 @@ export const checkIfBothReady = (done?: (param: any) => any) => {
 
   if((ollamaDone || ollamaService.ready) && (piperDone || piperService.ready)){
     done?.(true);
+    return true;
+  }
+  return false;
+}
+export const checkIfBothNeedUpdate = async () => {
+  let ollamaNeedsUpdate = await ollamaService.needsUpdate();
+  let piperNeedsUpdate = await piperService.needsUpdate();
+
+  if(piperNeedsUpdate || ollamaNeedsUpdate){
     return true;
   }
   return false;

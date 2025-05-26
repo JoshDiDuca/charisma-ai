@@ -8,6 +8,7 @@ import { logError, logInfo } from '../log/logService';
 import { promisify } from 'util';
 import mammoth from 'mammoth';
 import { ENVIRONMENT } from 'shared/constants';
+import { getSettings } from '../settings/settingsService';
 
 export const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
@@ -47,15 +48,17 @@ export function flattenTree(nodes: TreeNode[]): TreeNode[] {
   return flatList;
 }
 
-export const shouldSkipFolderName = (folderName: string) => {
-  return ENVIRONMENT.DISABLE_WALK_FOLDERS.some((skipFolder) => folderName.includes(skipFolder));
+export const shouldSkipFolderName = async (folderName: string) => {
+  const settings = await getSettings()
+
+  return settings?.ignorePaths?.some((skipFolder) => folderName.includes(skipFolder)) || ENVIRONMENT.DISABLE_WALK_FOLDERS.some((skipFolder) => folderName.includes(skipFolder));
 }
 
 export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> {
   const entries = await fs.readdir(dirPath, { withFileTypes: true });
   const nodePromises = entries.map(async (entry): Promise<TreeNode | undefined> => {
     const isFolder = entry.isDirectory();
-    if (isFolder && shouldSkipFolderName(entry.name)) {
+    if (isFolder && await shouldSkipFolderName(entry.name)) {
       return undefined;
     }
     const fullPath = path.join(dirPath, entry.name);

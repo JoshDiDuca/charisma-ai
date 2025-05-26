@@ -3,10 +3,16 @@ import * as fs from 'fs';
 import { logError } from "../log/logService";
 import { Settings } from "shared/types/Settings";
 
+let settingsCache: Settings | null = null;
+
 export const saveSettings = async (settings: Settings): Promise<Settings> => {
   try {
     const filePath = getPath("Settings", `settings.json`);
     fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
+
+    // Update cache
+    settingsCache = settings;
+
     return settings;
   } catch (error) {
     logError(`Failed to save settings`, { error, category: "Settings", showUI: true });
@@ -16,9 +22,19 @@ export const saveSettings = async (settings: Settings): Promise<Settings> => {
 
 export const getSettings = async (): Promise<Settings | null> => {
   try {
-    const filePath = getPath("Settings",  `settings.json`);
+    // Check if cache is valid
+    if (settingsCache) {
+      return settingsCache;
+    }
+
+    const filePath = getPath("Settings", `settings.json`);
     const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data) as Settings;
+    const settings = JSON.parse(data) as Settings;
+
+    // Update cache
+    settingsCache = settings;
+
+    return settings;
   } catch (error) {
     logError(`Failed to get conversation`, { error, category: "Settings", showUI: true });
     return null;

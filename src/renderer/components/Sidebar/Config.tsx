@@ -65,8 +65,9 @@ export const Config: React.FC<ConfigProps> = ({
                           <span className="text-tiny text-default-400 mt-1">{m.description}</span>
                           <div className="grid grid-cols-2 mt-2">
                             <p className="text-tiny text-default-400">Last Updated: {m.lastUpdated}</p>
-                            <p className="text-tiny text-default-400">Size: {m.size}</p>
-                            <p className="text-tiny text-default-400">Pull Count: {m.pullCount} Tag Count: {m.tagCount}</p>
+                            {m.size && <p className="text-tiny text-default-400">Size: {m.size}</p>}
+                            <p className="text-tiny text-default-400">Pull Count: {m.pullCount}</p>
+                            <p className="text-tiny text-default-400">Tag Count: {m.tagCount}</p>
                           </div>
                         </div>
                       </div>

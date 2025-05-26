@@ -18,12 +18,12 @@
     "compile:packageJSON": "tsx ./src/lib/electron-app/release/modules/prebuild.ts",
     "prebuild": "run-s clean:dev compile:app compile:packageJSON",
     "build": "pnpm electron-builder",
-    "postinstall": "run-s prebuild install:deps",
+    "postinstall": "run-s prebuild install:deps css-regen",
     "install:deps": "electron-builder install-app-deps",
     "make:release": "tsx ./src/lib/electron-app/release/modules/release.ts",
     "release": "electron-builder --publish always",
     "clean:dev": "rimraf ./node_modules/.dev",
-    "build:css": "npx @tailwindcss/cli -i ./src/renderer/input.css -o ./src/renderer/output.css --minify"
+    "css-regen": "npx @tailwindcss/cli -i ./src/renderer/input.css -o ./src/renderer/output.css --minify"
   },
   "packageManager": "pnpm@10.0.0",
   "pnpm": {

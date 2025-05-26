@@ -7,7 +7,7 @@ import { makeAppWithSingleInstanceLock } from 'lib/electron-app/factories/app/in
 import { makeAppSetup } from 'lib/electron-app/factories/app/setup'
 import { MainWindow } from './windows/main'
 import { initializeHandlers } from './handlers'
-import { performSplashLoading, SplashWindow } from './windows/splash'
+import { checkIfBothReady, performServicesStart, performSplashLoading, SplashWindow } from './windows/splash'
 
 makeAppWithSingleInstanceLock(async () => {
   await app.whenReady()
@@ -16,10 +16,16 @@ makeAppWithSingleInstanceLock(async () => {
   // Setup IPC handlers
   initializeHandlers();
 
-  const splashWindow = await SplashWindow(() =>
-    performSplashLoading().then(() => {
-      splashWindow.hide();
-      makeAppSetup(MainWindow)
-    })
-  );
+  await performServicesStart();
+
+  if (checkIfBothReady()) {
+    makeAppSetup(MainWindow)
+  } else {
+    const splashWindow = await SplashWindow(() =>
+      performSplashLoading().then(() => {
+        splashWindow.hide();
+        makeAppSetup(MainWindow)
+      })
+    );
+  }
 })

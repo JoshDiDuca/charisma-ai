@@ -30,8 +30,8 @@ const window = createWindow({
     if (ENVIRONMENT.IS_DEV) {
       //window.webContents.openDevTools({ mode: 'detach' });
     }
-    onLoad?.();
     window.show();
+    onLoad?.();
   });
 
   window.on('close', (event) => {
@@ -48,23 +48,8 @@ const window = createWindow({
 }
 
 export async function performSplashLoading() {
-  await ollamaService.start();
-  await piperService.start();
-
-  if(!ENVIRONMENT.DISABLE_TTS_ON_START){
-    ttsService.start()
-  }
-
   let ollamaDone = ollamaService.ready;
   let piperDone = piperService.ready;
-
-  const checkIfBothReady = (done?: (param: any) => any) => {
-    if((ollamaDone || ollamaService.ready) && (piperDone || piperService.ready)){
-      done?.(true);
-      return true;
-    }
-    return false;
-  }
 
   if(checkIfBothReady()){
     return true;
@@ -81,4 +66,25 @@ export async function performSplashLoading() {
       checkIfBothReady(resolve);
     })
   });
+}
+
+export const checkIfBothReady = (done?: (param: any) => any) => {
+  let ollamaDone = ollamaService.ready;
+  let piperDone = piperService.ready;
+
+  if((ollamaDone || ollamaService.ready) && (piperDone || piperService.ready)){
+    done?.(true);
+    return true;
+  }
+  return false;
+}
+
+export const performServicesStart = async () => {
+
+  await ollamaService.start();
+  await piperService.start();
+
+  if(!ENVIRONMENT.DISABLE_TTS_ON_START){
+    ttsService.start()
+  }
 }

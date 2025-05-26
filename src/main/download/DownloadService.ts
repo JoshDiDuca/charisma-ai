@@ -171,7 +171,7 @@ export class DownloadService extends EventEmitter {
 
       return finalFile
     } finally {
-      await this.cleanupTemp(tempFile)
+      await this.cleanupTemp(tempFile, finalFile)
     }
 
   }
@@ -263,6 +263,9 @@ export class DownloadService extends EventEmitter {
 
   private async cleanupTemp(tempPath: string, finalFile?: string): Promise<void> {
     await deleteFileOrFolder(tempPath);
+    if(finalFile){
+      await deleteFileOrFolder(finalFile);
+    }
   }
   private async moveContents(source: string, target: string) {
     // Add existence check

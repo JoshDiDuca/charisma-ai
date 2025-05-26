@@ -64,7 +64,7 @@ export function flattenTree(nodes: TreeNode[]): TreeNode[] {
 export const shouldSkipFolderName = async (folderName: string) => {
   const settings = await getSettings()
 
-  return settings?.ignorePaths?.some((skipFolder) => folderName.includes(skipFolder)) || ENVIRONMENT.DISABLE_WALK_FOLDERS.some((skipFolder) => folderName.includes(skipFolder));
+  return settings?.ignorePaths?.some((skipFolder) => folderName.includes(skipFolder));
 }
 
 export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> {

@@ -2,8 +2,14 @@ import { getPath } from "../files/fileService.directory";
 import * as fs from 'fs';
 import { logError } from "../log/logService";
 import { Settings } from "shared/types/Settings";
+import { ENVIRONMENT } from "shared/constants";
 
 let settingsCache: Settings | null = null;
+
+const defaultSettings: Settings = {
+  darkMode: true,
+  ignorePaths: [...ENVIRONMENT.DEFAULT_IGNORE_FOLDERS]
+};
 
 export const saveSettings = async (settings: Settings): Promise<Settings> => {
   try {
@@ -20,7 +26,7 @@ export const saveSettings = async (settings: Settings): Promise<Settings> => {
   }
 };
 
-export const getSettings = async (): Promise<Settings | null> => {
+export const getSettings = async (): Promise<Settings> => {
   try {
     // Check if cache is valid
     if (settingsCache) {
@@ -28,6 +34,14 @@ export const getSettings = async (): Promise<Settings | null> => {
     }
 
     const filePath = getPath("Settings", `settings.json`);
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      // Create default settings and save them
+      await saveSettings(defaultSettings);
+      return defaultSettings;
+    }
+
     const data = fs.readFileSync(filePath, 'utf8');
     const settings = JSON.parse(data) as Settings;
 
@@ -36,7 +50,9 @@ export const getSettings = async (): Promise<Settings | null> => {
 
     return settings;
   } catch (error) {
-    logError(`Failed to get conversation`, { error, category: "Settings", showUI: true });
-    return null;
+    logError(`Failed to get settings`, { error, category: "Settings", showUI: true });
+    // Return default settings on error
+    settingsCache = defaultSettings;
+    return defaultSettings;
   }
-};
+}

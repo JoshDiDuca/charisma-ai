@@ -87,7 +87,7 @@ export function SplashScreen() {
         <div className='text-lg font-semibold' style={{ color: textColor }}>Loading...</div>
       </div>
       <div className='flex items-center justify-center mt-2'>
-        <div className='text-md text-black'>{subText}</div>
+        <div className='text-md text-black dark:text-white'>{subText}</div>
       </div>
     </Container>
   )

@@ -23,17 +23,17 @@ export const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ className = 
     <CustomDropdown
       className={className}
       trigger={
-        <div className="p-2 rounded-full hover:bg-gray-100">
-          <FaCog className='float-right' style={{ float:"right", marginBottom: "0.5rem", marginTop: "0rem"}} size={20} />
+        <div className="p-2 rounded-full">
+          <FaCog className='float-right cursor-pointer' style={{ float:"right", marginBottom: "0.5rem", marginTop: "0rem"}} size={20} />
         </div>
       }
     >
       <div className="py-2">
-        <div className="px-4 py-2 text-sm font-medium border-b">Settings</div>
+        <div className="px-4 py-2 text-sm font-medium">Settings</div>
 
         {/*<div className="mt-2">
           <div
-            className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer"
+            className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             onClick={() => handleItemClick('profile')}
           >
             <FaUser size={16} />
@@ -41,7 +41,7 @@ export const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ className = 
           </div>
 
           <div
-            className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer"
+            className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             onClick={() => handleItemClick('language')}
           >
             <FaLanguage size={16} />
@@ -49,7 +49,7 @@ export const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ className = 
           </div>
 
           <div
-            className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer"
+            className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             onClick={() => handleItemClick('documents')}
           >
             <FaFileAlt size={16} />
@@ -73,7 +73,7 @@ export const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ className = 
 
         <div className="border-t mt-2">
           <div
-            className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 cursor-pointer"
+            className="px-4 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             onClick={() => handleItemClick('about')}
           >
             <FaInfoCircle size={16} />

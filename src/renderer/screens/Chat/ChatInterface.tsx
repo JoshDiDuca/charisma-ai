@@ -141,7 +141,7 @@ const handleAttachmentClick = () => {
 
         <SettingsDropdown />
         <CardBody
-          className="flex-1 flex flex-col gap-2 bg-default-200 mb-2 p-4 w-100"
+          className="flex-1 flex flex-col gap-2 bg-default-200 mb-2 p-4 min-w-100"
           style={{ overflowY: 'auto' }}
         >
           <MessageList messages={messages} hasFirstResponse={hasFirstResponse} />

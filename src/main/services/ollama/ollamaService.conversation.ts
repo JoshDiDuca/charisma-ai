@@ -1,20 +1,12 @@
-// src/main/services/conversationService.ts
-
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { app } from 'electron';
 import { logError, logInfo } from '../log/logService';
-import { IPC } from 'shared/constants';
-import { ipcMain } from 'electron';
-import { mainWindow } from 'main/windows/main';
 import { ollama } from './ollamaService.core';
 import { Conversation, Message } from 'shared/types/Conversation';
 import { Source } from 'shared/types/Sources/Source';
-import { ResponseSourceDocument } from 'shared/types/Sources/ResponseSourceDocument';
 import { deleteFileOrFolder } from '../files/fileService.delete';
 import { getPath } from '../files/fileService.directory';
-
 
 export const saveConversation = async (conversation: Conversation): Promise<Conversation> => {
   try {

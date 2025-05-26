@@ -1,4 +1,3 @@
-// src/main/services/TTSWorkerService.ts
 import { Worker, parentPort } from 'worker_threads'
 import path from 'path'
 import { app, ipcMain } from 'electron'

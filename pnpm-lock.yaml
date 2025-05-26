@@ -20,6 +20,9 @@ dependencies:
   '@langchain/ollama':
     specifier: ^0.2.0
     version: 0.2.0(@langchain/core@0.3.55)
+  '@langchain/textsplitters':
+    specifier: ^0.1.0
+    version: 0.1.0(@langchain/core@0.3.55)
   '@tailwindcss/vite':
     specifier: ^4.1.4
     version: 4.1.7(vite@6.3.3)
@@ -53,12 +56,18 @@ dependencies:
   electron-router-dom:
     specifier: ^2.1.0
     version: 2.1.0(electron@34.5.3)(react-router-dom@7.5.2)(react@19.1.0)
+  extract-zip:
+    specifier: ^2.0.1
+    version: 2.0.1
   file-type:
     specifier: ^20.5.0
     version: 20.5.0
   framer-motion:
     specifier: ^12.9.2
     version: 12.9.2(react-dom@19.1.0)(react@19.1.0)
+  fs-extra:
+    specifier: ^11.3.0
+    version: 11.3.0
   google-sr:
     specifier: ^5.0.0
     version: 5.0.0
@@ -8562,7 +8571,6 @@ packages:
       graceful-fs: 4.2.11
       jsonfile: 6.1.0
       universalify: 2.0.1
-    dev: true
 
   /fs-extra@8.1.0:
     resolution: {integrity: sha512-yhlQgA6mnOJUKOsRUFsgJdQCvkKhcz8tlZG5HBQfReYZy46OwLcY+Zia0mtdHsOo9y/hP+CxMN0TU9QxoOtG4g==}
@@ -9667,7 +9675,6 @@ packages:
       universalify: 2.0.1
     optionalDependencies:
       graceful-fs: 4.2.11
-    dev: true
 
   /jsonparse@1.3.1:
     resolution: {integrity: sha512-POQXvpdL69+CluYsillJ7SUhKvytYjW9vG/GKpnf+xP8UWgYEM/RaMzHHofbALDiKbbP1W8UEYmgGl39WkPZsg==}
@@ -13259,7 +13266,6 @@ packages:
   /universalify@2.0.1:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
-    dev: true
 
   /update-browserslist-db@1.1.3(browserslist@4.24.4):
     resolution: {integrity: sha512-UxhIZQ+QInVdunkDAaiazvvT/+fXL5Osr0JZlJulepYu6Jd7qJtDZjlur0emRlT71EN3ScPoE7gvsuIKKNavKw==}

@@ -1,6 +1,6 @@
-import React, {useState} from "react";
+import {useState} from "react";
 
-const CopyCodeButton = ({children, code} : React.PropsWithChildren & { code: string }) => {
+const CopyCodeButton = ({code} : { code: string }) => {
   const [copyOk, setCopyOk] = useState(false);
   const iconColor = copyOk ? '#0af20a' : '#ddd';
   const icon = copyOk ? 'fa-check-square' : 'fa-copy';

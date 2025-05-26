@@ -5,8 +5,7 @@ import { IPC } from 'shared/constants';
 import { logError, logInfo } from '../log/logService';
 import {
   getOllamaModelsDir,
-  fileExists,
-  ensureDirectoryExists
+  fileExists
 } from './ollamaService.fs';
 import {
   getInstalledModels,

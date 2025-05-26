@@ -51,7 +51,7 @@ export const ConversationsView: React.FC<ConversationsViewProps> = ({
             return (
             <div
               key={conv.id}
-              className={`p-2 cursor-pointer hover:bg-gray-50 flex justify-between items-start ${conversation?.id === conv.id ? 'bg-gray-100' : ''}`}
+              className={`p-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-950 flex justify-between items-start ${conversation?.id === conv.id ? 'bg-gray-200 dark:bg-gray-700' : ''}`}
               onClick={() => setConversation(conv)}
             >
               <div className="overflow-hidden">

@@ -67,7 +67,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   return (
     <div ref={selectRef} className={`relative ${className}`}>
       <div
-        className={`flex items-center justify-between p-2 border rounded cursor-pointer ${settings?.darkMode ? "bg-black" : "bg-white"} hover:bg-gray-50`}
+        className={`flex items-center justify-between p-2 border rounded cursor-pointer ${settings?.darkMode ? "bg-black" : "bg-white"} hover:bg-gray-50 dark:hover:bg-gray-950`}
         onClick={toggleDropdown}
       >
         <div className="flex-grow truncate">
@@ -102,7 +102,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             filteredOptions.map(option => (
               <div
                 key={option.key}
-                className={`p-2 cursor-pointer hover:bg-gray-100 ${option.value === value ? 'bg-gray-100' : ''}`}
+                className={`p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 ${option.value === value ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
                 onClick={() => handleOptionClick(option.value)}
               >
                 {option.label}

@@ -33,7 +33,7 @@ export const CustomDropdown: React.FC<DropdownProps> = ({
 
   return (
     <div ref={dropdownRef} className={`relative ${className}`}>
-      <div onClick={toggleDropdown} className="cursor-pointer">
+      <div onClick={toggleDropdown}>
         {trigger}
       </div>
 

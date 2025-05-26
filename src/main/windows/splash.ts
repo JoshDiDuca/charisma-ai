@@ -28,10 +28,10 @@ const window = createWindow({
 
   window.webContents.on('did-finish-load', () => {
     if (ENVIRONMENT.IS_DEV) {
-      window.webContents.openDevTools({ mode: 'detach' });
+      //window.webContents.openDevTools({ mode: 'detach' });
     }
     onLoad?.();
-
+    window.show();
   });
 
   window.on('close', (event) => {
@@ -42,8 +42,6 @@ const window = createWindow({
     }
     return true;
   });
-
-    window.show();
 
   splashWindow = window;
   return window;

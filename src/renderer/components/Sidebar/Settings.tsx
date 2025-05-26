@@ -60,9 +60,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             Status: <b style={{ color: statusColor }}>{statusText}</b>
           </span>
         </div>
-        <div className="inline-flex items-center mt-2 mb-4">
+        <div className="inline-flex items-center mt-2 mb-1">
           <span className="text-sm font-medium">
             <Checkbox defaultSelected={settings?.darkMode} onChange={(e) => saveSettings({...settings, darkMode: e.target.checked })}>Dark Mode</Checkbox>
+          </span>
+        </div>
+        <div className="inline-flex items-center mt-2 mb-1">
+          <span className="text-sm font-medium">
+            <Checkbox defaultSelected={settings?.useChromeLogo} onChange={(e) => saveSettings({...settings, useChromeLogo: e.target.checked })}>Use Chrome Logo</Checkbox>
           </span>
         </div>
         <div className="mt-4">

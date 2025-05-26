@@ -78,9 +78,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   Add
                 </Button>
               </div>
-              <div className="flex flex-col gap-1" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: '200px'}}>
                 {settings?.ignorePaths?.map((path, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded p-2">
+                  <div key={index} className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded">
                     <span className="text-sm">{path}</span>
                     <Button
                       size="sm"

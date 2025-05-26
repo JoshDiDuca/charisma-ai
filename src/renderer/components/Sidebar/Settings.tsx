@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, Checkbox, Input, Button, Accordion, AccordionItem } from '@heroui/react';
 import { useSettings } from 'renderer/store/settingsProvider';
 import { FaTrash } from 'react-icons/fa';
+import { ENVIRONMENT } from 'shared/constants';
 
 interface SettingsViewProps {
   status: any;
@@ -10,6 +11,7 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({
   status
 }) => {
+  const isDev = ENVIRONMENT.IS_DEV;
   const { settings, saveSettings } = useSettings();
   const [currentPath, setCurrentPath] = useState('');
 
@@ -76,7 +78,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   Add
                 </Button>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 {settings?.ignorePaths?.map((path, index) => (
                   <div key={index} className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded p-2">
                     <span className="text-sm">{path}</span>

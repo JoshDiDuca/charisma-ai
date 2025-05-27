@@ -1,15 +1,11 @@
-// Add contextMenu boolean switch at the top
-let contextMenu = false;
-
 import { app, BrowserWindow, session, Tray, Menu, nativeImage } from 'electron'
-import path, { join } from 'node:path'
-import log from 'electron-log';
-
+import { join } from 'node:path'
 import { createWindow } from 'lib/electron-app/factories/windows/create'
 import { ENVIRONMENT } from 'shared/constants'
 import { displayName } from '~/package.json'
 import { logError, logInfo } from 'main/services/log/logService';
 
+let contextMenu = false;
 export let mainWindow: Electron.BrowserWindow | null = null
 let tray: Tray | null = null;
 let isQuittingApp = false;

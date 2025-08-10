@@ -55,7 +55,9 @@
     "hnswlib-node": "^3.0.0",
     "langchain": "^0.3.24",
     "lodash": "^4.17.21",
+    "mammoth": "^1.10.0",
     "nodejs-whisper": "^0.2.6",
+    "ollama": "0.5.17",
     "pcm-player": "^0.0.18",
     "pdf-parse": "^1.1.1",
     "react": "^19.0.0",
@@ -67,6 +69,7 @@
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "threads": "^1.7.0",
+    "uuid": "^11.1.0",
     "word-extractor": "^1.0.4"
   },
   "devDependencies": {

@@ -143,7 +143,7 @@ export const Config: React.FC<ConfigProps> = ({
             }
           }} />
         </div>
-        <Card className="p-2 flex-grow overflow-y-auto rounded-none" style={{ minHeight: "100%" }}>
+        <Card className="p-2 flex-grow overflow-y-auto rounded-none">
           <div className="text-sm">
             {
               conversation?.sources &&

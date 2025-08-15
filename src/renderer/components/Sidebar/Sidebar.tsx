@@ -181,9 +181,9 @@ export const Sidebar = ({ }: SidebarProps) => {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-full">
       {/* Collapsible Sidebar */}
-      <Card className="rounded-none">
+      <Card className="rounded-none" style={{ height: "100vh" }}>
         <div className="flex flex-col h-full p-2">
           {/* Top Section */}
           <div className="flex items-left justify-left h-12">

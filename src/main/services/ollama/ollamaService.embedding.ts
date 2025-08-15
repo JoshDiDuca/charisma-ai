@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OllamaEmbeddings } from "@langchain/ollama";
+import * as os from 'os';
 import {
   flattenTree,
   shouldSkipFile,
@@ -110,79 +111,78 @@ export async function loadOllamaEmbedding(sources: Source[], embeddingModel: str
 }
 
 export async function loadOllamaPathEmbedding(filePaths: string[], conversation: Conversation, vectorStore: HNSWLib): Promise<void> {
-  const resultsToBatch: Array<{ content: string; metadata: any }> = [];
-  const filesToProcess = filePaths;
+  const CONCURRENCY_LIMIT = Math.min(CONCURRENT_LIMIT, os.cpus().length - 2);
+  let processedCount = 0;
+  let addedCount = 0;
 
-  logInfo(`Found ${filesToProcess.length} potential files to process.`);
+  logInfo(`Found ${filePaths.length} potential files to process.`);
 
-  const queue = [...filesToProcess];
-  const processFile = async (filePath: string) => {
+  const processAndAddFile = async (filePath: string, index: number) => {
     try {
       const stats = await fs.promises.stat(filePath);
+      if (stats.size === 0 || stats.size > 10_000_000) {
+        logInfo(`Skipping file (size): ${filePath}`);
+        return;
+      }
+
       if (!(await shouldSkipFile(filePath, stats))) {
         const content = await readFileByExtension(filePath);
-        const fileInfo = await getFileInfo(filePath, stats);
-        if (content) {
-          logInfo(`Processed file: ${filePath}`);
-          resultsToBatch.push({
-            content,
-            metadata: {
-              path: filePath,
-              ...fileInfo,
-              lastModified: fileInfo.lastModified.getTime(),
-            },
-          });
-        } else {
-          logInfo(`Skipping file due to read error or empty content: ${filePath}`);
+        if (!content) {
+          logInfo(`Skipping file (no content): ${filePath}`);
+          return;
         }
+          logInfo(`Processing file for embedding: ${filePath}`);
+
+        const fileInfo = await getFileInfo(filePath, stats);
+        const document = {
+          id: uuidv4(),
+          pageContent: content,
+          metadata: {
+            path: filePath,
+            ...fileInfo,
+            lastModified: fileInfo.lastModified.getTime(),
+          },
+        };
+
+        // Add document immediately to vector store
+        await addDocuments(vectorStore, [document]);
+        addedCount++;
+        logInfo(`Processed and added: ${filePath} (${index + 1}/${filePaths.length})`);
       } else {
-        logInfo(`Skipping file based on shouldSkipFile: ${filePath}`);
+        logInfo(`Skipping file (shouldSkipFile): ${filePath}`);
       }
     } catch (error: any) {
-      if (error.code === 'ENOENT') {
-        logError(`File not found during processing: ${filePath}`, {
-          error,
-          category: 'Ollama',
-          showUI: false,
-        });
-      } else {
-        logError(`File processing failed: ${filePath}`, {
-          error,
-          category: 'Ollama',
-          showUI: false,
-        });
-      }
+      logError(`File processing failed: ${filePath}`, {
+        error,
+        category: 'Ollama',
+        showUI: false
+      });
+    } finally {
+      processedCount++;
     }
   };
 
-  const worker = async () => {
-    while (queue.length > 0) {
-      const filePath = queue.shift();
-      if (filePath) await processFile(filePath);
-    }
-  };
+  // Process with controlled concurrency
+  const semaphore = Array(CONCURRENCY_LIMIT).fill(Promise.resolve());
 
-  const workerCount = Math.min(CONCURRENT_LIMIT, filesToProcess.length);
-  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  const allPromises = filePaths.map(async (filePath, index) => {
+    await semaphore[index % CONCURRENCY_LIMIT];
+    semaphore[index % CONCURRENCY_LIMIT] = processAndAddFile(filePath, index);
+    return semaphore[index % CONCURRENCY_LIMIT];
+  });
 
-  if (resultsToBatch.length === 0) {
-    logInfo(`No new documents to add to collection .`);
-    logInfo('loadOllamaEmbedding Done');
-    return;
-  }
+  await Promise.all(allPromises);
 
-  try {
-    await addDocuments(vectorStore, resultsToBatch.map(b => ({ id: uuidv4(), pageContent: b.content, metadata: b.metadata })));
-  } catch (error) {
-    logError(`Failed to upsert batch`, {
-      error,
-      category: 'Ollama',
-      showUI: true,
-    });
+  if (addedCount === 0) {
+    logInfo(`No new documents to add to collection.`);
+  } else {
+    logInfo(`Added ${addedCount} documents to vector store.`);
   }
 
   await vectorStore.save(getPath("DB", conversation.id));
+  logInfo('loadOllamaEmbedding Done');
 }
+
 
 export async function loadOllamaWebEmbedding(source: WebSourceInput, conversation: Conversation, vectorStore: HNSWLib): Promise<void> {
   try {

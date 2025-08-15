@@ -4,6 +4,10 @@ on:
       name:
         required: false
 
+permissions:
+  contents: read
+  releases: write
+
 jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/v')

@@ -1,10 +1,7 @@
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OllamaEmbeddings } from "@langchain/ollama";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { Document, BaseDocumentTransformer } from "@langchain/core/documents";
-import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
-
+import { Document } from "@langchain/core/documents";
 
 export type SearchResult = {
   content: string;
@@ -41,7 +38,7 @@ export const addDocuments = async (
     const docsToAdd: Document<Record<string, any>>[] = [];
 
     for (const docToProcess of batch) {
-      const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 500 });
+      const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 750 });
       const docs = await textSplitter.createDocuments([docToProcess.pageContent], [{ ...docToProcess.metadata }]);
       console.log(`Split ${docs.length}`)
       docsToAdd.push(...docs);

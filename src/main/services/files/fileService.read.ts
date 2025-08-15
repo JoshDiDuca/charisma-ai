@@ -55,18 +55,18 @@ export function flattenTree(nodes: TreeNode[]): TreeNode[] {
   return flatList;
 }
 
-export const shouldSkipFolderName = async (folderName: string) => {
+export const shouldSkipName = async (name: string) => {
   const settings = await getSettings()
-
-  return settings?.ignorePaths?.some((skipFolder) => folderName.includes(skipFolder));
+  console.log(`Checking if should skip: ${name} ${settings?.ignorePaths}`);
+  return settings?.ignorePaths?.some((skip) => name === skip);
 }
 
 export async function readDirectoryNested(dirPath: string): Promise<TreeNode[]> {
   const entries = await fs.readdir(dirPath, { withFileTypes: true });
   const nodePromises = entries.map(async (entry): Promise<TreeNode | undefined> => {
     const isFolder = entry.isDirectory();
-    if (isFolder && await shouldSkipFolderName(entry.name)) {
-      logInfo(`Skipping folder: ${entry.name}`);
+    if (isFolder && await shouldSkipName(entry.name)) {
+      logInfo(`Skipping: ${entry.name}`);
       return undefined;
     }
     const fullPath = path.join(dirPath, entry.name);
@@ -184,6 +184,9 @@ export const isDocFile = async (filePath: string): Promise<boolean> => {
 
 export async function shouldSkipFile(filePath: string, stats?: Stats): Promise<boolean> {
   stats = (stats ?? await fs.stat(filePath));
+  if(await shouldSkipName(path.basename(filePath))) {
+    return true;
+  }
   if (stats.isDirectory()) {
     return true;
   }

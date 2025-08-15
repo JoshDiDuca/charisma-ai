@@ -8,6 +8,7 @@ import {
   shouldSkipFile,
   readFileByExtension,
   getFileInfo,
+  TreeNode,
 } from '../files/fileService.read';
 import * as cheerio from 'cheerio';
 import { logError, logInfo } from '../log/logService';
@@ -110,24 +111,37 @@ export async function loadOllamaEmbedding(sources: Source[], embeddingModel: str
   }
 }
 
-export async function loadOllamaPathEmbedding(filePaths: string[], conversation: Conversation, vectorStore: HNSWLib): Promise<void> {
-  logInfo(`Found ${filePaths.length} potential files to process.`);
+export async function loadOllamaPathEmbedding(nodes: (string[] | TreeNode[]), conversation: Conversation, vectorStore: HNSWLib): Promise<void> {
+  //Get file paths from nodes and sort by size, biggest first
+  const isStringArray = typeof nodes[0] === 'string';
+  const filePaths = isStringArray ? nodes as string[] : (nodes as TreeNode[]).map(node => node.path).filter(Boolean);
+  const fileStats = await Promise.all(filePaths.map(async (filePath) => {
+    const stats = await fs.promises.stat(filePath);
+    return { filePath, stats };
+  }));
 
-  const processAndAddFile = async (filePath: string, index: number) => {
+  const sortedFileStats = fileStats
+    .filter(({ stats }) => stats.isFile() && stats.size > 0 && stats.size <= 10_000_000) // Filter out empty and too large files
+    .sort((a, b) => b.stats.size - a.stats.size); // Sort by size, biggest first
+
+  logInfo(`Found ${sortedFileStats.length} potential files to process.`);
+
+  const processAndAddFile = async ({ filePath, stats }: {
+    filePath: string;
+    stats: fs.Stats;
+  }, index: number) => {
     try {
-      const stats = await fs.promises.stat(filePath);
       if (stats.size === 0 || stats.size > 10_000_000) {
         logInfo(`Skipping file (size): ${filePath}`);
         return;
       }
-
       if (!(await shouldSkipFile(filePath, stats))) {
         const content = await readFileByExtension(filePath);
         if (!content) {
           logInfo(`Skipping file (no content): ${filePath}`);
           return;
         }
-          logInfo(`Processing file for embedding: ${filePath}`);
+        logInfo(`Processing file for embedding: ${filePath}`);
 
         const fileInfo = await getFileInfo(filePath, stats);
         const document = {
@@ -142,7 +156,7 @@ export async function loadOllamaPathEmbedding(filePaths: string[], conversation:
 
         // Add document immediately to vector store
         await addDocuments(vectorStore, [document]);
-        logInfo(`Processed and added: ${filePath} (${index + 1}/${filePaths.length})`);
+        logInfo(`Processed and added: ${filePath} (${index + 1}/${sortedFileStats.length})`);
       } else {
         logInfo(`Skipping file (shouldSkipFile): ${filePath}`);
       }
@@ -156,7 +170,7 @@ export async function loadOllamaPathEmbedding(filePaths: string[], conversation:
     }
   };
 
-  await Promise.all(filePaths.map(async (filePath, index) => processAndAddFile(filePath, index)));
+  await Promise.all(sortedFileStats.map(async (filePath, index) => processAndAddFile(filePath, index)));
 
   await vectorStore.save(getPath("DB", conversation.id));
   logInfo('loadOllamaEmbedding Done');
@@ -221,7 +235,7 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput, conversatio
 
 export async function getOllamaEmbeddingRetrieve(prompt: string, vectorStore: HNSWLib) {
   const results = await vectorStore.similaritySearchWithScore(prompt, 15);
-  console.log( results.map(doc => ({
+  console.log(results.map(doc => ({
     content: doc[0].pageContent,
     metadata: doc[0].metadata,
     score: doc[1]

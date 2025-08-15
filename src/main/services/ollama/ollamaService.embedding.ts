@@ -111,10 +111,6 @@ export async function loadOllamaEmbedding(sources: Source[], embeddingModel: str
 }
 
 export async function loadOllamaPathEmbedding(filePaths: string[], conversation: Conversation, vectorStore: HNSWLib): Promise<void> {
-  const CONCURRENCY_LIMIT = Math.min(CONCURRENT_LIMIT, os.cpus().length - 2);
-  let processedCount = 0;
-  let addedCount = 0;
-
   logInfo(`Found ${filePaths.length} potential files to process.`);
 
   const processAndAddFile = async (filePath: string, index: number) => {
@@ -146,7 +142,6 @@ export async function loadOllamaPathEmbedding(filePaths: string[], conversation:
 
         // Add document immediately to vector store
         await addDocuments(vectorStore, [document]);
-        addedCount++;
         logInfo(`Processed and added: ${filePath} (${index + 1}/${filePaths.length})`);
       } else {
         logInfo(`Skipping file (shouldSkipFile): ${filePath}`);
@@ -158,26 +153,10 @@ export async function loadOllamaPathEmbedding(filePaths: string[], conversation:
         showUI: false
       });
     } finally {
-      processedCount++;
     }
   };
 
-  // Process with controlled concurrency
-  const semaphore = Array(CONCURRENCY_LIMIT).fill(Promise.resolve());
-
-  const allPromises = filePaths.map(async (filePath, index) => {
-    await semaphore[index % CONCURRENCY_LIMIT];
-    semaphore[index % CONCURRENCY_LIMIT] = processAndAddFile(filePath, index);
-    return semaphore[index % CONCURRENCY_LIMIT];
-  });
-
-  await Promise.all(allPromises);
-
-  if (addedCount === 0) {
-    logInfo(`No new documents to add to collection.`);
-  } else {
-    logInfo(`Added ${addedCount} documents to vector store.`);
-  }
+  await Promise.all(filePaths.map(async (filePath, index) => processAndAddFile(filePath, index)));
 
   await vectorStore.save(getPath("DB", conversation.id));
   logInfo('loadOllamaEmbedding Done');
@@ -241,12 +220,17 @@ export async function loadOllamaWebEmbedding(source: WebSourceInput, conversatio
 }
 
 export async function getOllamaEmbeddingRetrieve(prompt: string, vectorStore: HNSWLib) {
-  const results = await vectorStore.similaritySearch(prompt, 5);
+  const results = await vectorStore.similaritySearchWithScore(prompt, 15);
+  console.log( results.map(doc => ({
+    content: doc[0].pageContent,
+    metadata: doc[0].metadata,
+    score: doc[1]
+  })).sort((a, b) => b.score - a.score))
   return results.map(doc => ({
-    content: doc.pageContent,
-    metadata: doc.metadata,
-    score: 0
-  }));
+    content: doc[0].pageContent,
+    metadata: doc[0].metadata,
+    score: doc[1]
+  })).sort((a, b) => b.score - a.score);
 }
 
 interface EmbeddingSource {

@@ -5,6 +5,8 @@ on:
 
 jobs:
   release:
+    permissions:
+      contents: write
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
 

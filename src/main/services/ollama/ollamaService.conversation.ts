@@ -163,7 +163,7 @@ export const generateConversationTitle = async (
 
     if (titleResponse.message?.content) {
       const newTitle = titleResponse.message.content.trim().substring(0, 50);
-      await updateConversationTitle(conversation.id, newTitle);
+      updateConversationTitle(conversation.id, newTitle);
       return true;
     }
 

@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { logError } from "../log/logService";
 import { Settings } from "shared/types/Settings";
 import { ENVIRONMENT } from "shared/constants";
+import { ollamaService } from "lib/electron-app/factories/app/setup";
 
 let settingsCache: Settings | null = null;
 
@@ -11,13 +12,26 @@ const defaultSettings: Settings = {
   ignorePaths: [...ENVIRONMENT.DEFAULT_IGNORE_FOLDERS]
 };
 
+const updateTrigger: {
+  [K in keyof Settings]?: (newSettings: Settings) => Promise<void>
+} = {
+  ollamaModelsPath: async (_settings: Settings) => {
+    ollamaService.restart();
+  }
+}
+
 export const saveSettings = async (settings: Settings): Promise<Settings> => {
   try {
+    const existingSettings = await getSettings();
+
     const filePath = getPath("Settings", `settings.json`);
     fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
 
     // Update cache
     settingsCache = settings;
+
+    const changedSettings = _getChangedSettings(settings, existingSettings);
+    await _runUpdateTriggers(settings, changedSettings);
 
     return settings;
   } catch (error) {
@@ -55,4 +69,22 @@ export const getSettings = async (): Promise<Settings> => {
     settingsCache = defaultSettings;
     return defaultSettings;
   }
+}
+
+const _getChangedSettings = (newSettings: Settings, existingSettings: Settings): (keyof Settings)[] => {
+  const changedSettings: (keyof Settings)[] = [];
+    for (const key in newSettings) {
+      if (newSettings[key as keyof Settings] !== existingSettings[key as keyof Settings]) {
+        changedSettings.push(key as keyof Settings);
+      }
+    }
+  return changedSettings;
+}
+
+const _runUpdateTriggers = async (settings: Settings, changedSettings: (keyof Settings)[]) => {
+    for (const key of changedSettings) {
+      if (updateTrigger[key]) {
+        await updateTrigger[key](settings);
+      }
+    }
 }

@@ -9,6 +9,7 @@ interface SettingsFormValues {
   ignorePaths: { value: string }[];
   darkMode: boolean;
   useChromeLogo: boolean;
+  ollamaModelsPath: string;
 }
 
 interface SettingsViewProps {
@@ -23,7 +24,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ status }) => {
     defaultValues: {
       ignorePaths: (settings?.ignorePaths || []).map((p: string) => ({ value: p })),
       darkMode: settings?.darkMode ?? false,
-      useChromeLogo: settings?.useChromeLogo ?? false
+      useChromeLogo: settings?.useChromeLogo ?? false,
+      ollamaModelsPath: settings?.ollamaModelsPath || '',
     },
   });
 
@@ -37,7 +39,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ status }) => {
       ...settings,
       ignorePaths: data.ignorePaths.map((p) => p.value),
       darkMode: data.darkMode,
-      useChromeLogo: data.useChromeLogo
+      useChromeLogo: data.useChromeLogo,
+      ollamaModelsPath: data.ollamaModelsPath,
     });
   };
 
@@ -126,6 +129,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ status }) => {
                     </Button>
                   </div>
                 ))}
+              </div>
+              <div className="mt-4">
+                <span className="text-sm font-medium mb-2 block">Ollama Models Path</span>
+                <Controller
+                  control={control}
+                  name="ollamaModelsPath"
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      placeholder="Enter Ollama models path..."
+                      className="w-full"
+                    />
+                  )}
+                />
               </div>
             </div>
           </AccordionItem>

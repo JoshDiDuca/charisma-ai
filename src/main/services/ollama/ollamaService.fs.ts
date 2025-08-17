@@ -1,9 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { getSettings } from '../settings/settingsService';
+import { isEmpty } from 'lodash';
 
 // Get Ollama models directory based on OS
-export const getOllamaModelsDir = (): string => {
+export const getOllamaModelsDir = async (): Promise<string> => {
+  const settings = await getSettings();
+
+  if(settings.ollamaModelsPath && !isEmpty(settings.ollamaModelsPath)) {
+    return settings.ollamaModelsPath;
+  }
+
   // Check for environment variable override first
   const envModelDir = process.env.OLLAMA_MODELS;
   if (envModelDir) {

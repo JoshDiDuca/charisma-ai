@@ -4,7 +4,7 @@ import path from 'path'
 import fs from 'fs-extra'
 import { getEligibleGpu } from '../gpuService'
 import { logError, logInfo } from '../log/logService'
-import { getOllamaStatus } from './ollamaService'
+import { getOllamaModelsDir, getOllamaStatus } from './ollamaService'
 import { DownloadProgress, DownloadService } from 'main/download/DownloadService'
 import { isNil } from 'lodash'
 import { Readable } from 'stream'
@@ -90,8 +90,8 @@ export class OllamaInstanceService {
   public async needsUpdate(): Promise<boolean> {
     if (!await fs.pathExists(this.execPath)) return true
 
-    const process = spawn(this.execPath, ['--version'])
-    const installedVersion = await this.readStream(process.stdout);
+    const proc = spawn(this.execPath, ['--version'], { env: { ...process.env, OLLAMA_MODELS : await getOllamaModelsDir()   } })
+    const installedVersion = await this.readStream(proc.stdout);
     return !isNil(await this.downloadService.checkForUpdate('ollama/ollama', installedVersion));
   }
 
@@ -132,5 +132,10 @@ export class OllamaInstanceService {
     if (!this.isRunning) return
     this.process?.kill('SIGTERM')
     this.isRunning = false
+  }
+
+  async restart() {
+    await this.stop()
+    await this.start()
   }
 }

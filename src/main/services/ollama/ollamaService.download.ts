@@ -171,7 +171,7 @@ export const downloadModel = async (modelName: string) => {
     try {
       // Extract model details
       const modelData = await extractOllamaDownloadUrls(modelName);
-      const modelsDir = getOllamaModelsDir();
+      const modelsDir = await getOllamaModelsDir();
 
       // Get actual config size from manifest data directly
       const configSize = 0; // Will be updated after manifest fetch

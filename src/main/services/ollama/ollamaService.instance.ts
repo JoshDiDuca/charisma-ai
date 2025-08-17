@@ -98,7 +98,7 @@ export class OllamaInstanceService {
   private async spawnOllamaProcess() {
 
     if (ENVIRONMENT.IS_DEV) {
-      await killPreExistingProcesses("ollama");
+      await killPreExistingProcesses("ollama.exe");
     }
 
     const eligibleGpu = await getEligibleGpu()

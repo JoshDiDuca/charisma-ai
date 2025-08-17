@@ -1,7 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-import * as ipcs from './ipcs'
-
 declare global {
   interface Window {
     App: typeof API
@@ -9,7 +7,6 @@ declare global {
 }
 
 const API = {
-  ...ipcs,
   checkBridge: () => console.log('\nBridge Working Fine! 👋\n\n'),
   username: process.env.USER,
   invoke: (channel: string, ...args: any[]) =>

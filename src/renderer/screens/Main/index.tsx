@@ -18,10 +18,6 @@ export function MainScreen() {
 
   useEffect(() => {
     App.checkBridge()
-
-    App.whenAboutWindowClose(({ message }) => {
-      store.setAboutWindowState(false)
-    })
   }, [])
 
   App.on(IPC.ERRORS.SHOW_UI_ERROR, (message: string) => {
@@ -44,11 +40,6 @@ export function MainScreen() {
       color: "warning",
     })
   })
-
-  function openAboutWindow() {
-    App.createAboutWindow()
-    store.setAboutWindowState(true)
-  }
 
   return (
     <Container>

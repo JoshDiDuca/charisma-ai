@@ -1,37 +1,44 @@
-import React, { useState } from 'react';
-import { Card, Checkbox, Input, Button, Accordion, AccordionItem } from '@heroui/react';
+import React from 'react';
+import { Checkbox, Input, Button, Accordion, AccordionItem } from '@heroui/react';
 import { useSettings } from 'renderer/store/settingsProvider';
 import { FaTrash } from 'react-icons/fa';
 import { ENVIRONMENT } from 'shared/constants';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
+
+interface SettingsFormValues {
+  ignorePaths: { value: string }[];
+  darkMode: boolean;
+  useChromeLogo: boolean;
+}
 
 interface SettingsViewProps {
   status: any;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({
-  status
-}) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ status }) => {
   const isDev = ENVIRONMENT.IS_DEV;
   const { settings, saveSettings } = useSettings();
-  const [currentPath, setCurrentPath] = useState('');
 
-  const addIgnorePath = () => {
-    if (currentPath.trim() && !settings?.ignorePaths?.includes(currentPath.trim())) {
-      const updatedPaths = [...(settings?.ignorePaths || []), currentPath.trim()];
-      saveSettings({ ...settings, ignorePaths: updatedPaths });
-      setCurrentPath('');
-    }
-  };
+  const { control, handleSubmit } = useForm<SettingsFormValues>({
+    defaultValues: {
+      ignorePaths: (settings?.ignorePaths || []).map((p: string) => ({ value: p })),
+      darkMode: settings?.darkMode ?? false,
+      useChromeLogo: settings?.useChromeLogo ?? false
+    },
+  });
 
-  const removeIgnorePath = (pathToRemove: string) => {
-    const updatedPaths = settings?.ignorePaths?.filter(path => path !== pathToRemove) || [];
-    saveSettings({ ...settings, ignorePaths: updatedPaths });
-  };
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'ignorePaths',
+  });
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      addIgnorePath();
-    }
+  const onSubmit = (data: SettingsFormValues) => {
+    saveSettings({
+      ...settings,
+      ignorePaths: data.ignorePaths.map((p) => p.value),
+      darkMode: data.darkMode,
+      useChromeLogo: data.useChromeLogo
+    });
   };
 
   const getStatusDisplay = () => {
@@ -54,7 +61,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const { text: statusText, color: statusColor } = getStatusDisplay();
 
   return (
-    <div className="p-4 rounded-none" style={{ height: "100%", minWidth: "400px" }}>
+    <form
+      onBlur={handleSubmit(onSubmit)}
+      className="p-4 rounded-none"
+      style={{ height: '100%', minWidth: '400px' }}
+    >
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-bold">Settings</h2>
         <div className="inline-flex items-center mb-4">
@@ -66,27 +77,50 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <AccordionItem key="1" aria-label="Configuration" title="Configuration">
             <div className="mt-2">
               <span className="text-sm font-medium mb-2 block">Ignore Paths</span>
-              <div className="flex gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <Input
                   placeholder="Enter path to ignore..."
-                  value={currentPath}
-                  onChange={(e) => setCurrentPath(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const inputValue = (e.target as HTMLInputElement).value.trim();
+                      if (inputValue && !fields.some(f => f.value === inputValue)) {
+                        append({ value: inputValue });
+                        (e.target as HTMLInputElement).value = '';
+                      }
+                    }
+                  }}
                   className="flex-1"
                 />
-                <Button onClick={addIgnorePath} disabled={!currentPath.trim()}>
+                <Button
+                  onClick={() => {
+                    const input = document.querySelector<HTMLInputElement>(
+                      'input[placeholder="Enter path to ignore..."]'
+                    );
+                    if (input) {
+                      const val = input.value.trim();
+                      if (val && !fields.some(f => f.value === val)) {
+                        append({ value: val });
+                        input.value = '';
+                      }
+                    }
+                  }}
+                >
                   Add
                 </Button>
               </div>
-              <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: '200px'}}>
-                {settings?.ignorePaths?.map((path, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded">
-                    <span className="text-sm">{path}</span>
+              <div className="flex flex-col gap-1 overflow-y-auto" style={{ maxHeight: '200px' }}>
+                {fields.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded"
+                  >
+                    <span className="text-sm">{item.value}</span>
                     <Button
                       size="sm"
                       color="danger"
                       variant="light"
-                      onClick={() => removeIgnorePath(path)}
+                      onClick={() => remove(index)}
                     >
                       <FaTrash />
                     </Button>
@@ -97,20 +131,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </AccordionItem>
           <AccordionItem key="2" aria-label="Appearance" title="Appearance">
             <div className="items-center mt-2 mb-1">
-              <span className="text-sm font-medium">
-                <Checkbox defaultSelected={settings?.darkMode} onChange={(e) => saveSettings({ ...settings, darkMode: e.target.checked })}>Dark Mode</Checkbox>
-              </span>
+              <Controller
+                control={control}
+                name="darkMode"
+                render={({ field }) => (
+                  <Checkbox isSelected={field.value} onChange={field.onChange}>
+                    Dark Mode
+                  </Checkbox>
+                )}
+              />
             </div>
             <div className="items-center mt-2 mb-1">
-              <span className="text-sm font-medium">
-                <Checkbox defaultSelected={settings?.useChromeLogo} onChange={(e) => saveSettings({ ...settings, useChromeLogo: e.target.checked })}>Use Chrome Logo</Checkbox>
-              </span>
+              <Controller
+                control={control}
+                name="useChromeLogo"
+                render={({ field }) => (
+                  <Checkbox isSelected={field.value} onChange={field.onChange}>
+                    Use Chrome Logo
+                  </Checkbox>
+                )}
+              />
             </div>
           </AccordionItem>
-
         </Accordion>
-
       </div>
-    </div>
+    </form>
   );
-}
+};

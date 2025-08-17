@@ -39,9 +39,15 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
 
   }
 
+  // Add this to your main.ts
+  app.on('before-quit', async () => {
+    await killServices();
+  });
+
+
+
   app.on('will-quit', async (e) => {
     e.preventDefault()
-    await killServices();
     app.exit()
   })
 
@@ -84,7 +90,7 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
   app.on('window-all-closed', async () => {
     await killServices();
     return (!PLATFORM.IS_MAC && app.quit());
-   })
+  })
 
   return window
 }

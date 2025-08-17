@@ -4,7 +4,6 @@ import { createWindow } from 'lib/electron-app/factories/windows/create'
 import { ENVIRONMENT } from 'shared/constants'
 import { displayName } from '~/package.json'
 import { logError, logInfo } from 'main/services/log/logService';
-import { ollamaService, piperService, ttsService } from 'lib/electron-app/factories/app/setup'
 
 let contextMenu = false;
 export let mainWindow: Electron.BrowserWindow | null = null

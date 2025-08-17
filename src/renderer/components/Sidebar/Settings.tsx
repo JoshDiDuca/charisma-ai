@@ -65,12 +65,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ status }) => {
 
   return (
     <form
-      onBlur={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit)}
       className="p-4 rounded-none"
       style={{ height: '100%', minWidth: '400px' }}
     >
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold">Settings</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-bold">Settings</h2>
+          <Button className='h-7' type="submit" color="primary">
+            Save
+          </Button>
+        </div>
         <div className="inline-flex items-center mb-4">
           <span className="text-sm font-medium">
             Status: <b style={{ color: statusColor }}>{statusText}</b>

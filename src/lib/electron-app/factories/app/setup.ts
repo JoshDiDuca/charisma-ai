@@ -32,19 +32,15 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
   let window = await createWindow()
 
 
-
   const killServices = async () => {
     await ollamaService.stop()
     await ttsService.stop()
 
   }
 
-  // Add this to your main.ts
   app.on('before-quit', async () => {
     await killServices();
   });
-
-
 
   app.on('will-quit', async (e) => {
     e.preventDefault()

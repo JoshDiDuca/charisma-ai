@@ -24,13 +24,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
         <Markdown>{text}</Markdown>
       ) : (
         <Tabs aria-label="Options">
-          <Tab key="answer" title="Answer">
+          {!message.isThinking && <Tab key="answer" title='Answer'>
             <Card>
               <CardBody>
                 <ChatMarkdown message={text} />
               </CardBody>
             </Card>
-          </Tab>
+          </Tab>}
           {(message.thoughts && message.thoughts.length > 0) && <Tab key="thoughts" title="Thoughts">
             <Card>
               <CardBody>

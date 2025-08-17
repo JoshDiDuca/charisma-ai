@@ -9,6 +9,7 @@ export interface Message {
   timestamp: number;
   thoughts?: string[];
   incomplete?: boolean;
+  isThinking?: boolean;
 }
 
 export interface Conversation {

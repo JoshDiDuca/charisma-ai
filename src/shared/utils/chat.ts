@@ -1,7 +1,8 @@
 import { Message } from "shared/types/Conversation";
 
-export function extractThoughtsAndMessage(input: string): { thoughts: string[], text: string } {
+export function extractThoughtsAndMessage(input: string): { thoughts: string[], text: string; isThinking: boolean } {
   const thoughts: string[] = [];
+  let isThinking = false;
   let message = input;
 
   // Extract complete thoughts (anything between <think> and </think> tags)
@@ -20,9 +21,10 @@ export function extractThoughtsAndMessage(input: string): { thoughts: string[], 
     const incompleteThoughtContent = message.substring(incompleteThoughtIndex + '<think>'.length);
     thoughts.push(incompleteThoughtContent.trim());
     message = message.substring(0, incompleteThoughtIndex);
+    isThinking = true;
   }
 
-  return { thoughts, text: message.trim() };
+  return { thoughts, text: message.trim(), isThinking };
 }
 export const processMessagesThoughts = (messages: Message[]) => messages.map(e => {
   if (e.role === "assistant") {

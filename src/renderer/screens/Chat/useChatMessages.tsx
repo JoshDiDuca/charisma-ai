@@ -94,33 +94,31 @@ export const useChatMessages = (
     if (!lastMsg || !lastMsg.incomplete) {
       // Start a new assistant message if last is complete
       const {text, thoughts} = extractThoughtsAndMessage(partial);
-      return [
+      return ([
         ...prev,
         {
           timestamp: Date.now(),
           text: text ?? "",
-          thoughts: thoughts,
           role: 'assistant',
           incomplete: true,
         },
-      ];
+      ]);
     }
 
 
     // Append to the last assistant message
-    return prev.map((msg, idx) => {
-      const {text, thoughts} = extractThoughtsAndMessage((msg.text ?? "") + (partial ?? ""));
+    return processMessagesThoughts(prev.map((msg, idx) => {
       return idx === prev.length - 1
-        ? { ...msg, text, thoughts }
+        ? { ...msg, text: (msg.text ?? "") + (partial ?? "") }
         : msg
     }
-    );
+    ));
   };
 
   // Handles incoming stream updates and updates messages accordingly
   const handleStreamUpdate = (partial: string) => {
     setHasFirstResponse(true);
-    setMessages((prev) => updateMessagesWithPartial(prev, partial));
+    setMessages((prev) => processMessagesThoughts(updateMessagesWithPartial(prev, partial)));
   };
 
   // Sets up and cleans up the stream update listener

@@ -130,7 +130,7 @@ export const Config: React.FC<ConfigProps> = ({
               disabled: false
             },
             web: {
-              label: "Add Web",
+              label: "Add Web (Beta)",
               description: "Search, find and add sources from the internet.",
               onClick: () => setSearchOpen(true),
               disabled: false
@@ -152,7 +152,7 @@ export const Config: React.FC<ConfigProps> = ({
                   case 'Directory':
                     return source.fileTree && <Tree node={source.fileTree} />;
                   case 'Web':
-                    return (<div><FileItem icon={'🌍'} id={source.url} name={source.title} depth={0} isExpandable={false} isExpanded={false} /></div>)
+                    return (<div><FileItem icon={'🌍'} id={source.url} name={source.title ?? source.url} depth={0} isExpandable={false} isExpanded={false} /></div>)
                   case 'FilePath':
                     return (<div><FileItem icon={'🗃️'} id={source.filePath} name={source.fileName} depth={0} isExpandable={false} isExpanded={false} /></div>)
                 }

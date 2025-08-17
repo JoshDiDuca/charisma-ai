@@ -28,7 +28,7 @@ export const Attachment: React.FC<AttachmentProps> = ({ attachment, onRemove }) 
       {(() => {
         switch(attachment.type){
           case "Web":
-          return `${attachment.title}`
+          return `${attachment.title ?? attachment.url}`
           case "File":
           case "FilePath":
           return `${attachment.fileName} (${Math.round(attachment.fileSize / 1024)} KB)`

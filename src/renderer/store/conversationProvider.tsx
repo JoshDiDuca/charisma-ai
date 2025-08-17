@@ -185,7 +185,7 @@ export const ChatBotProvider: React.FC<{ children: ReactNode }> = ({ children })
         type: "Web",
         url: item.url,
         description: item.description,
-        title: item.title
+        title: item.title ?? item.url
       }) as SourceInput), model, embeddingModel, false, conversation?.id, undefined)
       .then((newConversation: Conversation) =>
         setConversation(newConversation));

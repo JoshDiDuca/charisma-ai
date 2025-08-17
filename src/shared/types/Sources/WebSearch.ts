@@ -1,6 +1,6 @@
 
 export interface WebSearch {
   description?: string;
-  title: string;
+  title?: string;
   url: string
 }

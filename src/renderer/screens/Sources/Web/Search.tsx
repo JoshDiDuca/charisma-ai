@@ -63,10 +63,24 @@ const SearchModal: React.FC<SearchModalProps> = ({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const target = (e.target as HTMLInputElement);
+    if (e.key && target.value.startsWith("https://")) {
+      onAdd([{ url: target.value }]);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (searchQuery.startsWith("https://")) {
+      setIsLoading(false);
+      setSearchQuery(e.target.value);
+      setResults([]);
+      return;
+    }
+
     setIsLoading(true);
     setSearchQuery(e.target.value);
-    if(e.target.value === ""){
+    if (e.target.value === "") {
       setResults([]);
     }
   };
@@ -83,7 +97,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
   };
 
   const handleAddSelected = () => {
-    onAdd(selectedItems);
+    if (searchQuery.startsWith("https://")) {
+      onAdd([{ url: searchQuery }]);
+    } else {
+      onAdd(selectedItems);
+    }
     setSelectedItems([]);
     setSearchQuery('');
     setResults([]);
@@ -101,6 +119,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <input
               type="text"
               value={searchQuery}
+              onKeyDown={handleKeyDown}
               onChange={handleInputChange}
               placeholder="Search..."
               className="w-full p-4 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -244,7 +263,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
               </Button>
               <Button
                 onClick={handleAddSelected}
-                disabled={selectedItems.length === 0}
+                disabled={selectedItems.length === 0 && !searchQuery.startsWith("https://")}
               >
                 Add Selected
               </Button>

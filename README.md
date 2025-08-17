@@ -7,10 +7,9 @@ Charisma Studio is a desktop client that transforms how you interact with local 
 ---
 
 ## 🖼️ Screenshots
+- Charisma explaining it's own code.
 ![Screenshot](screenshots/Screenshot.png)
-- Charisma explaining it's own code. (Dark mode)
 ![Screenshot](screenshots/Screenshot_lightmode.png)
-- Light mode
 --
 
 ## 🚀 Features

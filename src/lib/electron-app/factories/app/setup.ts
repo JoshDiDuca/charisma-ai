@@ -43,6 +43,7 @@ export async function makeAppSetup(createWindow: () => Promise<BrowserWindow>) {
   });
 
   app.on('will-quit', async (e) => {
+    await killServices();
     e.preventDefault()
     app.exit()
   })

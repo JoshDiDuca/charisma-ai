@@ -59,7 +59,7 @@
     "hnswlib-node": "^3.0.0",
     "langchain": "^0.3.24",
     "lodash": "^4.17.21",
-    "mammoth": "^1.10.0",
+    "mammoth": "^1.11.0",
     "nodejs-whisper": "^0.2.6",
     "ollama": "0.5.17",
     "pcm-player": "^0.0.18",
